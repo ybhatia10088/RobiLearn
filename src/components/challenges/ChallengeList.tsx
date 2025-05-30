@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronRight, Trophy, LockKeyhole, Star, Book, Tag } from 'lucide-react';
 import { ChallengeCategory, DifficultyLevel, Challenge } from '@/types/challenge.types';
 import { motion } from 'framer-motion';
+import { useNavigate } from '@/hooks/useNavigation';
 
 // Sample challenge data
 const challenges: Challenge[] = [
@@ -116,6 +117,7 @@ const challenges: Challenge[] = [
 const ChallengeList: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory | 'all'>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'all'>('all');
+  const navigate = useNavigate();
   
   const filteredChallenges = challenges.filter(challenge => 
     (selectedCategory === 'all' || challenge.category === selectedCategory) &&
@@ -170,6 +172,11 @@ const ChallengeList: React.FC = () => {
         return <Book size={16} />;
     }
   };
+
+  const handleChallengeClick = (challenge: Challenge) => {
+    if (!challenge.unlocked) return;
+    navigate(`/simulator?challenge=${challenge.id}`);
+  };
   
   return (
     <div className="bg-dark-800 rounded-lg border border-dark-600 h-full flex flex-col">
@@ -182,7 +189,7 @@ const ChallengeList: React.FC = () => {
               Category
             </label>
             <select
-              className="input bg-dark-700"
+              className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value as any)}
             >
@@ -197,7 +204,7 @@ const ChallengeList: React.FC = () => {
               Difficulty
             </label>
             <select
-              className="input bg-dark-700"
+              className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value as any)}
             >
@@ -215,13 +222,18 @@ const ChallengeList: React.FC = () => {
             <p>No challenges found matching your filters.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filteredChallenges.map((challenge) => (
               <motion.div
                 key={challenge.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`card cursor-pointer border-l-4 border-l-${getDifficultyColor(challenge.difficulty)}-500 ${challenge.unlocked ? '' : 'opacity-70'}`}
+                onClick={() => handleChallengeClick(challenge)}
+                className={`card cursor-pointer border-l-4 ${
+                  challenge.unlocked 
+                    ? `border-l-${getDifficultyColor(challenge.difficulty)}-500` 
+                    : 'border-l-dark-500'
+                } ${challenge.unlocked ? '' : 'opacity-70'}`}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -235,13 +247,13 @@ const ChallengeList: React.FC = () => {
                     <p className="text-dark-300 text-sm mb-3">{challenge.description}</p>
                     
                     <div className="flex flex-wrap gap-2 mb-3">
-                      <div className={`badge badge-${getDifficultyColor(challenge.difficulty)}`}>
+                      <div className={`badge bg-${getDifficultyColor(challenge.difficulty)}-900 text-${getDifficultyColor(challenge.difficulty)}-400 border border-${getDifficultyColor(challenge.difficulty)}-700`}>
                         {challenge.difficulty}
                       </div>
-                      <div className="badge bg-dark-700 text-dark-300">
+                      <div className="badge bg-dark-700 text-dark-300 border border-dark-600">
                         {challenge.estimatedTime} min
                       </div>
-                      <div className="badge bg-dark-700 text-dark-300">
+                      <div className="badge bg-dark-700 text-dark-300 border border-dark-600">
                         {challenge.robotType}
                       </div>
                     </div>
