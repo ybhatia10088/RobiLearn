@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, XCircle, Save, Trash2 } from 'lucide-react';
 import { useRobotStore } from '@/store/robotStore';
 import { motion } from 'framer-motion';
 
-const CodeEditor: React.FC = () => {
+interface CodeEditorProps {
+  initialCode?: string;
+  onCodeRun?: (code: string) => void;
+}
+
+const CodeEditor: React.FC<CodeEditorProps> = ({ initialCode, onCodeRun }) => {
   const { selectedRobot } = useRobotStore();
-  const [code, setCode] = useState(`// Control your robot with JavaScript
+  const [code, setCode] = useState(initialCode || `// Control your robot with JavaScript
 // Example: Move the robot forward
 robot.move({
   direction: 'forward',
@@ -32,6 +37,12 @@ console.log(sensorData);
   ]);
   
   const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    if (initialCode) {
+      setCode(initialCode);
+    }
+  }, [initialCode]);
   
   const handleRunCode = () => {
     if (!selectedRobot) {
@@ -47,6 +58,11 @@ console.log(sensorData);
       ...output,
       { type: 'info', message: 'Running code...' }
     ]);
+    
+    // Call the onCodeRun prop if provided
+    if (onCodeRun) {
+      onCodeRun(code);
+    }
     
     // Simulate code execution with a timeout
     setTimeout(() => {
@@ -99,7 +115,7 @@ console.log(sensorData);
       <div className="flex-1 flex flex-col md:flex-row">
         <div className="flex-1 border-b md:border-b-0 md:border-r border-dark-600">
           <textarea
-            className="code-editor w-full h-full resize-none outline-none"
+            className="w-full h-full resize-none outline-none bg-dark-900 text-white p-4 font-mono text-sm"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             spellCheck={false}
@@ -126,10 +142,10 @@ console.log(sensorData);
                 transition={{ duration: 0.3 }}
                 className={`terminal-line ${
                   line.type === 'error' 
-                    ? 'terminal-error' 
+                    ? 'text-error-400' 
                     : line.type === 'success' 
-                      ? 'terminal-success' 
-                      : 'terminal-output'
+                      ? 'text-success-400' 
+                      : 'text-white'
                 } mb-1`}
               >
                 {line.message}

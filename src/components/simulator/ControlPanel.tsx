@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useRobotStore } from '@/store/robotStore';
-import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand } from 'lucide-react';
+import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand, Book } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Challenge } from '@/types/challenge.types';
 
-const ControlPanel: React.FC = () => {
+interface ControlPanelProps {
+  challenge?: Challenge | null;
+}
+
+const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const { 
     selectedRobot, 
     robotState, 
@@ -92,6 +97,32 @@ const ControlPanel: React.FC = () => {
                 <p className="text-sm text-dark-300">Type: {selectedRobot.type}</p>
               </div>
             </div>
+            
+            {challenge && (
+              <div className="mb-6 bg-dark-700 rounded-lg p-4 border border-dark-600">
+                <div className="flex items-center mb-3">
+                  <Book size={18} className="text-primary-400 mr-2" />
+                  <h4 className="font-medium text-white">Challenge Progress</h4>
+                </div>
+                <div className="space-y-2">
+                  {challenge.objectives.map((objective) => (
+                    <div 
+                      key={objective.id}
+                      className="flex items-center text-sm"
+                    >
+                      <div className={`w-3 h-3 rounded-full mr-2 ${
+                        objective.completed 
+                          ? 'bg-success-500' 
+                          : 'bg-dark-500'
+                      }`} />
+                      <span className={objective.completed ? 'text-success-400' : 'text-dark-300'}>
+                        {objective.description}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="mb-6">
               <label className="block text-sm font-medium text-dark-300 mb-2">
