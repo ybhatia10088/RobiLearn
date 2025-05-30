@@ -26,15 +26,21 @@ function App() {
     };
   }, []);
   
+  // Extract the base path without query parameters
+  const basePath = currentRoute.split('?')[0];
+  
   // Render the appropriate page based on the current route
   const renderPage = () => {
-    switch (currentRoute) {
+    switch (basePath) {
       case '/simulator':
         return <SimulatorPage />;
       case '/challenges':
         return <ChallengesPage />;
       case '/':
+        return <HomePage />;
       default:
+        // Redirect to home page for unknown routes
+        window.history.replaceState({}, '', '/');
         return <HomePage />;
     }
   };

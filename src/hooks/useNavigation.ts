@@ -15,5 +15,5 @@ export const useNavigate = () => {
 };
 
 export const useCurrentRoute = () => {
-  return window.location.pathname || '/';
+  return window.location.pathname + window.location.search;
 };
