@@ -219,18 +219,53 @@ const EnhancedRobotMobile: React.FC<{ wheelRotation: number; sensorRotation: num
 
 const EnhancedRobotArm: React.FC<{ sensorRotation: number }> = ({ sensorRotation }) => {
   const { robotState, isMoving } = useRobotStore();
-  const [jointAngles, setJointAngles] = useState({ base: 0, shoulder: 0, elbow: 0, wrist: 0 });
-  const [gripperOpen, setGripperOpen] = useState(0.08); // Gripper finger separation
+  const [jointAngles, setJointAngles] = useState({ 
+    base: 0, 
+    shoulder: 0, 
+    elbow: 0, 
+    wrist: 0 
+  });
+  const [gripperOpen, setGripperOpen] = useState(0.08);
   
   useFrame((state, delta) => {
-    // Only animate joints when the arm is "moving" (operating)
-    if (isMoving || robotState?.isMoving) {
-      setJointAngles(prev => ({
-        base: prev.base + delta * 0.5, // Slow base rotation
-        shoulder: Math.sin(state.clock.elapsedTime * 0.6) * 0.4,
-        elbow: Math.sin(state.clock.elapsedTime * 0.8) * 0.6,
-        wrist: Math.sin(state.clock.elapsedTime * 1.0) * 0.3
-      }));
+    // Read joint commands from robot state
+    const jointCommand = (robotState as any)?.currentJointCommand;
+    
+    if (jointCommand && isMoving) {
+      const { joint, direction, speed } = jointCommand;
+      const moveSpeed = speed * delta * 3; // Adjust speed multiplier
+      
+      setJointAngles(prev => {
+        const newAngles = { ...prev };
+        
+        switch (joint) {
+          case 'base':
+            newAngles.base += direction === 'right' ? moveSpeed : -moveSpeed;
+            // Limit base rotation
+            newAngles.base = Math.max(-Math.PI, Math.min(Math.PI, newAngles.base));
+            break;
+            
+          case 'shoulder':
+            newAngles.shoulder += direction === 'up' ? moveSpeed : -moveSpeed;
+            // Limit shoulder movement
+            newAngles.shoulder = Math.max(-Math.PI/2, Math.min(Math.PI/2, newAngles.shoulder));
+            break;
+            
+          case 'elbow':
+            newAngles.elbow += direction === 'up' ? moveSpeed : -moveSpeed;
+            // Limit elbow movement
+            newAngles.elbow = Math.max(-Math.PI/2, Math.min(Math.PI/2, newAngles.elbow));
+            break;
+            
+          case 'wrist':
+            newAngles.wrist += direction === 'right' ? moveSpeed : -moveSpeed;
+            // Limit wrist rotation
+            newAngles.wrist = Math.max(-Math.PI, Math.min(Math.PI, newAngles.wrist));
+            break;
+        }
+        
+        return newAngles;
+      });
     }
     
     // Animate gripper based on grab state
@@ -299,8 +334,8 @@ const EnhancedRobotArm: React.FC<{ sensorRotation: number }> = ({ sensorRotation
             />
           </mesh>
           
-          {/* End effector */}
-          <group position={[0, 0, 1.8]} rotation={[jointAngles.elbow, 0, 0]}>
+          {/* Wrist with rotation */}
+          <group position={[0, 0, 1.8]} rotation={[jointAngles.elbow, jointAngles.wrist, 0]}>
             {/* Wrist */}
             <mesh castShadow receiveShadow>
               <cylinderGeometry args={[0.12, 0.12, 0.15, 16]} />
