@@ -23,6 +23,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   
   const [speed, setSpeed] = useState(50);
   const [activeSensorTab, setActiveSensorTab] = useState('camera');
+  const [isPressed, setIsPressed] = useState<string | null>(null);
   
   // Enhanced robot models with better descriptions
   const availableRobots = [
@@ -34,32 +35,30 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     { id: 'humanoid1', name: 'Assistant Bot', type: 'humanoid', description: 'Bipedal humanoid robot for human interaction' },
   ];
   
-  const handleMoveForward = () => {
+  // Fixed movement handlers with proper event handling
+  const handleMoveStart = (direction: 'forward' | 'backward') => {
     if (!selectedRobot) return;
-    console.log('Moving forward with speed:', speed / 100);
-    moveRobot({ direction: 'forward', speed: speed / 100 });
+    console.log(`Moving ${direction} with speed:`, speed / 100);
+    setIsPressed(direction);
+    moveRobot({ direction, speed: speed / 100 });
   };
   
-  const handleMoveBackward = () => {
-    if (!selectedRobot) return;
-    console.log('Moving backward with speed:', speed / 100);
-    moveRobot({ direction: 'backward', speed: speed / 100 });
+  const handleMoveEnd = () => {
+    console.log('Stopping robot movement');
+    setIsPressed(null);
+    stopRobot();
   };
   
-  const handleTurnLeft = () => {
+  const handleRotateStart = (direction: 'left' | 'right') => {
     if (!selectedRobot) return;
-    console.log('Turning left with speed:', speed / 100);
-    rotateRobot({ direction: 'left', speed: speed / 100 });
+    console.log(`Turning ${direction} with speed:`, speed / 100);
+    setIsPressed(direction);
+    rotateRobot({ direction, speed: speed / 100 });
   };
   
-  const handleTurnRight = () => {
-    if (!selectedRobot) return;
-    console.log('Turning right with speed:', speed / 100);
-    rotateRobot({ direction: 'right', speed: speed / 100 });
-  };
-  
-  const handleStop = () => {
-    console.log('Stopping robot');
+  const handleRotateEnd = () => {
+    console.log('Stopping robot rotation');
+    setIsPressed(null);
     stopRobot();
   };
   
@@ -92,6 +91,53 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     }
   };
 
+  // Special action handlers for different robot types
+  const handleSpecialAction1 = () => {
+    if (!selectedRobot) return;
+    
+    switch (selectedRobot.type) {
+      case 'spider':
+        console.log('Spider climbing action');
+        // Trigger climb animation
+        break;
+      case 'humanoid':
+        console.log('Humanoid waving action');
+        // Trigger wave gesture
+        break;
+      case 'tank':
+        console.log('Tank special weapon action');
+        break;
+      case 'drone':
+        console.log('Drone boost action');
+        break;
+      default:
+        console.log('Special action 1');
+    }
+  };
+
+  const handleSpecialAction2 = () => {
+    if (!selectedRobot) return;
+    
+    switch (selectedRobot.type) {
+      case 'spider':
+        console.log('Spider scanning action');
+        // Trigger scan animation
+        break;
+      case 'humanoid':
+        console.log('Humanoid gesture action');
+        // Trigger custom gesture
+        break;
+      case 'tank':
+        console.log('Tank defensive action');
+        break;
+      case 'drone':
+        console.log('Drone hover action');
+        break;
+      default:
+        console.log('Special action 2');
+    }
+  };
+
   const getRobotIcon = (type: string) => {
     switch (type) {
       case 'mobile': return <Robot size={20} className="text-primary-400" />;
@@ -118,8 +164,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <button 
                   className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                   onMouseDown={() => handleArmJoint('base', 'left')}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
+                  onMouseUp={handleMoveEnd}
+                  onMouseLeave={handleMoveEnd}
+                  onTouchStart={() => handleArmJoint('base', 'left')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowLeft size={16} />
@@ -128,8 +176,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <button 
                   className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                   onMouseDown={() => handleArmJoint('base', 'right')}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
+                  onMouseUp={handleMoveEnd}
+                  onMouseLeave={handleMoveEnd}
+                  onTouchStart={() => handleArmJoint('base', 'right')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowRight size={16} />
@@ -144,8 +194,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <button 
                   className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                   onMouseDown={() => handleArmJoint('wrist', 'left')}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
+                  onMouseUp={handleMoveEnd}
+                  onMouseLeave={handleMoveEnd}
+                  onTouchStart={() => handleArmJoint('wrist', 'left')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowLeft size={16} />
@@ -154,8 +206,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <button 
                   className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                   onMouseDown={() => handleArmJoint('wrist', 'right')}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
+                  onMouseUp={handleMoveEnd}
+                  onMouseLeave={handleMoveEnd}
+                  onTouchStart={() => handleArmJoint('wrist', 'right')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowRight size={16} />
@@ -192,12 +246,20 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div></div>
               <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleMoveForward}
-                onMouseUp={handleStop}
-                onMouseLeave={handleStop}
-                onTouchStart={handleMoveForward}
-                onTouchEnd={handleStop}
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'forward' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleMoveStart('forward')}
+                onMouseUp={handleMoveEnd}
+                onMouseLeave={handleMoveEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleMoveStart('forward');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleMoveEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowUp size={20} />
@@ -205,34 +267,58 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               <div></div>
               
               <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleTurnLeft}
-                onMouseUp={handleStop}
-                onMouseLeave={handleStop}
-                onTouchStart={handleTurnLeft}
-                onTouchEnd={handleStop}
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'left' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleRotateStart('left')}
+                onMouseUp={handleRotateEnd}
+                onMouseLeave={handleRotateEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleRotateStart('left');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleRotateEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowLeft size={20} />
               </button>
               <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleMoveBackward}
-                onMouseUp={handleStop}
-                onMouseLeave={handleStop}
-                onTouchStart={handleMoveBackward}
-                onTouchEnd={handleStop}
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'backward' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleMoveStart('backward')}
+                onMouseUp={handleMoveEnd}
+                onMouseLeave={handleMoveEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleMoveStart('backward');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleMoveEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowDown size={20} />
               </button>
               <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleTurnRight}
-                onMouseUp={handleStop}
-                onMouseLeave={handleStop}
-                onTouchStart={handleTurnRight}
-                onTouchEnd={handleStop}
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'right' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleRotateStart('right')}
+                onMouseUp={handleRotateEnd}
+                onMouseLeave={handleRotateEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleRotateStart('right');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleRotateEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowRight size={20} />
@@ -240,23 +326,33 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
             </div>
 
             {/* Special actions for specific robot types */}
-            {(selectedRobot.type === 'spider' || selectedRobot.type === 'humanoid') && (
+            {(selectedRobot.type === 'spider' || selectedRobot.type === 'humanoid' || selectedRobot.type === 'tank' || selectedRobot.type === 'drone') && (
               <div className="flex space-x-2 mb-4">
                 <button 
                   className="btn bg-accent-600 hover:bg-accent-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                  onClick={() => console.log('Special action 1')}
+                  onClick={handleSpecialAction1}
                   disabled={!selectedRobot}
                 >
                   <Target size={18} className="mr-2" />
-                  <span>{selectedRobot.type === 'spider' ? 'Climb' : 'Wave'}</span>
+                  <span>
+                    {selectedRobot.type === 'spider' ? 'Climb' : 
+                     selectedRobot.type === 'humanoid' ? 'Wave' :
+                     selectedRobot.type === 'tank' ? 'Weapon' :
+                     selectedRobot.type === 'drone' ? 'Boost' : 'Action 1'}
+                  </span>
                 </button>
                 <button 
                   className="btn bg-secondary-600 hover:bg-secondary-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                  onClick={() => console.log('Special action 2')}
+                  onClick={handleSpecialAction2}
                   disabled={!selectedRobot}
                 >
                   <Radar size={18} className="mr-2" />
-                  <span>{selectedRobot.type === 'spider' ? 'Scan' : 'Gesture'}</span>
+                  <span>
+                    {selectedRobot.type === 'spider' ? 'Scan' : 
+                     selectedRobot.type === 'humanoid' ? 'Gesture' :
+                     selectedRobot.type === 'tank' ? 'Shield' :
+                     selectedRobot.type === 'drone' ? 'Hover' : 'Action 2'}
+                  </span>
                 </button>
               </div>
             )}
