@@ -10,27 +10,50 @@ interface RobotModelProps {
 
 const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const { robotState } = useRobotStore();
+  const { robotState, isMoving } = useRobotStore();
   const [wheelRotation, setWheelRotation] = useState(0);
   const [sensorRotation, setSensorRotation] = useState(0);
 
   useEffect(() => {
     if (groupRef.current && robotState) {
-      groupRef.current.position.set(
-        robotState.position.x,
-        robotState.position.y,
-        robotState.position.z
-      );
-      
-      groupRef.current.rotation.y = robotState.rotation.y;
+      // Only move mobile robots and drones, NOT robot arms
+      if (robotConfig.type === 'mobile' || robotConfig.type === 'drone') {
+        // Smooth position interpolation
+        const currentPos = groupRef.current.position;
+        const targetPos = new THREE.Vector3(
+          robotState.position.x,
+          robotState.position.y,
+          robotState.position.z
+        );
+        
+        currentPos.lerp(targetPos, 0.1);
+        
+        // Smooth rotation interpolation
+        const currentRot = groupRef.current.rotation.y;
+        const targetRot = robotState.rotation.y;
+        const rotDiff = targetRot - currentRot;
+        
+        // Handle rotation wrap-around
+        const adjustedRotDiff = ((rotDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+        groupRef.current.rotation.y = currentRot + adjustedRotDiff * 0.1;
+      }
+      // Robot arms stay in place - only their joints move
     }
-  }, [robotState]);
+  }, [robotState, robotConfig.type]);
 
   useFrame((state, delta) => {
-    if (robotState?.isMoving) {
-      setWheelRotation(prev => prev + delta * 8);
+    // Animate wheels when moving (only for mobile robots)
+    if ((isMoving || robotState?.isMoving) && robotConfig.type === 'mobile') {
+      setWheelRotation(prev => prev + delta * 12);
     }
-    setSensorRotation(prev => prev + delta * 1.5);
+    
+    // Animate propellers for drones
+    if ((isMoving || robotState?.isMoving) && robotConfig.type === 'drone') {
+      setWheelRotation(prev => prev + delta * 20); // Faster for propellers
+    }
+    
+    // Always rotate sensor for scanning effect
+    setSensorRotation(prev => prev + delta * 2);
   });
 
   return (
@@ -195,14 +218,24 @@ const EnhancedRobotMobile: React.FC<{ wheelRotation: number; sensorRotation: num
 };
 
 const EnhancedRobotArm: React.FC<{ sensorRotation: number }> = ({ sensorRotation }) => {
-  const [jointAngles, setJointAngles] = useState({ base: 0, shoulder: 0, elbow: 0 });
+  const { robotState, isMoving } = useRobotStore();
+  const [jointAngles, setJointAngles] = useState({ base: 0, shoulder: 0, elbow: 0, wrist: 0 });
+  const [gripperOpen, setGripperOpen] = useState(0.08); // Gripper finger separation
   
-  useFrame((state) => {
-    setJointAngles({
-      base: Math.sin(state.clock.elapsedTime * 0.3) * 0.1,
-      shoulder: Math.sin(state.clock.elapsedTime * 0.4) * 0.2,
-      elbow: Math.sin(state.clock.elapsedTime * 0.5) * 0.3
-    });
+  useFrame((state, delta) => {
+    // Only animate joints when the arm is "moving" (operating)
+    if (isMoving || robotState?.isMoving) {
+      setJointAngles(prev => ({
+        base: prev.base + delta * 0.5, // Slow base rotation
+        shoulder: Math.sin(state.clock.elapsedTime * 0.6) * 0.4,
+        elbow: Math.sin(state.clock.elapsedTime * 0.8) * 0.6,
+        wrist: Math.sin(state.clock.elapsedTime * 1.0) * 0.3
+      }));
+    }
+    
+    // Animate gripper based on grab state
+    const targetGrip = robotState?.isGrabbing ? 0.02 : 0.08;
+    setGripperOpen(prev => prev + (targetGrip - prev) * delta * 5);
   });
 
   return (
@@ -284,22 +317,22 @@ const EnhancedRobotArm: React.FC<{ sensorRotation: number }> = ({ sensorRotation
               <meshStandardMaterial color="#991B1B" />
             </mesh>
             
-            {/* Gripper fingers */}
-            <mesh position={[0.08, 0, 0.18]} castShadow receiveShadow>
+            {/* Gripper fingers - animated based on grab state */}
+            <mesh position={[gripperOpen, 0, 0.18]} castShadow receiveShadow>
               <boxGeometry args={[0.04, 0.25, 0.08]} />
               <meshStandardMaterial color="#374151" />
             </mesh>
-            <mesh position={[-0.08, 0, 0.18]} castShadow receiveShadow>
+            <mesh position={[-gripperOpen, 0, 0.18]} castShadow receiveShadow>
               <boxGeometry args={[0.04, 0.25, 0.08]} />
               <meshStandardMaterial color="#374151" />
             </mesh>
             
-            {/* Gripper tips */}
-            <mesh position={[0.08, 0, 0.22]} castShadow receiveShadow>
+            {/* Gripper tips - animated */}
+            <mesh position={[gripperOpen, 0, 0.22]} castShadow receiveShadow>
               <boxGeometry args={[0.02, 0.08, 0.02]} />
               <meshStandardMaterial color="#FCD34D" />
             </mesh>
-            <mesh position={[-0.08, 0, 0.22]} castShadow receiveShadow>
+            <mesh position={[-gripperOpen, 0, 0.22]} castShadow receiveShadow>
               <boxGeometry args={[0.02, 0.08, 0.02]} />
               <meshStandardMaterial color="#FCD34D" />
             </mesh>
