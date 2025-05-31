@@ -15,6 +15,9 @@ export enum RobotType {
   ARM = 'arm',
   MOBILE = 'mobile',
   DRONE = 'drone',
+  SPIDER = 'spider',
+  TANK = 'tank',
+  HUMANOID = 'humanoid',
 }
 
 export type JointConfig = {
@@ -74,4 +77,9 @@ export type RobotState = {
   isGrabbing: boolean;
   batteryLevel: number;
   errors: string[];
+  currentJointCommand?: {
+    joint: string;
+    direction: string;
+    speed: number;
+  } | null;
 };
