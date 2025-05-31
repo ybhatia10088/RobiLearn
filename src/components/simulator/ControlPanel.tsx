@@ -12,6 +12,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const { 
     selectedRobot, 
     robotState, 
+    isMoving,
     selectRobot, 
     moveRobot, 
     rotateRobot, 
@@ -32,22 +33,48 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   
   const handleMoveForward = () => {
     if (!selectedRobot) return;
+    console.log('Moving forward with speed:', speed / 100);
     moveRobot({ direction: 'forward', speed: speed / 100 });
   };
   
   const handleMoveBackward = () => {
     if (!selectedRobot) return;
+    console.log('Moving backward with speed:', speed / 100);
     moveRobot({ direction: 'backward', speed: speed / 100 });
   };
   
   const handleTurnLeft = () => {
     if (!selectedRobot) return;
+    console.log('Turning left with speed:', speed / 100);
     rotateRobot({ direction: 'left', speed: speed / 100 });
   };
   
   const handleTurnRight = () => {
     if (!selectedRobot) return;
+    console.log('Turning right with speed:', speed / 100);
     rotateRobot({ direction: 'right', speed: speed / 100 });
+  };
+  
+  const handleStop = () => {
+    console.log('Stopping robot');
+    stopRobot();
+  };
+  
+  const handleRobotSelect = (robotId: string) => {
+    const robot = availableRobots.find(r => r.id === robotId);
+    if (robot) {
+      console.log('Selecting robot:', robot);
+      selectRobot({
+        id: robot.id,
+        name: robot.name,
+        type: robot.type as any,
+        description: `A ${robot.type} robot for simulation`,
+        model: `/models/${robot.type}.glb`,
+        basePosition: { x: 0, y: 0, z: 0 },
+        baseRotation: { x: 0, y: 0, z: 0, w: 1 },
+        sensors: []
+      });
+    }
   };
   
   return (
@@ -58,22 +85,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
           <select
             className="input bg-dark-700 text-white py-1 px-2 text-sm"
             value={selectedRobot?.id || ''}
-            onChange={(e) => {
-              const robotId = e.target.value;
-              const robot = availableRobots.find(r => r.id === robotId);
-              if (robot) {
-                selectRobot({
-                  id: robot.id,
-                  name: robot.name,
-                  type: robot.type as any,
-                  description: `A ${robot.type} robot for simulation`,
-                  model: `/models/${robot.type}.glb`,
-                  basePosition: { x: 0, y: 0, z: 0 },
-                  baseRotation: { x: 0, y: 0, z: 0, w: 1 },
-                  sensors: []
-                });
-              }
-            }}
+            onChange={(e) => handleRobotSelect(e.target.value)}
           >
             <option value="">Select Robot</option>
             {availableRobots.map(robot => (
@@ -95,6 +107,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               <div>
                 <h4 className="font-medium text-white">{selectedRobot.name}</h4>
                 <p className="text-sm text-dark-300">Type: {selectedRobot.type}</p>
+                <p className="text-sm text-dark-300">
+                  Status: <span className={isMoving ? 'text-warning-400' : 'text-success-400'}>
+                    {isMoving ? 'Moving' : 'Idle'}
+                  </span>
+                </p>
               </div>
             </div>
             
@@ -130,7 +147,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               </label>
               <input 
                 type="range" 
-                min="0" 
+                min="10" 
                 max="100" 
                 value={speed} 
                 onChange={(e) => setSpeed(parseInt(e.target.value))}
@@ -138,67 +155,84 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               />
             </div>
             
-            <div className="grid grid-cols-3 gap-2 mb-6">
-              <div></div>
-              <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleMoveForward}
-                onMouseUp={stopRobot}
-                onMouseLeave={stopRobot}
-                onTouchStart={handleMoveForward}
-                onTouchEnd={stopRobot}
-              >
-                <ArrowUp size={20} />
-              </button>
-              <div></div>
-              
-              <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleTurnLeft}
-                onMouseUp={stopRobot}
-                onMouseLeave={stopRobot}
-                onTouchStart={handleTurnLeft}
-                onTouchEnd={stopRobot}
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleMoveBackward}
-                onMouseUp={stopRobot}
-                onMouseLeave={stopRobot}
-                onTouchStart={handleMoveBackward}
-                onTouchEnd={stopRobot}
-              >
-                <ArrowDown size={20} />
-              </button>
-              <button 
-                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                onMouseDown={handleTurnRight}
-                onMouseUp={stopRobot}
-                onMouseLeave={stopRobot}
-                onTouchStart={handleTurnRight}
-                onTouchEnd={stopRobot}
-              >
-                <ArrowRight size={20} />
-              </button>
+            {/* Movement Controls */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-white mb-3">Movement Controls</h4>
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div></div>
+                <button 
+                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                  onMouseDown={handleMoveForward}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  onTouchStart={handleMoveForward}
+                  onTouchEnd={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowUp size={20} />
+                </button>
+                <div></div>
+                
+                <button 
+                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                  onMouseDown={handleTurnLeft}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  onTouchStart={handleTurnLeft}
+                  onTouchEnd={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <button 
+                  className="btn bg-error-600 hover:bg-error-700 text-white py-3 flex items-center justify-center transition-colors"
+                  onClick={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  STOP
+                </button>
+                <button 
+                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                  onMouseDown={handleTurnRight}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  onTouchStart={handleTurnRight}
+                  onTouchEnd={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowRight size={20} />
+                </button>
+                
+                <div></div>
+                <button 
+                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                  onMouseDown={handleMoveBackward}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  onTouchStart={handleMoveBackward}
+                  onTouchEnd={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowDown size={20} />
+                </button>
+                <div></div>
+              </div>
             </div>
             
             {selectedRobot.type === 'arm' && (
               <div className="flex space-x-2 mb-6">
                 <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-2 flex-1 flex items-center justify-center"
-                  onMouseDown={grabObject}
-                  onMouseUp={releaseObject}
-                  onTouchStart={grabObject}
-                  onTouchEnd={releaseObject}
+                  className="btn bg-success-600 hover:bg-success-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
+                  onClick={grabObject}
+                  disabled={!selectedRobot}
                 >
                   <Grab size={18} className="mr-2" />
                   <span>Grab</span>
                 </button>
                 <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-2 flex-1 flex items-center justify-center"
+                  className="btn bg-warning-600 hover:bg-warning-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
                   onClick={releaseObject}
+                  disabled={!selectedRobot}
                 >
                   <Hand size={18} className="mr-2" />
                   <span>Release</span>
@@ -218,8 +252,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <p className="text-dark-300">Battery: <span className={`${robotState && robotState.batteryLevel > 20 ? 'text-success-400' : 'text-warning-400'}`}>
                   {robotState ? `${robotState.batteryLevel.toFixed(1)}%` : 'N/A'}
                 </span></p>
-                <p className="text-dark-300">Status: <span className={`${robotState && robotState.isMoving ? 'text-accent-400' : 'text-white'}`}>
-                  {robotState ? (robotState.isMoving ? 'Moving' : 'Idle') : 'N/A'}
+                <p className="text-dark-300">Status: <span className={`${isMoving ? 'text-accent-400' : 'text-white'}`}>
+                  {isMoving ? 'Moving' : 'Idle'}
                 </span></p>
               </div>
             </div>
@@ -256,6 +290,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                         ? 'Lidar data visualization' 
                         : 'Other sensor data'}
                   </p>
+                  {robotState && (
+                    <p className="text-primary-400 text-xs mt-2">
+                      Sensor data: {Math.random().toFixed(2)}m
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
