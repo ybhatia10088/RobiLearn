@@ -60,6 +60,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     stopRobot();
   };
   
+  // New function for arm joint control
+  const handleArmJoint = (joint: string, direction: string) => {
+    if (!selectedRobot) return;
+    console.log(`Moving ${joint} ${direction}`);
+    
+    // Use the existing moveRobot function but with joint-specific data
+    moveRobot({ 
+      direction: direction as 'forward' | 'backward', 
+      speed: speed / 100,
+      joint: joint // Add joint info
+    });
+  };
+  
   const handleRobotSelect = (robotId: string) => {
     const robot = availableRobots.find(r => r.id === robotId);
     if (robot) {
@@ -158,62 +171,122 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
             {/* Movement Controls */}
             <div className="mb-6">
               <h4 className="text-sm font-medium text-white mb-3">
-                {selectedRobot.type === 'arm' ? 'Arm Controls' : 'Movement Controls'}
+                {selectedRobot.type === 'arm' ? 'Arm Joint Controls' : 'Movement Controls'}
               </h4>
               
               {selectedRobot.type === 'arm' ? (
-                // Robot Arm Controls
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      className="btn bg-primary-600 hover:bg-primary-700 text-white py-2 text-sm transition-colors"
-                      onMouseDown={handleMoveForward}
-                      onMouseUp={handleStop}
-                      disabled={!selectedRobot}
-                    >
-                      Base Left
-                    </button>
-                    <button 
-                      className="btn bg-primary-600 hover:bg-primary-700 text-white py-2 text-sm transition-colors"
-                      onMouseDown={handleMoveBackward}
-                      onMouseUp={handleStop}
-                      disabled={!selectedRobot}
-                    >
-                      Base Right
-                    </button>
+                // Robot Arm Controls - Better UI
+                <div className="space-y-4">
+                  {/* Base Rotation */}
+                  <div>
+                    <label className="block text-xs font-medium text-dark-300 mb-2">Base Rotation</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('base', 'left')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowLeft size={16} />
+                      </button>
+                      <div className="flex items-center justify-center text-xs text-dark-400">Base</div>
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('base', 'right')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowRight size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      className="btn bg-secondary-600 hover:bg-secondary-700 text-white py-2 text-sm transition-colors"
-                      onMouseDown={handleTurnLeft}
-                      onMouseUp={handleStop}
-                      disabled={!selectedRobot}
-                    >
-                      Shoulder Up
-                    </button>
-                    <button 
-                      className="btn bg-secondary-600 hover:bg-secondary-700 text-white py-2 text-sm transition-colors"
-                      onMouseDown={handleTurnRight}
-                      onMouseUp={handleStop}
-                      disabled={!selectedRobot}
-                    >
-                      Shoulder Down
-                    </button>
+
+                  {/* Shoulder */}
+                  <div>
+                    <label className="block text-xs font-medium text-dark-300 mb-2">Shoulder</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('shoulder', 'up')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <div className="flex items-center justify-center text-xs text-dark-400">Shoulder</div>
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('shoulder', 'down')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <button 
-                    className="w-full btn bg-error-600 hover:bg-error-700 text-white py-2 transition-colors"
-                    onClick={handleStop}
-                    disabled={!selectedRobot}
-                  >
-                    STOP ARM
-                  </button>
+
+                  {/* Elbow */}
+                  <div>
+                    <label className="block text-xs font-medium text-dark-300 mb-2">Elbow</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('elbow', 'up')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <div className="flex items-center justify-center text-xs text-dark-400">Elbow</div>
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('elbow', 'down')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Wrist */}
+                  <div>
+                    <label className="block text-xs font-medium text-dark-300 mb-2">Wrist</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('wrist', 'left')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowLeft size={16} />
+                      </button>
+                      <div className="flex items-center justify-center text-xs text-dark-400">Wrist</div>
+                      <button 
+                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                        onMouseDown={() => handleArmJoint('wrist', 'right')}
+                        onMouseUp={handleStop}
+                        onMouseLeave={handleStop}
+                        disabled={!selectedRobot}
+                      >
+                        <ArrowRight size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                // Mobile Robot / Drone Controls
+                // Mobile Robot / Drone Controls - Original good-looking design
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div></div>
                   <button 
-                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                     onMouseDown={handleMoveForward}
                     onMouseUp={handleStop}
                     onMouseLeave={handleStop}
@@ -226,7 +299,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   <div></div>
                   
                   <button 
-                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                     onMouseDown={handleTurnLeft}
                     onMouseUp={handleStop}
                     onMouseLeave={handleStop}
@@ -237,27 +310,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                     <ArrowLeft size={20} />
                   </button>
                   <button 
-                    className="btn bg-error-600 hover:bg-error-700 text-white py-3 flex items-center justify-center transition-colors"
-                    onClick={handleStop}
-                    disabled={!selectedRobot}
-                  >
-                    STOP
-                  </button>
-                  <button 
-                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
-                    onMouseDown={handleTurnRight}
-                    onMouseUp={handleStop}
-                    onMouseLeave={handleStop}
-                    onTouchStart={handleTurnRight}
-                    onTouchEnd={handleStop}
-                    disabled={!selectedRobot}
-                  >
-                    <ArrowRight size={20} />
-                  </button>
-                  
-                  <div></div>
-                  <button 
-                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                     onMouseDown={handleMoveBackward}
                     onMouseUp={handleStop}
                     onMouseLeave={handleStop}
@@ -267,7 +320,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   >
                     <ArrowDown size={20} />
                   </button>
-                  <div></div>
+                  <button 
+                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                    onMouseDown={handleTurnRight}
+                    onMouseUp={handleStop}
+                    onMouseLeave={handleStop}
+                    onTouchStart={handleTurnRight}
+                    onTouchEnd={handleStop}
+                    disabled={!selectedRobot}
+                  >
+                    <ArrowRight size={20} />
+                  </button>
                 </div>
               )}
             </div>
