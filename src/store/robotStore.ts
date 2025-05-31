@@ -11,6 +11,7 @@ interface RobotStoreState {
   selectedRobot: RobotConfig | null;
   robotState: RobotState | null;
   environment: EnvironmentConfig | null;
+  isMoving: boolean;
   selectRobot: (config: RobotConfig) => void;
   moveRobot: (params: { direction: 'forward' | 'backward', speed: number }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
@@ -25,6 +26,7 @@ interface RobotStoreState {
 export const useRobotStore = create<RobotStoreState>((set, get) => ({
   selectedRobot: null,
   robotState: null,
+  isMoving: false,
   environment: {
     id: 'warehouse',
     name: 'Warehouse',
@@ -44,18 +46,22 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         isGrabbing: false,
         batteryLevel: 100,
         errors: [],
-      }
+      },
+      isMoving: false
     });
   },
   
   moveRobot: (params) => {
     const { direction, speed } = params;
-    const { robotState } = get();
+    const state = get();
     
-    if (!robotState) return;
+    if (!state.robotState) return;
     
-    const moveStep = 0.1 * speed;
-    const angle = robotState.rotation.y;
+    // Set moving state immediately
+    set({ isMoving: true });
+    
+    const moveStep = 0.05 * speed; // Smaller steps for smoother movement
+    const angle = state.robotState.rotation.y;
     
     // Calculate movement based on robot's rotation
     const deltaX = Math.sin(angle) * moveStep;
@@ -63,87 +69,123 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     
     const multiplier = direction === 'forward' ? 1 : -1;
     
-    set({
-      robotState: {
-        ...robotState,
-        isMoving: true,
-        position: {
-          x: robotState.position.x + (deltaX * multiplier),
-          y: robotState.position.y,
-          z: robotState.position.z + (deltaZ * multiplier),
-        }
+    // Create movement interval for continuous movement
+    const moveInterval = setInterval(() => {
+      const currentState = get();
+      if (!currentState.robotState || !currentState.isMoving) {
+        clearInterval(moveInterval);
+        return;
       }
-    });
-    
-    // Simulate battery drain
-    setTimeout(() => {
-      const currentState = get().robotState;
-      if (currentState) {
+      
+      set({
+        robotState: {
+          ...currentState.robotState,
+          isMoving: true,
+          position: {
+            x: currentState.robotState.position.x + (deltaX * multiplier),
+            y: currentState.robotState.position.y,
+            z: currentState.robotState.position.z + (deltaZ * multiplier),
+          }
+        }
+      });
+      
+      // Simulate battery drain
+      if (currentState.robotState.batteryLevel > 0) {
         set({
           robotState: {
-            ...currentState,
-            batteryLevel: Math.max(0, currentState.batteryLevel - 0.1),
+            ...currentState.robotState,
+            batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01),
           }
         });
       }
-    }, 100);
+    }, 16); // ~60fps updates
+    
+    // Store interval reference for cleanup
+    (window as any).robotMoveInterval = moveInterval;
   },
   
   rotateRobot: (params) => {
     const { direction, speed } = params;
-    const { robotState } = get();
+    const state = get();
     
-    if (!robotState) return;
+    if (!state.robotState) return;
     
-    const rotationStep = 0.1 * speed;
+    // Set moving state immediately
+    set({ isMoving: true });
+    
+    const rotationStep = 0.02 * speed; // Smaller steps for smoother rotation
     const delta = direction === 'left' ? rotationStep : -rotationStep;
     
-    set({
-      robotState: {
-        ...robotState,
-        isMoving: true,
-        rotation: {
-          ...robotState.rotation,
-          y: (robotState.rotation.y + delta) % (Math.PI * 2),
-        }
+    // Create rotation interval for continuous rotation
+    const rotateInterval = setInterval(() => {
+      const currentState = get();
+      if (!currentState.robotState || !currentState.isMoving) {
+        clearInterval(rotateInterval);
+        return;
       }
-    });
+      
+      set({
+        robotState: {
+          ...currentState.robotState,
+          isMoving: true,
+          rotation: {
+            ...currentState.robotState.rotation,
+            y: (currentState.robotState.rotation.y + delta) % (Math.PI * 2),
+          }
+        }
+      });
+    }, 16); // ~60fps updates
+    
+    // Store interval reference for cleanup
+    (window as any).robotRotateInterval = rotateInterval;
   },
   
   grabObject: () => {
-    const { robotState } = get();
+    const state = get();
     
-    if (!robotState) return;
+    if (!state.robotState) return;
     
     set({
       robotState: {
-        ...robotState,
+        ...state.robotState,
         isGrabbing: true,
       }
     });
   },
   
   releaseObject: () => {
-    const { robotState } = get();
+    const state = get();
     
-    if (!robotState) return;
+    if (!state.robotState) return;
     
     set({
       robotState: {
-        ...robotState,
+        ...state.robotState,
         isGrabbing: false,
       }
     });
   },
   
   stopRobot: () => {
-    const { robotState } = get();
+    // Clear any existing movement intervals
+    if ((window as any).robotMoveInterval) {
+      clearInterval((window as any).robotMoveInterval);
+      (window as any).robotMoveInterval = null;
+    }
     
-    if (!robotState) return;
+    if ((window as any).robotRotateInterval) {
+      clearInterval((window as any).robotRotateInterval);
+      (window as any).robotRotateInterval = null;
+    }
+    
+    const state = get();
+    
+    if (!state.robotState) return;
     
     set({
+      isMoving: false,
       robotState: {
-        ...robotState,
+        ...state.robotState,
         isMoving: false,
       }
     });
@@ -154,26 +196,26 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
   
   updateRobotPosition: (position) => {
-    const { robotState } = get();
+    const state = get();
     
-    if (!robotState) return;
+    if (!state.robotState) return;
     
     set({
       robotState: {
-        ...robotState,
+        ...state.robotState,
         position,
       }
     });
   },
   
   updateRobotRotation: (rotation) => {
-    const { robotState } = get();
+    const state = get();
     
-    if (!robotState) return;
+    if (!state.robotState) return;
     
     set({
       robotState: {
-        ...robotState,
+        ...state.robotState,
         rotation,
       }
     });
