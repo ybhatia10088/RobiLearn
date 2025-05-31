@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRobotStore } from '@/store/robotStore';
-import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand, Book } from 'lucide-react';
+import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand, Book, Zap, Target, Radar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Challenge } from '@/types/challenge.types';
 
@@ -24,11 +24,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const [speed, setSpeed] = useState(50);
   const [activeSensorTab, setActiveSensorTab] = useState('camera');
   
-  // Get available robot models
+  // Enhanced robot models with better descriptions
   const availableRobots = [
-    { id: 'arm1', name: 'Robot Arm', type: 'arm' },
-    { id: 'mobile1', name: 'Mobile Robot', type: 'mobile' },
-    { id: 'drone1', name: 'Drone', type: 'drone' },
+    { id: 'mobile1', name: 'Explorer Bot', type: 'mobile', description: 'All-terrain mobile robot for exploration and navigation' },
+    { id: 'arm1', name: 'Precision Arm', type: 'arm', description: 'Industrial robot arm for precise manipulation tasks' },
+    { id: 'drone1', name: 'Sky Scanner', type: 'drone', description: 'Aerial drone for surveillance and mapping' },
+    { id: 'spider1', name: 'Spider Walker', type: 'spider', description: 'Six-legged robot for rough terrain navigation' },
+    { id: 'tank1', name: 'Heavy Mover', type: 'tank', description: 'Tracked robot for heavy-duty operations' },
+    { id: 'humanoid1', name: 'Assistant Bot', type: 'humanoid', description: 'Bipedal humanoid robot for human interaction' },
   ];
   
   const handleMoveForward = () => {
@@ -60,16 +63,15 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     stopRobot();
   };
   
-  // New function for arm joint control
+  // Arm joint control function
   const handleArmJoint = (joint: string, direction: string) => {
     if (!selectedRobot) return;
     console.log(`Moving ${joint} ${direction}`);
     
-    // Use the existing moveRobot function but with joint-specific data
     moveRobot({ 
       direction: direction as 'forward' | 'backward', 
       speed: speed / 100,
-      joint: joint // Add joint info
+      joint: joint
     });
   };
   
@@ -81,7 +83,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
         id: robot.id,
         name: robot.name,
         type: robot.type as any,
-        description: `A ${robot.type} robot for simulation`,
+        description: robot.description,
         model: `/models/${robot.type}.glb`,
         basePosition: { x: 0, y: 0, z: 0 },
         baseRotation: { x: 0, y: 0, z: 0, w: 1 },
@@ -89,10 +91,183 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
       });
     }
   };
+
+  const getRobotIcon = (type: string) => {
+    switch (type) {
+      case 'mobile': return <Robot size={20} className="text-primary-400" />;
+      case 'arm': return <Grab size={20} className="text-secondary-400" />;
+      case 'drone': return <Zap size={20} className="text-accent-400" />;
+      case 'spider': return <Target size={20} className="text-purple-400" />;
+      case 'tank': return <Radar size={20} className="text-green-400" />;
+      case 'humanoid': return <Robot size={20} className="text-blue-400" />;
+      default: return <Robot size={20} className="text-primary-400" />;
+    }
+  };
+
+  const getControlsForRobotType = () => {
+    if (!selectedRobot) return null;
+
+    switch (selectedRobot.type) {
+      case 'arm':
+        return (
+          <div className="space-y-4">
+            {/* Base Rotation */}
+            <div>
+              <label className="block text-xs font-medium text-dark-300 mb-2">Base Rotation</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button 
+                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                  onMouseDown={() => handleArmJoint('base', 'left')}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowLeft size={16} />
+                </button>
+                <div className="flex items-center justify-center text-xs text-dark-400">Base</div>
+                <button 
+                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                  onMouseDown={() => handleArmJoint('base', 'right')}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Wrist */}
+            <div>
+              <label className="block text-xs font-medium text-dark-300 mb-2">Wrist (No 360°)</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button 
+                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                  onMouseDown={() => handleArmJoint('wrist', 'left')}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowLeft size={16} />
+                </button>
+                <div className="flex items-center justify-center text-xs text-dark-400">Wrist</div>
+                <button 
+                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                  onMouseDown={() => handleArmJoint('wrist', 'right')}
+                  onMouseUp={handleStop}
+                  onMouseLeave={handleStop}
+                  disabled={!selectedRobot}
+                >
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Gripper Controls */}
+            <div className="flex space-x-2">
+              <button 
+                className="btn bg-success-600 hover:bg-success-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
+                onClick={grabObject}
+                disabled={!selectedRobot}
+              >
+                <Grab size={18} className="mr-2" />
+                <span>Grab</span>
+              </button>
+              <button 
+                className="btn bg-warning-600 hover:bg-warning-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
+                onClick={releaseObject}
+                disabled={!selectedRobot}
+              >
+                <Hand size={18} className="mr-2" />
+                <span>Release</span>
+              </button>
+            </div>
+          </div>
+        );
+
+      default:
+        // Standard movement controls for mobile, drone, spider, tank, humanoid
+        return (
+          <div>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div></div>
+              <button 
+                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                onMouseDown={handleMoveForward}
+                onMouseUp={handleStop}
+                onMouseLeave={handleStop}
+                onTouchStart={handleMoveForward}
+                onTouchEnd={handleStop}
+                disabled={!selectedRobot}
+              >
+                <ArrowUp size={20} />
+              </button>
+              <div></div>
+              
+              <button 
+                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                onMouseDown={handleTurnLeft}
+                onMouseUp={handleStop}
+                onMouseLeave={handleStop}
+                onTouchStart={handleTurnLeft}
+                onTouchEnd={handleStop}
+                disabled={!selectedRobot}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <button 
+                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                onMouseDown={handleMoveBackward}
+                onMouseUp={handleStop}
+                onMouseLeave={handleStop}
+                onTouchStart={handleMoveBackward}
+                onTouchEnd={handleStop}
+                disabled={!selectedRobot}
+              >
+                <ArrowDown size={20} />
+              </button>
+              <button 
+                className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
+                onMouseDown={handleTurnRight}
+                onMouseUp={handleStop}
+                onMouseLeave={handleStop}
+                onTouchStart={handleTurnRight}
+                onTouchEnd={handleStop}
+                disabled={!selectedRobot}
+              >
+                <ArrowRight size={20} />
+              </button>
+            </div>
+
+            {/* Special actions for specific robot types */}
+            {(selectedRobot.type === 'spider' || selectedRobot.type === 'humanoid') && (
+              <div className="flex space-x-2 mb-4">
+                <button 
+                  className="btn bg-accent-600 hover:bg-accent-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
+                  onClick={() => console.log('Special action 1')}
+                  disabled={!selectedRobot}
+                >
+                  <Target size={18} className="mr-2" />
+                  <span>{selectedRobot.type === 'spider' ? 'Climb' : 'Wave'}</span>
+                </button>
+                <button 
+                  className="btn bg-secondary-600 hover:bg-secondary-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
+                  onClick={() => console.log('Special action 2')}
+                  disabled={!selectedRobot}
+                >
+                  <Radar size={18} className="mr-2" />
+                  <span>{selectedRobot.type === 'spider' ? 'Scan' : 'Gesture'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        );
+    }
+  };
   
   return (
     <div className="bg-dark-800 rounded-lg border border-dark-600 overflow-hidden flex flex-col h-full">
-      <div className="p-4 border-b border-dark-600 flex justify-between items-center">
+      <div className="border-b border-dark-600 p-4 flex justify-between items-center">
         <h3 className="text-lg font-semibold text-white">Control Panel</h3>
         <div className="flex space-x-2">
           <select
@@ -103,7 +278,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
             <option value="">Select Robot</option>
             {availableRobots.map(robot => (
               <option key={robot.id} value={robot.id}>
-                {robot.name}
+                {robot.name} ({robot.type})
               </option>
             ))}
           </select>
@@ -115,11 +290,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
           <div className="p-4">
             <div className="flex items-center mb-4">
               <div className="bg-primary-900 p-2 rounded-md mr-3 border border-primary-700">
-                <Robot size={20} className="text-primary-400" />
+                {getRobotIcon(selectedRobot.type)}
               </div>
               <div>
                 <h4 className="font-medium text-white">{selectedRobot.name}</h4>
                 <p className="text-sm text-dark-300">Type: {selectedRobot.type}</p>
+                <p className="text-xs text-dark-400">{selectedRobot.description}</p>
                 <p className="text-sm text-dark-300">
                   Status: <span className={isMoving ? 'text-warning-400' : 'text-success-400'}>
                     {isMoving ? 'Moving' : 'Idle'}
@@ -168,193 +344,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               />
             </div>
             
-            {/* Movement Controls */}
+            {/* Dynamic Movement Controls */}
             <div className="mb-6">
               <h4 className="text-sm font-medium text-white mb-3">
-                {selectedRobot.type === 'arm' ? 'Arm Joint Controls' : 'Movement Controls'}
+                {selectedRobot.type === 'arm' ? 'Arm Controls' : 'Movement Controls'}
               </h4>
               
-              {selectedRobot.type === 'arm' ? (
-                // Robot Arm Controls - Better UI
-                <div className="space-y-4">
-                  {/* Base Rotation */}
-                  <div>
-                    <label className="block text-xs font-medium text-dark-300 mb-2">Base Rotation</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('base', 'left')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowLeft size={16} />
-                      </button>
-                      <div className="flex items-center justify-center text-xs text-dark-400">Base</div>
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('base', 'right')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowRight size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Shoulder */}
-                  <div>
-                    <label className="block text-xs font-medium text-dark-300 mb-2">Shoulder</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('shoulder', 'up')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowUp size={16} />
-                      </button>
-                      <div className="flex items-center justify-center text-xs text-dark-400">Shoulder</div>
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('shoulder', 'down')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowDown size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Elbow */}
-                  <div>
-                    <label className="block text-xs font-medium text-dark-300 mb-2">Elbow</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('elbow', 'up')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowUp size={16} />
-                      </button>
-                      <div className="flex items-center justify-center text-xs text-dark-400">Elbow</div>
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('elbow', 'down')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowDown size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Wrist */}
-                  <div>
-                    <label className="block text-xs font-medium text-dark-300 mb-2">Wrist</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('wrist', 'left')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowLeft size={16} />
-                      </button>
-                      <div className="flex items-center justify-center text-xs text-dark-400">Wrist</div>
-                      <button 
-                        className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                        onMouseDown={() => handleArmJoint('wrist', 'right')}
-                        onMouseUp={handleStop}
-                        onMouseLeave={handleStop}
-                        disabled={!selectedRobot}
-                      >
-                        <ArrowRight size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                // Mobile Robot / Drone Controls - Original good-looking design
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div></div>
-                  <button 
-                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                    onMouseDown={handleMoveForward}
-                    onMouseUp={handleStop}
-                    onMouseLeave={handleStop}
-                    onTouchStart={handleMoveForward}
-                    onTouchEnd={handleStop}
-                    disabled={!selectedRobot}
-                  >
-                    <ArrowUp size={20} />
-                  </button>
-                  <div></div>
-                  
-                  <button 
-                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                    onMouseDown={handleTurnLeft}
-                    onMouseUp={handleStop}
-                    onMouseLeave={handleStop}
-                    onTouchStart={handleTurnLeft}
-                    onTouchEnd={handleStop}
-                    disabled={!selectedRobot}
-                  >
-                    <ArrowLeft size={20} />
-                  </button>
-                  <button 
-                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                    onMouseDown={handleMoveBackward}
-                    onMouseUp={handleStop}
-                    onMouseLeave={handleStop}
-                    onTouchStart={handleMoveBackward}
-                    onTouchEnd={handleStop}
-                    disabled={!selectedRobot}
-                  >
-                    <ArrowDown size={20} />
-                  </button>
-                  <button 
-                    className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                    onMouseDown={handleTurnRight}
-                    onMouseUp={handleStop}
-                    onMouseLeave={handleStop}
-                    onTouchStart={handleTurnRight}
-                    onTouchEnd={handleStop}
-                    disabled={!selectedRobot}
-                  >
-                    <ArrowRight size={20} />
-                  </button>
-                </div>
-              )}
+              {getControlsForRobotType()}
             </div>
-            
-            {selectedRobot.type === 'arm' && (
-              <div className="flex space-x-2 mb-6">
-                <button 
-                  className="btn bg-success-600 hover:bg-success-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                  onClick={grabObject}
-                  disabled={!selectedRobot}
-                >
-                  <Grab size={18} className="mr-2" />
-                  <span>Grab</span>
-                </button>
-                <button 
-                  className="btn bg-warning-600 hover:bg-warning-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                  onClick={releaseObject}
-                  disabled={!selectedRobot}
-                >
-                  <Hand size={18} className="mr-2" />
-                  <span>Release</span>
-                </button>
-              </div>
-            )}
             
             <div className="mb-4">
               <h4 className="font-medium text-white mb-2">Robot State</h4>
@@ -371,6 +368,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <p className="text-dark-300">Status: <span className={`${isMoving ? 'text-accent-400' : 'text-white'}`}>
                   {isMoving ? 'Moving' : 'Idle'}
                 </span></p>
+                {selectedRobot.type === 'arm' && robotState?.isGrabbing && (
+                  <p className="text-dark-300">Gripper: <span className="text-primary-400">
+                    Grabbing Object
+                  </span></p>
+                )}
               </div>
             </div>
             
@@ -401,14 +403,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   <Cpu size={24} className="text-dark-400 mx-auto mb-2" />
                   <p className="text-dark-400 text-sm">
                     {activeSensorTab === 'camera' 
-                      ? 'Camera feed will appear here' 
+                      ? `${selectedRobot.name} camera feed` 
                       : activeSensorTab === 'lidar' 
-                        ? 'Lidar data visualization' 
-                        : 'Other sensor data'}
+                        ? `${selectedRobot.name} lidar data` 
+                        : `${selectedRobot.name} sensor data`}
                   </p>
                   {robotState && (
                     <p className="text-primary-400 text-xs mt-2">
-                      Sensor data: {Math.random().toFixed(2)}m
+                      Sensor data: {(Math.random() * 10).toFixed(2)}m
                     </p>
                   )}
                 </div>
@@ -428,8 +430,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
             </motion.div>
             <h3 className="text-lg font-medium text-white mb-2">No Robot Selected</h3>
             <p className="text-dark-300 text-sm mb-4">
-              Choose a robot from the dropdown menu to begin controlling it
+              Choose from {availableRobots.length} different robot types to begin controlling
             </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {availableRobots.map((robot) => (
+                <div key={robot.id} className="flex items-center text-dark-400">
+                  {getRobotIcon(robot.type)}
+                  <span className="ml-1">{robot.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
