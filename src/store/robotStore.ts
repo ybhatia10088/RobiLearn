@@ -13,7 +13,7 @@ interface RobotStoreState {
   environment: EnvironmentConfig | null;
   isMoving: boolean;
   selectRobot: (config: RobotConfig) => void;
-  moveRobot: (params: { direction: 'forward' | 'backward', speed: number }) => void;
+  moveRobot: (params: { direction: 'forward' | 'backward', speed: number, joint?: string }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
   grabObject: () => void;
   releaseObject: () => void;
@@ -46,13 +46,14 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         isGrabbing: false,
         batteryLevel: 100,
         errors: [],
+        currentJointCommand: null, // Add this for arm control
       },
       isMoving: false
     });
   },
   
   moveRobot: (params) => {
-    const { direction, speed } = params;
+    const { direction, speed, joint } = params;
     const state = get();
     
     if (!state.robotState) return;
@@ -60,48 +61,60 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     // Set moving state immediately
     set({ isMoving: true });
     
-    const moveStep = 0.05 * speed; // Smaller steps for smoother movement
-    const angle = state.robotState.rotation.y;
-    
-    // Calculate movement based on robot's rotation
-    const deltaX = Math.sin(angle) * moveStep;
-    const deltaZ = Math.cos(angle) * moveStep;
-    
-    const multiplier = direction === 'forward' ? 1 : -1;
-    
-    // Create movement interval for continuous movement
-    const moveInterval = setInterval(() => {
-      const currentState = get();
-      if (!currentState.robotState || !currentState.isMoving) {
-        clearInterval(moveInterval);
-        return;
-      }
-      
+    // Store current joint movement for the robot model to read
+    if (joint) {
       set({
         robotState: {
-          ...currentState.robotState,
+          ...state.robotState,
           isMoving: true,
-          position: {
-            x: currentState.robotState.position.x + (deltaX * multiplier),
-            y: currentState.robotState.position.y,
-            z: currentState.robotState.position.z + (deltaZ * multiplier),
-          }
+          // Store the current joint movement command
+          currentJointCommand: { joint, direction, speed }
         }
       });
+    } else {
+      // Regular movement for mobile robots
+      const moveStep = 0.05 * speed;
+      const angle = state.robotState.rotation.y;
       
-      // Simulate battery drain
-      if (currentState.robotState.batteryLevel > 0) {
+      const deltaX = Math.sin(angle) * moveStep;
+      const deltaZ = Math.cos(angle) * moveStep;
+      
+      const multiplier = direction === 'forward' ? 1 : -1;
+      
+      // Create movement interval for continuous movement
+      const moveInterval = setInterval(() => {
+        const currentState = get();
+        if (!currentState.robotState || !currentState.isMoving) {
+          clearInterval(moveInterval);
+          return;
+        }
+        
         set({
           robotState: {
             ...currentState.robotState,
-            batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01),
+            isMoving: true,
+            position: {
+              x: currentState.robotState.position.x + (deltaX * multiplier),
+              y: currentState.robotState.position.y,
+              z: currentState.robotState.position.z + (deltaZ * multiplier),
+            }
           }
         });
-      }
-    }, 16); // ~60fps updates
-    
-    // Store interval reference for cleanup
-    (window as any).robotMoveInterval = moveInterval;
+        
+        // Simulate battery drain
+        if (currentState.robotState.batteryLevel > 0) {
+          set({
+            robotState: {
+              ...currentState.robotState,
+              batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01),
+            }
+          });
+        }
+      }, 16);
+      
+      // Store interval reference for cleanup
+      (window as any).robotMoveInterval = moveInterval;
+    }
   },
   
   rotateRobot: (params) => {
@@ -187,6 +200,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       robotState: {
         ...state.robotState,
         isMoving: false,
+        currentJointCommand: null, // Clear joint command
       }
     });
   },
