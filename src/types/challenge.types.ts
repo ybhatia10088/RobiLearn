@@ -24,12 +24,39 @@ export type ChallengeObjective = {
   description: string;
   completionCriteria: string;
   completed: boolean;
+  theory?: string;
+  hints?: string[];
 };
 
 export type ChallengeHint = {
   id: string;
   text: string;
-  unlockCost: number; // cost in points or tokens to unlock this hint
+  unlockCost: number;
+};
+
+export type TheoryExample = {
+  title: string;
+  code: string;
+  explanation: string;
+};
+
+export type TheorySection = {
+  title: string;
+  content: string;
+  video?: string;
+  examples?: TheoryExample[];
+};
+
+export type QuizQuestion = {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+};
+
+export type Theory = {
+  sections: TheorySection[];
+  quiz?: QuizQuestion[];
 };
 
 export type Challenge = {
@@ -38,10 +65,11 @@ export type Challenge = {
   description: string;
   category: ChallengeCategory;
   difficulty: DifficultyLevel;
-  estimatedTime: number; // in minutes
+  estimatedTime: number;
   objectives: ChallengeObjective[];
   hints: ChallengeHint[];
   startingCode: Record<ProgrammingMode, string>;
+  theory?: Theory;
   robotType: string;
   environmentId: string;
   unlocked: boolean;
@@ -65,7 +93,7 @@ export type UserSolution = {
   programmingMode: ProgrammingMode;
   code: string;
   completed: boolean;
-  timeSpent: number; // in seconds
+  timeSpent: number;
   attemptCount: number;
   createdAt: Date;
   updatedAt: Date;
