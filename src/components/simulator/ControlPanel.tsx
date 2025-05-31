@@ -157,66 +157,119 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
             
             {/* Movement Controls */}
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-white mb-3">Movement Controls</h4>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div></div>
-                <button 
-                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
-                  onMouseDown={handleMoveForward}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
-                  onTouchStart={handleMoveForward}
-                  onTouchEnd={handleStop}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowUp size={20} />
-                </button>
-                <div></div>
-                
-                <button 
-                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
-                  onMouseDown={handleTurnLeft}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
-                  onTouchStart={handleTurnLeft}
-                  onTouchEnd={handleStop}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <button 
-                  className="btn bg-error-600 hover:bg-error-700 text-white py-3 flex items-center justify-center transition-colors"
-                  onClick={handleStop}
-                  disabled={!selectedRobot}
-                >
-                  STOP
-                </button>
-                <button 
-                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
-                  onMouseDown={handleTurnRight}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
-                  onTouchStart={handleTurnRight}
-                  onTouchEnd={handleStop}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowRight size={20} />
-                </button>
-                
-                <div></div>
-                <button 
-                  className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
-                  onMouseDown={handleMoveBackward}
-                  onMouseUp={handleStop}
-                  onMouseLeave={handleStop}
-                  onTouchStart={handleMoveBackward}
-                  onTouchEnd={handleStop}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowDown size={20} />
-                </button>
-                <div></div>
-              </div>
+              <h4 className="text-sm font-medium text-white mb-3">
+                {selectedRobot.type === 'arm' ? 'Arm Controls' : 'Movement Controls'}
+              </h4>
+              
+              {selectedRobot.type === 'arm' ? (
+                // Robot Arm Controls
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      className="btn bg-primary-600 hover:bg-primary-700 text-white py-2 text-sm transition-colors"
+                      onMouseDown={handleMoveForward}
+                      onMouseUp={handleStop}
+                      disabled={!selectedRobot}
+                    >
+                      Base Left
+                    </button>
+                    <button 
+                      className="btn bg-primary-600 hover:bg-primary-700 text-white py-2 text-sm transition-colors"
+                      onMouseDown={handleMoveBackward}
+                      onMouseUp={handleStop}
+                      disabled={!selectedRobot}
+                    >
+                      Base Right
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      className="btn bg-secondary-600 hover:bg-secondary-700 text-white py-2 text-sm transition-colors"
+                      onMouseDown={handleTurnLeft}
+                      onMouseUp={handleStop}
+                      disabled={!selectedRobot}
+                    >
+                      Shoulder Up
+                    </button>
+                    <button 
+                      className="btn bg-secondary-600 hover:bg-secondary-700 text-white py-2 text-sm transition-colors"
+                      onMouseDown={handleTurnRight}
+                      onMouseUp={handleStop}
+                      disabled={!selectedRobot}
+                    >
+                      Shoulder Down
+                    </button>
+                  </div>
+                  <button 
+                    className="w-full btn bg-error-600 hover:bg-error-700 text-white py-2 transition-colors"
+                    onClick={handleStop}
+                    disabled={!selectedRobot}
+                  >
+                    STOP ARM
+                  </button>
+                </div>
+              ) : (
+                // Mobile Robot / Drone Controls
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div></div>
+                  <button 
+                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                    onMouseDown={handleMoveForward}
+                    onMouseUp={handleStop}
+                    onMouseLeave={handleStop}
+                    onTouchStart={handleMoveForward}
+                    onTouchEnd={handleStop}
+                    disabled={!selectedRobot}
+                  >
+                    <ArrowUp size={20} />
+                  </button>
+                  <div></div>
+                  
+                  <button 
+                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                    onMouseDown={handleTurnLeft}
+                    onMouseUp={handleStop}
+                    onMouseLeave={handleStop}
+                    onTouchStart={handleTurnLeft}
+                    onTouchEnd={handleStop}
+                    disabled={!selectedRobot}
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                  <button 
+                    className="btn bg-error-600 hover:bg-error-700 text-white py-3 flex items-center justify-center transition-colors"
+                    onClick={handleStop}
+                    disabled={!selectedRobot}
+                  >
+                    STOP
+                  </button>
+                  <button 
+                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                    onMouseDown={handleTurnRight}
+                    onMouseUp={handleStop}
+                    onMouseLeave={handleStop}
+                    onTouchStart={handleTurnRight}
+                    onTouchEnd={handleStop}
+                    disabled={!selectedRobot}
+                  >
+                    <ArrowRight size={20} />
+                  </button>
+                  
+                  <div></div>
+                  <button 
+                    className="btn bg-primary-600 hover:bg-primary-700 text-white py-3 flex items-center justify-center transition-colors"
+                    onMouseDown={handleMoveBackward}
+                    onMouseUp={handleStop}
+                    onMouseLeave={handleStop}
+                    onTouchStart={handleMoveBackward}
+                    onTouchEnd={handleStop}
+                    disabled={!selectedRobot}
+                  >
+                    <ArrowDown size={20} />
+                  </button>
+                  <div></div>
+                </div>
+              )}
             </div>
             
             {selectedRobot.type === 'arm' && (
