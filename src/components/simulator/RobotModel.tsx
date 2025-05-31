@@ -1,41 +1,32 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { RobotConfig } from '@/types/robot.types';
 import { useRobotStore } from '@/store/robotStore';
+import * as THREE from 'three';
 
 interface RobotModelProps {
   robotConfig: RobotConfig;
 }
 
-// This is a placeholder model function - in a real app, you'd load actual GLTF models
 const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const groupRef = useRef<THREE.Group>(null);
   const { robotState } = useRobotStore();
   
-  // In a real implementation, we would load the actual model file
-  // const { scene } = useGLTF(robotConfig.model);
-  
-  // Animate the robot based on its state
-  useFrame((state, delta) => {
-    if (!groupRef.current || !robotState) return;
-    
-    // Example animation - in a real app, this would be driven by the robot state
-    if (robotState.isMoving) {
-      groupRef.current.rotation.y += delta * 0.5;
+  useEffect(() => {
+    if (groupRef.current && robotState) {
+      groupRef.current.position.set(
+        robotState.position.x,
+        robotState.position.y,
+        robotState.position.z
+      );
+      
+      groupRef.current.rotation.y = robotState.rotation.y;
     }
-  });
+  }, [robotState]);
 
   return (
-    <group 
-      ref={groupRef} 
-      position={[
-        robotConfig.basePosition.x, 
-        robotConfig.basePosition.y, 
-        robotConfig.basePosition.z
-      ]}
-    >
-      {/* For demo purposes, we're rendering a simple placeholder robot */}
+    <group ref={groupRef}>
       {robotConfig.type === 'arm' ? (
         <RobotArm />
       ) : robotConfig.type === 'drone' ? (
@@ -47,7 +38,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
-// Placeholder components for different robot types
 const RobotArm: React.FC = () => {
   return (
     <group>

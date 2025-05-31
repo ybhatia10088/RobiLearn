@@ -145,6 +145,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={handleMoveForward}
                 onMouseUp={stopRobot}
                 onMouseLeave={stopRobot}
+                onTouchStart={handleMoveForward}
+                onTouchEnd={stopRobot}
               >
                 <ArrowUp size={20} />
               </button>
@@ -155,6 +157,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={handleTurnLeft}
                 onMouseUp={stopRobot}
                 onMouseLeave={stopRobot}
+                onTouchStart={handleTurnLeft}
+                onTouchEnd={stopRobot}
               >
                 <ArrowLeft size={20} />
               </button>
@@ -163,6 +167,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={handleMoveBackward}
                 onMouseUp={stopRobot}
                 onMouseLeave={stopRobot}
+                onTouchStart={handleMoveBackward}
+                onTouchEnd={stopRobot}
               >
                 <ArrowDown size={20} />
               </button>
@@ -171,6 +177,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={handleTurnRight}
                 onMouseUp={stopRobot}
                 onMouseLeave={stopRobot}
+                onTouchStart={handleTurnRight}
+                onTouchEnd={stopRobot}
               >
                 <ArrowRight size={20} />
               </button>
@@ -180,7 +188,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               <div className="flex space-x-2 mb-6">
                 <button 
                   className="btn bg-dark-700 hover:bg-dark-600 text-white py-2 flex-1 flex items-center justify-center"
-                  onClick={grabObject}
+                  onMouseDown={grabObject}
+                  onMouseUp={releaseObject}
+                  onTouchStart={grabObject}
+                  onTouchEnd={releaseObject}
                 >
                   <Grab size={18} className="mr-2" />
                   <span>Grab</span>
@@ -201,8 +212,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <p className="text-dark-300">Position: <span className="text-white">
                   {robotState ? `(${robotState.position.x.toFixed(2)}, ${robotState.position.y.toFixed(2)}, ${robotState.position.z.toFixed(2)})` : 'N/A'}
                 </span></p>
+                <p className="text-dark-300">Rotation: <span className="text-white">
+                  {robotState ? `${(robotState.rotation.y * 180 / Math.PI).toFixed(2)}°` : 'N/A'}
+                </span></p>
                 <p className="text-dark-300">Battery: <span className={`${robotState && robotState.batteryLevel > 20 ? 'text-success-400' : 'text-warning-400'}`}>
-                  {robotState ? `${robotState.batteryLevel}%` : 'N/A'}
+                  {robotState ? `${robotState.batteryLevel.toFixed(1)}%` : 'N/A'}
                 </span></p>
                 <p className="text-dark-300">Status: <span className={`${robotState && robotState.isMoving ? 'text-accent-400' : 'text-white'}`}>
                   {robotState ? (robotState.isMoving ? 'Moving' : 'Idle') : 'N/A'}

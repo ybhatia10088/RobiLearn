@@ -36,8 +36,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       selectedRobot: config,
       robotState: {
         robotId: config.id,
-        position: config.basePosition,
-        rotation: config.baseRotation,
+        position: { ...config.basePosition },
+        rotation: { ...config.baseRotation },
         jointPositions: {},
         sensorReadings: [],
         isMoving: false,
@@ -54,16 +54,23 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     
     if (!robotState) return;
     
-    const delta = direction === 'forward' ? speed : -speed;
+    const moveStep = 0.1 * speed;
+    const angle = robotState.rotation.y;
     
-    // In a real app, we'd have more sophisticated physics and movement logic
+    // Calculate movement based on robot's rotation
+    const deltaX = Math.sin(angle) * moveStep;
+    const deltaZ = Math.cos(angle) * moveStep;
+    
+    const multiplier = direction === 'forward' ? 1 : -1;
+    
     set({
       robotState: {
         ...robotState,
         isMoving: true,
         position: {
-          ...robotState.position,
-          z: robotState.position.z + delta,
+          x: robotState.position.x + (deltaX * multiplier),
+          y: robotState.position.y,
+          z: robotState.position.z + (deltaZ * multiplier),
         }
       }
     });
@@ -88,32 +95,19 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     
     if (!robotState) return;
     
-    const delta = direction === 'left' ? speed : -speed;
+    const rotationStep = 0.1 * speed;
+    const delta = direction === 'left' ? rotationStep : -rotationStep;
     
-    // This is a simplified rotation model
     set({
       robotState: {
         ...robotState,
         isMoving: true,
         rotation: {
           ...robotState.rotation,
-          y: robotState.rotation.y + delta,
+          y: (robotState.rotation.y + delta) % (Math.PI * 2),
         }
       }
     });
-    
-    // Simulate battery drain
-    setTimeout(() => {
-      const currentState = get().robotState;
-      if (currentState) {
-        set({
-          robotState: {
-            ...currentState,
-            batteryLevel: Math.max(0, currentState.batteryLevel - 0.05),
-          }
-        });
-      }
-    }, 100);
   },
   
   grabObject: () => {
@@ -127,19 +121,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         isGrabbing: true,
       }
     });
-    
-    // Simulate battery drain
-    setTimeout(() => {
-      const currentState = get().robotState;
-      if (currentState) {
-        set({
-          robotState: {
-            ...currentState,
-            batteryLevel: Math.max(0, currentState.batteryLevel - 0.2),
-          }
-        });
-      }
-    }, 100);
   },
   
   releaseObject: () => {
