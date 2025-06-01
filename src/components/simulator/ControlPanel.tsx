@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { create } from 'zustand'; // Re-import zustand if useRobotStore is defined in the same file
+import { create } from 'zustand';
 import { FaPlay, FaPause, FaArrowUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaHandPaper, FaHandRock, FaPlane, FaCloudDownloadAlt, FaUndo, FaRedo, FaBatteryFull, FaBatteryHalf, FaBatteryQuarter, FaBatteryEmpty, FaWifi, FaWifiSlash } from 'react-icons/fa';
 
-// Define types (these should ideally be in a separate '@/types/robot.types' file as you had)
-// For a single file, we'll put them here.
+// Define types
 interface Vector3 {
   x: number;
   y: number;
@@ -20,21 +19,20 @@ interface Quaternion {
 interface RobotConfig {
   id: string;
   name: string;
-  type: 'mobile' | 'arm' | 'drone' | 'spider' | 'tank' | 'humanoid'; // Added common robot types
+  type: 'mobile' | 'arm' | 'drone' | 'spider' | 'tank' | 'humanoid';
   basePosition: Vector3;
   baseRotation: Quaternion;
-  // Add other config properties as needed (e.g., joint limits for arm, max speed for mobile)
 }
 
 interface RobotState {
   robotId: string;
   position: Vector3;
   rotation: Quaternion;
-  jointPositions: { [key: string]: number }; // Dynamic for different joints
-  sensorReadings: any[]; // Placeholder
+  jointPositions: { [key: string]: number };
+  sensorReadings: any[];
   isMoving: boolean;
   isGrabbing: boolean;
-  batteryLevel: number; // 0-100
+  batteryLevel: number;
   errors: string[];
   currentJointCommand: { joint: string; direction: string; speed: number } | null;
 }
@@ -50,16 +48,15 @@ interface JointState {
   shoulder: number;
   elbow: number;
   wrist: number;
-  // Add other joints like 'gripper' if treated as a joint
 }
 
 interface RobotStoreState {
   selectedRobot: RobotConfig | null;
   robotState: RobotState | null;
   environment: EnvironmentConfig | null;
-  isMoving: boolean; // Global flag for any movement
-  moveCommands: { joint?: string; direction: string; speed: number } | null; // Unified move commands
-  jointPositions: JointState; // Actual desired joint positions
+  isMoving: boolean;
+  moveCommands: { joint?: string; direction: string; speed: number } | null;
+  jointPositions: JointState;
   selectRobot: (config: RobotConfig) => void;
   moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right' | 'up' | 'down', speed: number, joint?: string }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
@@ -72,6 +69,58 @@ interface RobotStoreState {
   updateJointPosition: (joint: keyof JointState, value: number) => void;
 }
 
-// Rest of the code remains the same...
+const ControlPanel: React.FC = () => {
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-md">
+      <div className="grid grid-cols-3 gap-4">
+        {/* Movement Controls */}
+        <div className="col-span-1 space-y-4">
+          <div className="grid grid-cols-3 gap-2">
+            <button className="p-2 bg-gray-200 rounded hover:bg-gray-300">
+              <FaArrowLeft className="mx-auto" />
+            </button>
+            <button className="p-2 bg-gray-200 rounded hover:bg-gray-300">
+              <FaArrowUp className="mx-auto" />
+            </button>
+            <button className="p-2 bg-gray-200 rounded hover:bg-gray-300">
+              <FaArrowRight className="mx-auto" />
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div></div>
+            <button className="p-2 bg-gray-200 rounded hover:bg-gray-300">
+              <FaArrowDown className="mx-auto" />
+            </button>
+            <div></div>
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="col-span-1 space-y-2">
+          <button className="w-full p-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center justify-center gap-2">
+            <FaPlay />
+            <span>Start</span>
+          </button>
+          <button className="w-full p-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center justify-center gap-2">
+            <FaPause />
+            <span>Stop</span>
+          </button>
+        </div>
+
+        {/* Status Indicators */}
+        <div className="col-span-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <FaBatteryFull className="text-green-500" />
+            <span>100%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FaWifi className="text-green-500" />
+            <span>Connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default ControlPanel;
