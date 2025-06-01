@@ -5,6 +5,8 @@ interface EnvironmentConfig {
   id: string;
   name: string;
   description: string;
+  temperature?: number;
+  humidity?: number;
 }
 
 interface JointState {
@@ -14,14 +16,22 @@ interface JointState {
   wrist: number;
 }
 
+interface PerformanceMetrics {
+  distanceTraveled: number;
+  rotations: number;
+  tasksCompleted: number;
+  batteryUsed: number;
+}
+
 interface RobotStoreState {
   selectedRobot: RobotConfig | null;
   robotState: RobotState | null;
   environment: EnvironmentConfig | null;
   isMoving: boolean;
   jointPositions: JointState;
+  performance: PerformanceMetrics;
   selectRobot: (config: RobotConfig) => void;
-  moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: string }) => void;
+  moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: keyof JointState }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
   grabObject: () => void;
   releaseObject: () => void;
@@ -46,8 +56,16 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     id: 'warehouse',
     name: 'Warehouse',
     description: 'A warehouse environment with shelves, boxes, and robots.',
+    temperature: 22,
+    humidity: 45,
   },
-  
+  performance: {
+    distanceTraveled: 0,
+    rotations: 0,
+    tasksCompleted: 0,
+    batteryUsed: 0,
+  },
+
   selectRobot: (config) => {
     set({ 
       selectedRobot: config,
@@ -69,125 +87,131 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         shoulder: 0,
         elbow: 0,
         wrist: 0
+      },
+      performance: {
+        distanceTraveled: 0,
+        rotations: 0,
+        tasksCompleted: 0,
+        batteryUsed: 0,
       }
     });
   },
-  
-  moveRobot: (params) => {
-    const { direction, speed, joint } = params;
+
+  moveRobot: ({ direction, speed, joint }) => {
     const state = get();
-    
     if (!state.robotState) return;
-    
-    // Clear any existing movement intervals
+
     if ((window as any).robotMoveInterval) {
       clearInterval((window as any).robotMoveInterval);
     }
-    
+
     set({ isMoving: true });
-    
-    // Handle joint movement for robotic arm
+
     if (state.selectedRobot?.type === 'arm' && joint) {
-      const currentPos = state.jointPositions[joint as keyof JointState];
+      const currentPos = state.jointPositions[joint];
       const step = (direction === 'left' || direction === 'backward') ? -0.05 : 0.05;
-      
-      // Update joint position with limits
-      const newPos = currentPos + step;
-      const limits = {
+
+      const limits: Record<keyof JointState, { min: number, max: number }> = {
         base: { min: -Math.PI, max: Math.PI },
-        shoulder: { min: -Math.PI/2, max: Math.PI/4 },
-        elbow: { min: -Math.PI/2, max: Math.PI/2 },
-        wrist: { min: -Math.PI, max: Math.PI }
+        shoulder: { min: -Math.PI / 2, max: Math.PI / 4 },
+        elbow: { min: -Math.PI / 2, max: Math.PI / 2 },
+        wrist: { min: -Math.PI, max: Math.PI },
       };
-      
-      const limitedPos = Math.max(
-        limits[joint as keyof typeof limits].min,
-        Math.min(newPos, limits[joint as keyof typeof limits].max)
-      );
-      
+
+      const newPos = currentPos + step;
+      const clampedPos = Math.max(limits[joint].min, Math.min(newPos, limits[joint].max));
+
       set((state) => ({
         jointPositions: {
           ...state.jointPositions,
-          [joint]: limitedPos
+          [joint]: clampedPos,
         }
       }));
-      
       return;
     }
-    
-    // Regular movement for mobile robots
+
     if (state.selectedRobot?.type !== 'arm') {
       const moveStep = 0.05 * speed;
       const angle = state.robotState.rotation.y;
-      
       const deltaX = Math.sin(angle) * moveStep;
       const deltaZ = Math.cos(angle) * moveStep;
-      
       const multiplier = direction === 'forward' ? 1 : -1;
-      
+
       const moveInterval = setInterval(() => {
         const currentState = get();
         if (!currentState.robotState || !currentState.isMoving) {
           clearInterval(moveInterval);
           return;
         }
-        
+
+        const newPosition = {
+          x: currentState.robotState.position.x + (deltaX * multiplier),
+          y: currentState.robotState.position.y,
+          z: currentState.robotState.position.z + (deltaZ * multiplier),
+        };
+
+        const distance = Math.sqrt(deltaX ** 2 + deltaZ ** 2);
+
         set({
           robotState: {
             ...currentState.robotState,
             isMoving: true,
-            position: {
-              x: currentState.robotState.position.x + (deltaX * multiplier),
-              y: currentState.robotState.position.y,
-              z: currentState.robotState.position.z + (deltaZ * multiplier),
-            },
-            batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01)
+            position: newPosition,
+            batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01),
+          },
+          performance: {
+            ...currentState.performance,
+            distanceTraveled: currentState.performance.distanceTraveled + distance,
+            batteryUsed: currentState.performance.batteryUsed + 0.01,
           }
         });
       }, 16);
-      
+
       (window as any).robotMoveInterval = moveInterval;
     }
   },
-  
-  rotateRobot: (params) => {
-    const { direction, speed } = params;
+
+  rotateRobot: ({ direction, speed }) => {
     const state = get();
-    
     if (!state.robotState || state.selectedRobot?.type === 'arm') return;
-    
+
     if ((window as any).robotRotateInterval) {
       clearInterval((window as any).robotRotateInterval);
     }
-    
+
     set({ isMoving: true });
-    
-    const rotationStep = 0.02 * speed;
-    const delta = direction === 'left' ? rotationStep : -rotationStep;
-    
+    const delta = direction === 'left' ? 0.02 * speed : -0.02 * speed;
+
     const rotateInterval = setInterval(() => {
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
         clearInterval(rotateInterval);
         return;
       }
-      
+
+      const newY = (currentState.robotState.rotation.y + delta) % (Math.PI * 2);
+
       set({
         robotState: {
           ...currentState.robotState,
           isMoving: true,
           rotation: {
             ...currentState.robotState.rotation,
-            y: (currentState.robotState.rotation.y + delta) % (Math.PI * 2),
+            y: newY,
           },
-          batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.005)
+          batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.005),
+        },
+        performance: {
+          ...currentState.performance,
+          rotations: currentState.performance.rotations + 1,
+          batteryUsed: currentState.performance.batteryUsed + 0.005,
         }
       });
     }, 16);
-    
+
     (window as any).robotRotateInterval = rotateInterval;
   },
-  
+
   grabObject: () => {
     const state = get();
     if (!state.robotState) return;
@@ -198,7 +222,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       }
     });
   },
-  
+
   releaseObject: () => {
     const state = get();
     if (!state.robotState) return;
@@ -209,21 +233,21 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       }
     });
   },
-  
+
   stopRobot: () => {
     if ((window as any).robotMoveInterval) {
       clearInterval((window as any).robotMoveInterval);
       (window as any).robotMoveInterval = null;
     }
-    
+
     if ((window as any).robotRotateInterval) {
       clearInterval((window as any).robotRotateInterval);
       (window as any).robotRotateInterval = null;
     }
-    
+
     const state = get();
     if (!state.robotState) return;
-    
+
     set({
       isMoving: false,
       robotState: {
@@ -233,39 +257,27 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       }
     });
   },
-  
-  setEnvironment: (config) => {
-    set({ environment: config });
-  },
-  
+
+  setEnvironment: (config) => set({ environment: config }),
+
   updateRobotPosition: (position) => {
     const state = get();
     if (!state.robotState) return;
-    set({
-      robotState: {
-        ...state.robotState,
-        position,
-      }
-    });
+    set({ robotState: { ...state.robotState, position } });
   },
-  
+
   updateRobotRotation: (rotation) => {
     const state = get();
     if (!state.robotState) return;
-    set({
-      robotState: {
-        ...state.robotState,
-        rotation,
-      }
-    });
+    set({ robotState: { ...state.robotState, rotation } });
   },
-  
+
   updateJointPosition: (joint, value) => {
     set((state) => ({
       jointPositions: {
         ...state.jointPositions,
-        [joint]: value
-      }
+        [joint]: value,
+      },
     }));
   },
 }));
