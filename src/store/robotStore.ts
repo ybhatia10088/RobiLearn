@@ -66,7 +66,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       clearInterval((window as any).robotMoveInterval);
     }
     
-    // Set moving state immediately
+    // Set moving state and commands immediately
     set({ 
       isMoving: true,
       moveCommands: joint ? { joint, direction, speed } : null
