@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRobotStore } from '@/store/robotStore';
 import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand, Book, Zap, Target, Radar } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -34,58 +34,41 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     { id: 'tank1', name: 'Heavy Mover', type: 'tank', description: 'Tracked robot for heavy-duty operations' },
     { id: 'humanoid1', name: 'Assistant Bot', type: 'humanoid', description: 'Bipedal humanoid robot for human interaction' },
   ];
-
-  // Cleanup effect for movement intervals
-  useEffect(() => {
-    return () => {
-      if ((window as any).robotMoveInterval) {
-        clearInterval((window as any).robotMoveInterval);
-      }
-      if ((window as any).robotRotateInterval) {
-        clearInterval((window as any).robotRotateInterval);
-      }
-    };
-  }, []);
   
   // Fixed movement handlers with proper event handling
   const handleMoveStart = (direction: 'forward' | 'backward') => {
     if (!selectedRobot) return;
+    console.log(`Moving ${direction} with speed:`, speed / 100);
     setIsPressed(direction);
     moveRobot({ direction, speed: speed / 100 });
   };
   
   const handleMoveEnd = () => {
+    console.log('Stopping robot movement');
     setIsPressed(null);
     stopRobot();
   };
   
   const handleRotateStart = (direction: 'left' | 'right') => {
     if (!selectedRobot) return;
+    console.log(`Turning ${direction} with speed:`, speed / 100);
     setIsPressed(direction);
     rotateRobot({ direction, speed: speed / 100 });
   };
   
   const handleRotateEnd = () => {
+    console.log('Stopping robot rotation');
     setIsPressed(null);
     stopRobot();
   };
-
-  // Touch event handlers for mobile support
-  const handleTouchStart = (e: React.TouchEvent, action: () => void) => {
-    e.preventDefault(); // Prevent default touch behavior
-    action();
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault(); // Prevent default touch behavior
-    handleMoveEnd();
-  };
   
   // Arm joint control function
-  const handleArmJoint = (joint: string, direction: 'forward' | 'backward' | 'left' | 'right') => {
+  const handleArmJoint = (joint: string, direction: string) => {
     if (!selectedRobot) return;
+    console.log(`Moving ${joint} ${direction}`);
+    
     moveRobot({ 
-      direction, 
+      direction: direction as 'forward' | 'backward', 
       speed: speed / 100,
       joint: joint
     });
@@ -94,6 +77,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const handleRobotSelect = (robotId: string) => {
     const robot = availableRobots.find(r => r.id === robotId);
     if (robot) {
+      console.log('Selecting robot:', robot);
       selectRobot({
         id: robot.id,
         name: robot.name,
@@ -114,9 +98,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     switch (selectedRobot.type) {
       case 'spider':
         console.log('Spider climbing action');
+        // Trigger climb animation
         break;
       case 'humanoid':
         console.log('Humanoid waving action');
+        // Trigger wave gesture
         break;
       case 'tank':
         console.log('Tank special weapon action');
@@ -135,9 +121,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     switch (selectedRobot.type) {
       case 'spider':
         console.log('Spider scanning action');
+        // Trigger scan animation
         break;
       case 'humanoid':
         console.log('Humanoid gesture action');
+        // Trigger custom gesture
         break;
       case 'tank':
         console.log('Tank defensive action');
@@ -178,8 +166,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   onMouseDown={() => handleArmJoint('base', 'left')}
                   onMouseUp={handleMoveEnd}
                   onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('base', 'left'))}
-                  onTouchEnd={handleTouchEnd}
+                  onTouchStart={() => handleArmJoint('base', 'left')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowLeft size={16} />
@@ -190,8 +178,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   onMouseDown={() => handleArmJoint('base', 'right')}
                   onMouseUp={handleMoveEnd}
                   onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('base', 'right'))}
-                  onTouchEnd={handleTouchEnd}
+                  onTouchStart={() => handleArmJoint('base', 'right')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowRight size={16} />
@@ -199,77 +187,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               </div>
             </div>
 
-            {/* Shoulder */}
-            <div>
-              <label className="block text-xs font-medium text-dark-300 mb-2">Shoulder</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('shoulder', 'backward')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('shoulder', 'backward'))}
-                  onTouchEnd={handleTouchEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowDown size={16} />
-                </button>
-                <div className="flex items-center justify-center text-xs text-dark-400">Shoulder</div>
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('shoulder', 'forward')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('shoulder', 'forward'))}
-                  onTouchEnd={handleTouchEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowUp size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Elbow */}
-            <div>
-              <label className="block text-xs font-medium text-dark-300 mb-2">Elbow</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('elbow', 'backward')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('elbow', 'backward'))}
-                  onTouchEnd={handleTouchEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowDown size={16} />
-                </button>
-                <div className="flex items-center justify-center text-xs text-dark-400">Elbow</div>
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('elbow', 'forward')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('elbow', 'forward'))}
-                  onTouchEnd={handleTouchEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowUp size={16} />
-                </button>
-              </div>
-            </div>
-
             {/* Wrist */}
             <div>
-              <label className="block text-xs font-medium text-dark-300 mb-2">Wrist</label>
+              <label className="block text-xs font-medium text-dark-300 mb-2">Wrist (No 360°)</label>
               <div className="grid grid-cols-3 gap-2">
                 <button 
                   className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
                   onMouseDown={() => handleArmJoint('wrist', 'left')}
                   onMouseUp={handleMoveEnd}
                   onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('wrist', 'left'))}
-                  onTouchEnd={handleTouchEnd}
+                  onTouchStart={() => handleArmJoint('wrist', 'left')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowLeft size={16} />
@@ -280,8 +208,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   onMouseDown={() => handleArmJoint('wrist', 'right')}
                   onMouseUp={handleMoveEnd}
                   onMouseLeave={handleMoveEnd}
-                  onTouchStart={(e) => handleTouchStart(e, () => handleArmJoint('wrist', 'right'))}
-                  onTouchEnd={handleTouchEnd}
+                  onTouchStart={() => handleArmJoint('wrist', 'right')}
+                  onTouchEnd={handleMoveEnd}
                   disabled={!selectedRobot}
                 >
                   <ArrowRight size={16} />
@@ -324,8 +252,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleMoveStart('forward')}
                 onMouseUp={handleMoveEnd}
                 onMouseLeave={handleMoveEnd}
-                onTouchStart={(e) => handleTouchStart(e, () => handleMoveStart('forward'))}
-                onTouchEnd={handleTouchEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleMoveStart('forward');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleMoveEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowUp size={20} />
@@ -339,8 +273,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleRotateStart('left')}
                 onMouseUp={handleRotateEnd}
                 onMouseLeave={handleRotateEnd}
-                onTouchStart={(e) => handleTouchStart(e, () => handleRotateStart('left'))}
-                onTouchEnd={handleTouchEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleRotateStart('left');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleRotateEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowLeft size={20} />
@@ -352,8 +292,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleMoveStart('backward')}
                 onMouseUp={handleMoveEnd}
                 onMouseLeave={handleMoveEnd}
-                onTouchStart={(e) => handleTouchStart(e, () => handleMoveStart('backward'))}
-                onTouchEnd={handleTouchEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleMoveStart('backward');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleMoveEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowDown size={20} />
@@ -365,8 +311,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleRotateStart('right')}
                 onMouseUp={handleRotateEnd}
                 onMouseLeave={handleRotateEnd}
-                onTouchStart={(e) => handleTouchStart(e, () => handleRotateStart('right'))}
-                onTouchEnd={handleTouchEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleRotateStart('right');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleRotateEnd();
+                }}
                 disabled={!selectedRobot}
               >
                 <ArrowRight size={20} />
@@ -408,9 +360,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
         );
     }
   };
-
+  
   return (
-    <div className="bg-dark-800 rounded-lg border border-dark-600 h-full flex flex-col">
+    <div className="bg-dark-800 rounded-lg border border-dark-600 overflow-hidden flex flex-col h-full">
       <div className="border-b border-dark-600 p-4 flex justify-between items-center">
         <h3 className="text-lg font-semibold text-white">Control Panel</h3>
         <div className="flex space-x-2">
