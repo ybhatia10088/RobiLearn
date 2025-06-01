@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Play, PlusCircle, X, ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
 import { motion, Reorder } from 'framer-motion';
+import { useRobotStore } from '@/store/robotStore';
 
 type BlockType = 'motion' | 'sensor' | 'logic' | 'action';
 
