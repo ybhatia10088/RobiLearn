@@ -58,6 +58,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     
     if (!state.robotState) return;
     
+    // Clear any existing movement intervals
+    if ((window as any).robotMoveInterval) {
+      clearInterval((window as any).robotMoveInterval);
+    }
+    
     // Set moving state immediately
     set({ isMoving: true });
     
@@ -97,20 +102,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
                 x: currentState.robotState.position.x + (deltaX * multiplier),
                 y: currentState.robotState.position.y,
                 z: currentState.robotState.position.z + (deltaZ * multiplier),
-              }
+              },
+              batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01)
             }
           });
-          
-          // Simulate battery drain
-          if (currentState.robotState.batteryLevel > 0) {
-            set({
-              robotState: {
-                ...currentState.robotState,
-                batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01),
-              }
-            });
-          }
-        }, 16);
+        }, 16); // 60fps update rate
         
         // Store interval reference for cleanup
         (window as any).robotMoveInterval = moveInterval;
@@ -123,6 +119,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     const state = get();
     
     if (!state.robotState || state.selectedRobot?.type === 'arm') return;
+    
+    // Clear any existing rotation intervals
+    if ((window as any).robotRotateInterval) {
+      clearInterval((window as any).robotRotateInterval);
+    }
     
     // Set moving state immediately
     set({ isMoving: true });
@@ -145,10 +146,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           rotation: {
             ...currentState.robotState.rotation,
             y: (currentState.robotState.rotation.y + delta) % (Math.PI * 2),
-          }
+          },
+          batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.005)
         }
       });
-    }, 16);
+    }, 16); // 60fps update rate
     
     // Store interval reference for cleanup
     (window as any).robotRotateInterval = rotateInterval;
@@ -156,9 +158,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   
   grabObject: () => {
     const state = get();
-    
     if (!state.robotState) return;
-    
     set({
       robotState: {
         ...state.robotState,
@@ -169,9 +169,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   
   releaseObject: () => {
     const state = get();
-    
     if (!state.robotState) return;
-    
     set({
       robotState: {
         ...state.robotState,
@@ -193,7 +191,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     }
     
     const state = get();
-    
     if (!state.robotState) return;
     
     set({
@@ -212,9 +209,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   
   updateRobotPosition: (position) => {
     const state = get();
-    
     if (!state.robotState) return;
-    
     set({
       robotState: {
         ...state.robotState,
@@ -225,9 +220,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   
   updateRobotRotation: (rotation) => {
     const state = get();
-    
     if (!state.robotState) return;
-    
     set({
       robotState: {
         ...state.robotState,

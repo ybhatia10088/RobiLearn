@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRobotStore } from '@/store/robotStore';
 import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand, Book, Zap, Target, Radar } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -34,39 +34,56 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     { id: 'tank1', name: 'Heavy Mover', type: 'tank', description: 'Tracked robot for heavy-duty operations' },
     { id: 'humanoid1', name: 'Assistant Bot', type: 'humanoid', description: 'Bipedal humanoid robot for human interaction' },
   ];
+
+  // Cleanup effect for movement intervals
+  useEffect(() => {
+    return () => {
+      if ((window as any).robotMoveInterval) {
+        clearInterval((window as any).robotMoveInterval);
+      }
+      if ((window as any).robotRotateInterval) {
+        clearInterval((window as any).robotRotateInterval);
+      }
+    };
+  }, []);
   
   // Fixed movement handlers with proper event handling
   const handleMoveStart = (direction: 'forward' | 'backward') => {
     if (!selectedRobot) return;
-    console.log(`Moving ${direction} with speed:`, speed / 100);
     setIsPressed(direction);
     moveRobot({ direction, speed: speed / 100 });
   };
   
   const handleMoveEnd = () => {
-    console.log('Stopping robot movement');
     setIsPressed(null);
     stopRobot();
   };
   
   const handleRotateStart = (direction: 'left' | 'right') => {
     if (!selectedRobot) return;
-    console.log(`Turning ${direction} with speed:`, speed / 100);
     setIsPressed(direction);
     rotateRobot({ direction, speed: speed / 100 });
   };
   
   const handleRotateEnd = () => {
-    console.log('Stopping robot rotation');
     setIsPressed(null);
     stopRobot();
+  };
+
+  // Touch event handlers for mobile support
+  const handleTouchStart = (e: React.TouchEvent, action: () => void) => {
+    e.preventDefault(); // Prevent default touch behavior
+    action();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent default touch behavior
+    handleMoveEnd();
   };
   
   // Arm joint control function
   const handleArmJoint = (joint: string, direction: string) => {
     if (!selectedRobot) return;
-    console.log(`Moving ${joint} ${direction}`);
-    
     moveRobot({ 
       direction: direction as 'forward' | 'backward', 
       speed: speed / 100,
@@ -77,7 +94,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const handleRobotSelect = (robotId: string) => {
     const robot = availableRobots.find(r => r.id === robotId);
     if (robot) {
-      console.log('Selecting robot:', robot);
       selectRobot({
         id: robot.id,
         name: robot.name,
@@ -252,14 +268,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleMoveStart('forward')}
                 onMouseUp={handleMoveEnd}
                 onMouseLeave={handleMoveEnd}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  handleMoveStart('forward');
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  handleMoveEnd();
-                }}
+                onTouchStart={(e) => handleTouchStart(e, () => handleMoveStart('forward'))}
+                onTouchEnd={handleTouchEnd}
                 disabled={!selectedRobot}
               >
                 <ArrowUp size={20} />
@@ -273,14 +283,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleRotateStart('left')}
                 onMouseUp={handleRotateEnd}
                 onMouseLeave={handleRotateEnd}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  handleRotateStart('left');
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  handleRotateEnd();
-                }}
+                onTouchStart={(e) => handleTouchStart(e, () => handleRotateStart('left'))}
+                onTouchEnd={handleTouchEnd}
                 disabled={!selectedRobot}
               >
                 <ArrowLeft size={20} />
@@ -292,14 +296,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleMoveStart('backward')}
                 onMouseUp={handleMoveEnd}
                 onMouseLeave={handleMoveEnd}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  handleMoveStart('backward');
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  handleMoveEnd();
-                }}
+                onTouchStart={(e) => handleTouchStart(e, () => handleMoveStart('backward'))}
+                onTouchEnd={handleTouchEnd}
                 disabled={!selectedRobot}
               >
                 <ArrowDown size={20} />
@@ -311,14 +309,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 onMouseDown={() => handleRotateStart('right')}
                 onMouseUp={handleRotateEnd}
                 onMouseLeave={handleRotateEnd}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  handleRotateStart('right');
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  handleRotateEnd();
-                }}
+                onTouchStart={(e) => handleTouchStart(e, () => handleRotateStart('right'))}
+                onTouchEnd={handleTouchEnd}
                 disabled={!selectedRobot}
               >
                 <ArrowRight size={20} />
@@ -360,9 +352,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
         );
     }
   };
-  
+
   return (
-    <div className="bg-dark-800 rounded-lg border border-dark-600 overflow-hidden flex flex-col h-full">
+    <div className="bg-dark-800 rounded-lg border border-dark-600 h-full flex flex-col">
       <div className="border-b border-dark-600 p-4 flex justify-between items-center">
         <h3 className="text-lg font-semibold text-white">Control Panel</h3>
         <div className="flex space-x-2">

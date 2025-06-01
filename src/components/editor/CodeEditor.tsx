@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, XCircle, Save, Trash2 } from 'lucide-react';
 import { useRobotStore } from '@/store/robotStore';
 import { motion } from 'framer-motion';
@@ -37,12 +37,32 @@ console.log(sensorData);
   ]);
   
   const [isRunning, setIsRunning] = useState(false);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (initialCode) {
       setCode(initialCode);
     }
   }, [initialCode]);
+
+  // Handle tab key in the editor
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = e.currentTarget.selectionStart;
+      const end = e.currentTarget.selectionEnd;
+      const spaces = '  '; // 2 spaces for indentation
+      
+      setCode(code.substring(0, start) + spaces + code.substring(end));
+      
+      // Set cursor position after indentation
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.selectionStart = editorRef.current.selectionEnd = start + 2;
+        }
+      }, 0);
+    }
+  };
   
   const handleRunCode = () => {
     if (!selectedRobot) {
@@ -115,9 +135,11 @@ console.log(sensorData);
       <div className="flex-1 flex flex-col md:flex-row">
         <div className="flex-1 border-b md:border-b-0 md:border-r border-dark-600">
           <textarea
+            ref={editorRef}
             className="w-full h-full resize-none outline-none bg-dark-900 text-white p-4 font-mono text-sm"
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleKeyDown}
             spellCheck={false}
           />
         </div>
