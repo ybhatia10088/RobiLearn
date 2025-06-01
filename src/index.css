@@ -4,7 +4,7 @@
 
 :root {
   --header-height: 64px;
-  --footer-height: 48px;
+  --footer-height: 40px;
 }
 
 @layer base {
@@ -176,4 +176,21 @@
 
 .block-action {
   @apply bg-accent-900 border-accent-500 hover:shadow-glow;
+}
+
+/* Layout utilities */
+.page-container {
+  @apply min-h-screen flex flex-col;
+}
+
+.main-content {
+  @apply flex-1 flex flex-col;
+}
+
+.content-wrapper {
+  @apply flex-1 overflow-hidden;
+}
+
+.scrollable-content {
+  @apply overflow-y-auto;
 }
