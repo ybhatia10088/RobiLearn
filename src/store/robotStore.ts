@@ -7,12 +7,20 @@ interface EnvironmentConfig {
   description: string;
 }
 
+interface JointState {
+  base: number;
+  shoulder: number;
+  elbow: number;
+  wrist: number;
+}
+
 interface RobotStoreState {
   selectedRobot: RobotConfig | null;
   robotState: RobotState | null;
   environment: EnvironmentConfig | null;
   isMoving: boolean;
   moveCommands: { joint: string; direction: string; speed: number } | null;
+  jointPositions: JointState;
   selectRobot: (config: RobotConfig) => void;
   moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: string }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
@@ -22,6 +30,7 @@ interface RobotStoreState {
   setEnvironment: (config: EnvironmentConfig) => void;
   updateRobotPosition: (position: Vector3) => void;
   updateRobotRotation: (rotation: Quaternion) => void;
+  updateJointPosition: (joint: keyof JointState, value: number) => void;
 }
 
 export const useRobotStore = create<RobotStoreState>((set, get) => ({
@@ -29,6 +38,12 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   robotState: null,
   isMoving: false,
   moveCommands: null,
+  jointPositions: {
+    base: 0,
+    shoulder: 0,
+    elbow: 0,
+    wrist: 0
+  },
   environment: {
     id: 'warehouse',
     name: 'Warehouse',
@@ -51,7 +66,13 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         currentJointCommand: null,
       },
       isMoving: false,
-      moveCommands: null
+      moveCommands: null,
+      jointPositions: {
+        base: 0,
+        shoulder: 0,
+        elbow: 0,
+        wrist: 0
+      }
     });
   },
   
@@ -106,6 +127,19 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       
       // Store interval reference for cleanup
       (window as any).robotMoveInterval = moveInterval;
+    } else if (joint) {
+      // Handle joint movement
+      const currentJointPos = state.jointPositions[joint as keyof JointState] || 0;
+      const jointStep = direction === 'left' || direction === 'backward' ? -0.1 : 0.1;
+      const newJointPos = currentJointPos + jointStep;
+      
+      // Update joint position
+      set((state) => ({
+        jointPositions: {
+          ...state.jointPositions,
+          [joint]: newJointPos
+        }
+      }));
     }
   },
   
@@ -223,5 +257,14 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         rotation,
       }
     });
+  },
+  
+  updateJointPosition: (joint, value) => {
+    set((state) => ({
+      jointPositions: {
+        ...state.jointPositions,
+        [joint]: value
+      }
+    }));
   },
 }));
