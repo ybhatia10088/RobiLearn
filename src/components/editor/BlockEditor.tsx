@@ -135,7 +135,7 @@ const BlockEditor: React.FC = () => {
 
         case 'Turn Left':
         case 'Turn Right': {
-          const duration = (angle / speed) * 1000;
+          const duration = 1000; // fixed 1s rotation for realistic turn
           await rotateRobot({
             direction: block.name === 'Turn Left' ? 'left' : 'right',
             speed
