@@ -111,7 +111,9 @@ const BlockEditor: React.FC = () => {
   const runProgram = async () => {
     const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
 
-    for (const block of blocks) {
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      console.log(`Executing block #${i + 1}:`, block.name);
       const speed = block.params.speed || 50;
       const distance = block.params.distance || 10;
       const angle = block.params.angle || 90;
@@ -165,6 +167,7 @@ const BlockEditor: React.FC = () => {
           break;
       }
 
+      console.log(`Finished block #${i + 1}, moving to next...`);
       await smoothDelay(300); // Delay between blocks
     }
 
