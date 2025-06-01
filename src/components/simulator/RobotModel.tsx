@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RobotConfig } from '@/types/robot.types';
 import { useRobotStore } from '@/store/robotStore';
@@ -15,447 +15,762 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const armBaseRef = useRef<THREE.Group>();
   const armSegment1Ref = useRef<THREE.Group>();
   const armSegment2Ref = useRef<THREE.Group>();
+  const armWristRef = useRef<THREE.Group>();
   const gripperRef = useRef<THREE.Group>();
   const propellersRef = useRef<THREE.Group[]>([]);
   
-  const { robotState } = useRobotStore();
+  const { robotState, moveCommands } = useRobotStore();
   
-  // Track wheel rotation for realistic movement
+  // Enhanced state management for realistic movements
+  const [armAngles, setArmAngles] = useState({
+    base: 0,
+    shoulder: 0,
+    elbow: 0,
+    wrist: 0
+  });
+  
   const wheelRotation = useRef(0);
   const prevPosition = useRef(new THREE.Vector3());
+  const velocity = useRef(new THREE.Vector3());
+  const angularVelocity = useRef(0);
 
-  // Create robot models based on type
-  const RobotGeometry = () => {
-    switch (robotConfig.type) {
-      case 'mobile':
-        return (
-          <>
-            {/* Main chassis - lower and more realistic */}
-            <mesh castShadow receiveShadow position={[0, 0.08, 0]}>
-              <boxGeometry args={[0.4, 0.12, 0.6]} />
-              <meshStandardMaterial color="#e2e8f0" metalness={0.3} roughness={0.7} />
-            </mesh>
+  // Physics constants
+  const PHYSICS = {
+    acceleration: 0.02,
+    deceleration: 0.95,
+    maxSpeed: 0.05,
+    wheelRadius: 0.14,
+    armSpeed: 0.8,
+    droneHoverAmplitude: 0.008,
+    droneHoverSpeed: 2.5
+  };
 
-            {/* Side panels for structural detail */}
-            <mesh castShadow position={[-0.21, 0.08, 0]}>
-              <boxGeometry args={[0.02, 0.12, 0.55]} />
-              <meshStandardMaterial color="#cbd5e1" metalness={0.4} roughness={0.6} />
-            </mesh>
-            <mesh castShadow position={[0.21, 0.08, 0]}>
-              <boxGeometry args={[0.02, 0.12, 0.55]} />
-              <meshStandardMaterial color="#cbd5e1" metalness={0.4} roughness={0.6} />
-            </mesh>
+  // Enhanced Mobile Robot
+  const MobileRobotGeometry = () => (
+    <>
+      {/* Main chassis - more sophisticated design */}
+      <mesh castShadow receiveShadow position={[0, 0.1, 0]}>
+        <boxGeometry args={[0.5, 0.15, 0.7]} />
+        <meshStandardMaterial 
+          color="#e2e8f0" 
+          metalness={0.4} 
+          roughness={0.6}
+          envMapIntensity={1}
+        />
+      </mesh>
 
-            {/* Top sensor platform */}
-            <mesh castShadow position={[0, 0.18, 0.2]}>
-              <boxGeometry args={[0.15, 0.04, 0.15]} />
-              <meshStandardMaterial color="#94a3b8" metalness={0.5} roughness={0.5} />
-            </mesh>
+      {/* Chassis reinforcement frame */}
+      <mesh castShadow position={[0, 0.1, 0]}>
+        <boxGeometry args={[0.52, 0.02, 0.72]} />
+        <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
+      </mesh>
 
-            {/* Sensor array */}
-            <group position={[0, 0.22, 0.27]}>
-              {/* Main sensor housing */}
-              <mesh castShadow>
-                <boxGeometry args={[0.12, 0.06, 0.08]} />
-                <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-              </mesh>
-              
-              {/* Individual sensors */}
-              {[-0.03, 0, 0.03].map((x, i) => (
-                <mesh key={i} castShadow position={[x, 0, 0.04]}>
-                  <cylinderGeometry args={[0.015, 0.015, 0.02, 16]} />
-                  <meshStandardMaterial 
-                    color={i === 1 ? "#3b82f6" : "#1e293b"} 
-                    metalness={0.8} 
-                    roughness={0.2} 
-                  />
-                </mesh>
-              ))}
-            </group>
+      {/* Side protection panels */}
+      {[-0.26, 0.26].map((x, i) => (
+        <mesh key={i} castShadow position={[x, 0.1, 0]}>
+          <boxGeometry args={[0.02, 0.15, 0.65]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
+        </mesh>
+      ))}
 
-            {/* Left wheel assembly */}
-            <group ref={leftWheelRef} position={[-0.22, 0.08, 0]}>
-              {/* Wheel hub */}
-              <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.08, 0.08, 0.06, 32]} />
-                <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-              </mesh>
-              
-              {/* Tire */}
-              <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.12, 0.12, 0.04, 32]} />
-                <meshStandardMaterial color="#1f2937" metalness={0.1} roughness={0.9} />
-              </mesh>
-              
-              {/* Tire treads */}
-              {[...Array(12)].map((_, i) => (
-                <mesh key={i} castShadow rotation={[0, 0, Math.PI / 2]} position={[
-                  Math.cos(i * Math.PI / 6) * 0.125,
+      {/* Top sensor platform with curved edges */}
+      <mesh castShadow position={[0, 0.22, 0.25]}>
+        <cylinderGeometry args={[0.12, 0.15, 0.05, 32]} />
+        <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
+      </mesh>
+
+      {/* Advanced sensor array housing */}
+      <group position={[0, 0.27, 0.32]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.16, 0.08, 0.1]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
+        </mesh>
+        
+        {/* Multiple sensor types */}
+        {[
+          { pos: [-0.05, 0, 0.051], color: "#3b82f6", size: 0.018 }, // Main camera
+          { pos: [0, 0, 0.051], color: "#ef4444", size: 0.015 }, // Laser
+          { pos: [0.05, 0, 0.051], color: "#22c55e", size: 0.012 }, // Secondary sensor
+        ].map((sensor, i) => (
+          <mesh key={i} castShadow position={sensor.pos}>
+            <cylinderGeometry args={[sensor.size, sensor.size, 0.025, 16]} />
+            <meshStandardMaterial 
+              color={sensor.color}
+              emissive={sensor.color}
+              emissiveIntensity={0.3}
+              metalness={0.9}
+              roughness={0.1}
+            />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Enhanced wheel assemblies with better separation */}
+      {[
+        { side: 'left', x: -0.32, ref: leftWheelRef },
+        { side: 'right', x: 0.32, ref: rightWheelRef }
+      ].map(({ side, x, ref }) => (
+        <group key={side} ref={ref} position={[x, 0.1, 0]}>
+          {/* Wheel suspension arm */}
+          <mesh castShadow position={[x > 0 ? -0.03 : 0.03, 0, 0]}>
+            <boxGeometry args={[0.06, 0.06, 0.4]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+          </mesh>
+
+          {/* Wheel hub - larger and more detailed */}
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.08, 32]} />
+            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
+          </mesh>
+          
+          {/* Hub details */}
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.09, 6]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+          </mesh>
+          
+          {/* Tire - larger and more realistic */}
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.14, 0.14, 0.06, 32]} />
+            <meshStandardMaterial color="#1f2937" metalness={0.1} roughness={0.95} />
+          </mesh>
+          
+          {/* Tire sidewall details */}
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0, 0, 0.035]}>
+            <cylinderGeometry args={[0.13, 0.13, 0.01, 32]} />
+            <meshStandardMaterial color="#374151" metalness={0.2} roughness={0.8} />
+          </mesh>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0, 0, -0.035]}>
+            <cylinderGeometry args={[0.13, 0.13, 0.01, 32]} />
+            <meshStandardMaterial color="#374151" metalness={0.2} roughness={0.8} />
+          </mesh>
+          
+          {/* Tire treads - more realistic pattern */}
+          {[...Array(16)].map((_, i) => {
+            const angle = (i * Math.PI * 2) / 16;
+            return (
+              <mesh 
+                key={i} 
+                castShadow 
+                rotation={[0, 0, Math.PI / 2]} 
+                position={[
+                  Math.cos(angle) * 0.145,
                   0,
-                  Math.sin(i * Math.PI / 6) * 0.125
-                ]}>
-                  <boxGeometry args={[0.02, 0.04, 0.04]} />
-                  <meshStandardMaterial color="#374151" metalness={0.2} roughness={0.8} />
-                </mesh>
-              ))}
-            </group>
-
-            {/* Right wheel assembly */}
-            <group ref={rightWheelRef} position={[0.22, 0.08, 0]}>
-              <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.08, 0.08, 0.06, 32]} />
-                <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+                  Math.sin(angle) * 0.145
+                ]}
+              >
+                <boxGeometry args={[0.015, 0.06, 0.03]} />
+                <meshStandardMaterial color="#111827" metalness={0.1} roughness={1} />
               </mesh>
-              
-              <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.12, 0.12, 0.04, 32]} />
-                <meshStandardMaterial color="#1f2937" metalness={0.1} roughness={0.9} />
-              </mesh>
-              
-              {[...Array(12)].map((_, i) => (
-                <mesh key={i} castShadow rotation={[0, 0, Math.PI / 2]} position={[
-                  Math.cos(i * Math.PI / 6) * 0.125,
-                  0,
-                  Math.sin(i * Math.PI / 6) * 0.125
-                ]}>
-                  <boxGeometry args={[0.02, 0.04, 0.04]} />
-                  <meshStandardMaterial color="#374151" metalness={0.2} roughness={0.8} />
-                </mesh>
-              ))}
-            </group>
+            );
+          })}
+        </group>
+      ))}
 
-            {/* Status LED indicators */}
-            <mesh castShadow position={[-0.15, 0.15, 0.25]}>
-              <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
-              <meshStandardMaterial 
-                color={robotState?.isMoving ? "#22c55e" : "#ef4444"} 
-                emissive={robotState?.isMoving ? "#22c55e" : "#ef4444"}
-                emissiveIntensity={0.3}
-              />
-            </mesh>
-            <mesh castShadow position={[0.15, 0.15, 0.25]}>
-              <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
-              <meshStandardMaterial 
-                color="#3b82f6" 
-                emissive="#3b82f6"
-                emissiveIntensity={0.2}
-              />
-            </mesh>
+      {/* Front and rear bumpers with sensors */}
+      <mesh castShadow position={[0, 0.06, 0.36]}>
+        <boxGeometry args={[0.4, 0.03, 0.02]} />
+        <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh castShadow position={[0, 0.06, -0.36]}>
+        <boxGeometry args={[0.4, 0.03, 0.02]} />
+        <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
+      </mesh>
 
-            {/* Bumper sensors */}
-            <mesh castShadow position={[0, 0.05, 0.31]}>
-              <boxGeometry args={[0.3, 0.02, 0.02]} />
-              <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
-            </mesh>
-          </>
-        );
+      {/* Status LED array */}
+      {[-0.18, -0.06, 0.06, 0.18].map((x, i) => (
+        <mesh key={i} castShadow position={[x, 0.18, 0.32]}>
+          <cylinderGeometry args={[0.008, 0.008, 0.003, 16]} />
+          <meshStandardMaterial 
+            color={robotState?.isMoving ? "#22c55e" : "#ef4444"} 
+            emissive={robotState?.isMoving ? "#22c55e" : "#ef4444"}
+            emissiveIntensity={0.4}
+          />
+        </mesh>
+      ))}
+    </>
+  );
 
-      case 'arm':
-        return (
-          <>
-            {/* Heavy base platform */}
-            <mesh castShadow receiveShadow position={[0, 0.03, 0]}>
-              <cylinderGeometry args={[0.25, 0.25, 0.06, 32]} />
+  // Enhanced Robotic Arm with realistic joints
+  const RoboticArmGeometry = () => (
+    <>
+      {/* Heavy industrial base with mounting */}
+      <mesh castShadow receiveShadow position={[0, 0.04, 0]}>
+        <cylinderGeometry args={[0.3, 0.3, 0.08, 32]} />
+        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Base mounting plate */}
+      <mesh castShadow position={[0, 0.08, 0]}>
+        <cylinderGeometry args={[0.32, 0.32, 0.01, 32]} />
+        <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
+      </mesh>
+
+      {/* Mounting bolts */}
+      {[0, Math.PI/2, Math.PI, 3*Math.PI/2].map((angle, i) => (
+        <mesh key={i} castShadow position={[
+          Math.cos(angle) * 0.25,
+          0.085,
+          Math.sin(angle) * 0.25
+        ]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.015, 16]} />
+          <meshStandardMaterial color="#000000" metalness={1} roughness={0} />
+        </mesh>
+      ))}
+
+      {/* Rotating base assembly */}
+      <group ref={armBaseRef} position={[0, 0.08, 0]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.15, 0.18, 0.15, 32]} />
+          <meshStandardMaterial color="#fb923c" metalness={0.7} roughness={0.3} />
+        </mesh>
+
+        {/* Base joint actuator */}
+        <mesh castShadow position={[0, 0.08, 0]} rotation={[0, 0, Math.PI/2]}>
+          <cylinderGeometry args={[0.06, 0.06, 0.12, 32]} />
+          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        {/* Shoulder assembly - first joint */}
+        <group ref={armSegment1Ref} position={[0, 0.08, 0]}>
+          {/* Shoulder joint housing */}
+          <mesh castShadow rotation={[0, 0, Math.PI/2]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.15, 32]} />
+            <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+          </mesh>
+
+          {/* Upper arm segment */}
+          <mesh castShadow position={[0, 0, 0.25]} rotation={[Math.PI/2, 0, 0]}>
+            <cylinderGeometry args={[0.05, 0.07, 0.4, 32]} />
+            <meshStandardMaterial color="#fb923c" metalness={0.6} roughness={0.4} />
+          </mesh>
+
+          {/* Structural reinforcement */}
+          {[0.15, 0.25, 0.35].map((z, i) => (
+            <mesh key={i} castShadow position={[0, 0, z]}>
+              <boxGeometry args={[0.12, 0.03, 0.03]} />
               <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
             </mesh>
+          ))}
 
-            {/* Base mounting bolts */}
-            {[0, Math.PI/2, Math.PI, 3*Math.PI/2].map((angle, i) => (
-              <mesh key={i} castShadow position={[
-                Math.cos(angle) * 0.2,
-                0.06,
-                Math.sin(angle) * 0.2
-              ]}>
-                <cylinderGeometry args={[0.015, 0.015, 0.01, 16]} />
-                <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
-              </mesh>
-            ))}
+          {/* Elbow joint assembly */}
+          <group ref={armSegment2Ref} position={[0, 0, 0.45]}>
+            <mesh castShadow rotation={[Math.PI/2, 0, 0]}>
+              <cylinderGeometry args={[0.06, 0.06, 0.12, 32]} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+            </mesh>
 
-            {/* Rotating base */}
-            <group ref={armBaseRef} position={[0, 0.06, 0]}>
+            {/* Forearm segment */}
+            <mesh castShadow position={[0, 0, 0.2]} rotation={[Math.PI/2, 0, 0]}>
+              <cylinderGeometry args={[0.04, 0.05, 0.35, 32]} />
+              <meshStandardMaterial color="#fb923c" metalness={0.6} roughness={0.4} />
+            </mesh>
+
+            {/* Wrist assembly */}
+            <group ref={armWristRef} position={[0, 0, 0.37]}>
+              {/* Wrist joint */}
               <mesh castShadow>
-                <cylinderGeometry args={[0.12, 0.15, 0.12, 32]} />
-                <meshStandardMaterial color="#fb923c" metalness={0.6} roughness={0.4} />
+                <cylinderGeometry args={[0.04, 0.04, 0.1, 32]} />
+                <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
               </mesh>
 
-              {/* First arm segment (shoulder) */}
-              <group ref={armSegment1Ref} position={[0, 0.06, 0]}>
-                {/* Shoulder joint */}
-                <mesh castShadow rotation={[0, 0, Math.PI/2]}>
-                  <cylinderGeometry args={[0.05, 0.05, 0.1, 32]} />
-                  <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+              {/* End effector mount */}
+              <group ref={gripperRef} position={[0, 0, 0.08]}>
+                {/* Gripper base */}
+                <mesh castShadow>
+                  <boxGeometry args={[0.12, 0.08, 0.08]} />
+                  <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
                 </mesh>
 
-                {/* Upper arm */}
-                <mesh castShadow position={[0, 0, 0.2]}>
-                  <boxGeometry args={[0.08, 0.08, 0.35]} />
-                  <meshStandardMaterial color="#fb923c" metalness={0.6} roughness={0.4} />
-                </mesh>
-
-                {/* Reinforcement ribs */}
-                {[0.1, 0.2, 0.3].map((z, i) => (
-                  <mesh key={i} castShadow position={[0, 0, z]}>
-                    <boxGeometry args={[0.1, 0.02, 0.02]} />
-                    <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
+                {/* Hydraulic/pneumatic cylinders for gripper */}
+                {[-0.04, 0.04].map((x, i) => (
+                  <mesh key={i} castShadow position={[x, 0, 0.06]}>
+                    <cylinderGeometry args={[0.008, 0.008, 0.04, 16]} />
+                    <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
                   </mesh>
                 ))}
 
-                {/* Elbow joint */}
-                <group ref={armSegment2Ref} position={[0, 0, 0.37]}>
-                  <mesh castShadow rotation={[Math.PI/2, 0, 0]}>
-                    <cylinderGeometry args={[0.04, 0.04, 0.1, 32]} />
-                    <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+                {/* Gripper fingers with realistic movement */}
+                <group>
+                  <mesh 
+                    castShadow 
+                    position={[robotState?.isGrabbing ? -0.015 : -0.05, 0, 0.12]}
+                    rotation={[0, robotState?.isGrabbing ? 0.2 : 0, 0]}
+                  >
+                    <boxGeometry args={[0.02, 0.1, 0.06]} />
+                    <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
+                  </mesh>
+                  <mesh 
+                    castShadow 
+                    position={[robotState?.isGrabbing ? 0.015 : 0.05, 0, 0.12]}
+                    rotation={[0, robotState?.isGrabbing ? -0.2 : 0, 0]}
+                  >
+                    <boxGeometry args={[0.02, 0.1, 0.06]} />
+                    <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
                   </mesh>
 
-                  {/* Forearm */}
-                  <mesh castShadow position={[0, 0, 0.15]}>
-                    <boxGeometry args={[0.06, 0.06, 0.25]} />
-                    <meshStandardMaterial color="#fb923c" metalness={0.6} roughness={0.4} />
+                  {/* Gripper tips */}
+                  <mesh 
+                    castShadow 
+                    position={[robotState?.isGrabbing ? -0.01 : -0.04, 0, 0.16]}
+                  >
+                    <boxGeometry args={[0.01, 0.02, 0.02]} />
+                    <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
                   </mesh>
-
-                  {/* Wrist assembly */}
-                  <group ref={gripperRef} position={[0, 0, 0.27]}>
-                    {/* Wrist joint */}
-                    <mesh castShadow>
-                      <cylinderGeometry args={[0.03, 0.03, 0.08, 32]} />
-                      <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
-                    </mesh>
-
-                    {/* Gripper base */}
-                    <mesh castShadow position={[0, 0, 0.06]}>
-                      <boxGeometry args={[0.1, 0.06, 0.06]} />
-                      <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
-                    </mesh>
-
-                    {/* Gripper fingers - animated based on state */}
-                    {robotState?.isGrabbing ? (
-                      // Closed gripper
-                      <>
-                        <mesh castShadow position={[-0.02, 0, 0.09]}>
-                          <boxGeometry args={[0.015, 0.08, 0.015]} />
-                          <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
-                        </mesh>
-                        <mesh castShadow position={[0.02, 0, 0.09]}>
-                          <boxGeometry args={[0.015, 0.08, 0.015]} />
-                          <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
-                        </mesh>
-                      </>
-                    ) : (
-                      // Open gripper
-                      <>
-                        <mesh castShadow position={[-0.04, 0, 0.09]}>
-                          <boxGeometry args={[0.015, 0.08, 0.015]} />
-                          <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
-                        </mesh>
-                        <mesh castShadow position={[0.04, 0, 0.09]}>
-                          <boxGeometry args={[0.015, 0.08, 0.015]} />
-                          <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
-                        </mesh>
-                      </>
-                    )}
-                  </group>
+                  <mesh 
+                    castShadow 
+                    position={[robotState?.isGrabbing ? 0.01 : 0.04, 0, 0.16]}
+                  >
+                    <boxGeometry args={[0.01, 0.02, 0.02]} />
+                    <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
+                  </mesh>
                 </group>
               </group>
             </group>
-          </>
-        );
+          </group>
+        </group>
+      </group>
+    </>
+  );
 
-      case 'drone':
-        return (
-          <>
-            {/* Main body - streamlined design */}
-            <mesh castShadow receiveShadow position={[0, 0, 0]}>
-              <boxGeometry args={[0.2, 0.06, 0.3]} />
-              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+  // Enhanced Drone with realistic aerodynamics
+  const DroneGeometry = () => (
+    <>
+      {/* Main body - aerodynamic design */}
+      <mesh castShadow receiveShadow position={[0, 0, 0]}>
+        <boxGeometry args={[0.25, 0.08, 0.35]} />
+        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Top and bottom shells */}
+      <mesh castShadow position={[0, 0.04, 0]}>
+        <boxGeometry args={[0.23, 0.02, 0.33]} />
+        <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh castShadow position={[0, -0.04, 0]}>
+        <boxGeometry args={[0.23, 0.02, 0.33]} />
+        <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.1} />
+      </mesh>
+
+      {/* Advanced gimbal camera system */}
+      <group position={[0, -0.08, 0.15]}>
+        {/* Gimbal frame */}
+        <mesh castShadow>
+          <torusGeometry args={[0.06, 0.008, 16, 32]} />
+          <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
+        </mesh>
+        
+        {/* Camera housing */}
+        <mesh castShadow>
+          <boxGeometry args={[0.06, 0.04, 0.08]} />
+          <meshStandardMaterial color="#000000" metalness={1} roughness={0} />
+        </mesh>
+        
+        {/* Camera lens */}
+        <mesh castShadow position={[0, 0, 0.04]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.02, 32]} />
+          <meshStandardMaterial 
+            color="#1a1a1a" 
+            metalness={1} 
+            roughness={0}
+            transparent
+            opacity={0.9}
+          />
+        </mesh>
+
+        {/* Lens reflection */}
+        <mesh castShadow position={[0, 0, 0.045]}>
+          <cylinderGeometry args={[0.018, 0.018, 0.001, 32]} />
+          <meshStandardMaterial 
+            color="#3b82f6" 
+            emissive="#3b82f6"
+            emissiveIntensity={0.2}
+            metalness={1} 
+            roughness={0}
+          />
+        </mesh>
+      </group>
+
+      {/* Motor arms with improved aerodynamics */}
+      {[
+        { pos: [-0.18, 0, -0.18], index: 0, color: "#22c55e" },
+        { pos: [0.18, 0, -0.18], index: 1, color: "#ef4444" },
+        { pos: [-0.18, 0, 0.18], index: 2, color: "#ef4444" },
+        { pos: [0.18, 0, 0.18], index: 3, color: "#22c55e" }
+      ].map(({ pos, index, color }) => (
+        <group key={index} position={pos}>
+          {/* Streamlined arm */}
+          <mesh castShadow rotation={[0, Math.PI/4, 0]}>
+            <boxGeometry args={[0.15, 0.02, 0.03]} />
+            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
+          </mesh>
+
+          {/* Motor housing */}
+          <mesh castShadow position={[0, 0.025, 0]}>
+            <cylinderGeometry args={[0.025, 0.03, 0.04, 32]} />
+            <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
+          </mesh>
+
+          {/* Motor heat fins */}
+          {[...Array(8)].map((_, i) => {
+            const angle = (i * Math.PI * 2) / 8;
+            return (
+              <mesh 
+                key={i} 
+                castShadow 
+                position={[
+                  Math.cos(angle) * 0.032,
+                  0.025,
+                  Math.sin(angle) * 0.032
+                ]}
+                rotation={[0, angle, 0]}
+              >
+                <boxGeometry args={[0.001, 0.04, 0.008]} />
+                <meshStandardMaterial color="#374151" metalness={0.7} roughness={0.3} />
+              </mesh>
+            );
+          })}
+
+          {/* Enhanced propeller system */}
+          <group 
+            ref={(el) => { if (el) propellersRef.current[index] = el; }}
+            position={[0, 0.045, 0]}
+          >
+            {/* Propeller hub */}
+            <mesh castShadow>
+              <cylinderGeometry args={[0.008, 0.008, 0.01, 16]} />
+              <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
             </mesh>
 
-            {/* Top shell */}
-            <mesh castShadow position={[0, 0.03, 0]}>
-              <boxGeometry args={[0.18, 0.02, 0.28]} />
-              <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
-            </mesh>
-
-            {/* Camera gimbal */}
-            <group position={[0, -0.05, 0.12]}>
-              <mesh castShadow>
-                <sphereGeometry args={[0.04, 16, 16]} />
-                <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
-              </mesh>
-              
-              {/* Camera lens */}
-              <mesh castShadow position={[0, 0, 0.04]}>
-                <cylinderGeometry args={[0.015, 0.015, 0.02, 16]} />
-                <meshStandardMaterial color="#000000" metalness={1} roughness={0} />
-              </mesh>
-            </group>
-
-            {/* Arms and propellers */}
-            {[
-              { pos: [-0.15, 0, -0.15], index: 0 },
-              { pos: [0.15, 0, -0.15], index: 1 },
-              { pos: [-0.15, 0, 0.15], index: 2 },
-              { pos: [0.15, 0, 0.15], index: 3 }
-            ].map(({ pos, index }) => (
-              <group key={index} position={pos}>
-                {/* Arm */}
-                <mesh castShadow>
-                  <boxGeometry args={[0.04, 0.02, 0.12]} />
-                  <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+            {/* Propeller blades - more realistic shape */}
+            {[0, Math.PI/2, Math.PI, 3*Math.PI/2].map((rotation, i) => (
+              <group key={i} rotation={[0, rotation, 0]}>
+                <mesh castShadow position={[0, 0, 0.08]}>
+                  <boxGeometry args={[0.004, 0.002, 0.12]} />
+                  <meshStandardMaterial 
+                    color="#1f2937" 
+                    metalness={0.6} 
+                    roughness={0.3}
+                    opacity={robotState?.isMoving ? 0.2 : 0.9}
+                    transparent
+                  />
                 </mesh>
-
-                {/* Motor */}
-                <mesh castShadow position={[0, 0.02, 0]}>
-                  <cylinderGeometry args={[0.02, 0.02, 0.03, 16]} />
-                  <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
+                
+                {/* Blade tip */}
+                <mesh castShadow position={[0, 0, 0.13]}>
+                  <boxGeometry args={[0.008, 0.003, 0.02]} />
+                  <meshStandardMaterial color="#fb923c" metalness={0.7} roughness={0.2} />
                 </mesh>
-
-                {/* Propeller */}
-                <group 
-                  ref={(el) => { if (el) propellersRef.current[index] = el; }}
-                  position={[0, 0.035, 0]}
-                >
-                  {/* Propeller blades */}
-                  <mesh castShadow>
-                    <boxGeometry args={[0.001, 0.001, 0.2]} />
-                    <meshStandardMaterial 
-                      color="#1f2937" 
-                      metalness={0.6} 
-                      roughness={0.4}
-                      opacity={robotState?.isMoving ? 0.3 : 0.9}
-                      transparent
-                    />
-                  </mesh>
-                  <mesh castShadow rotation={[0, Math.PI/2, 0]}>
-                    <boxGeometry args={[0.001, 0.001, 0.2]} />
-                    <meshStandardMaterial 
-                      color="#1f2937" 
-                      metalness={0.6} 
-                      roughness={0.4}
-                      opacity={robotState?.isMoving ? 0.3 : 0.9}
-                      transparent
-                    />
-                  </mesh>
-
-                  {/* Propeller tips */}
-                  {[-0.09, 0.09].map((z) => (
-                    <mesh key={z} castShadow position={[0, 0, z]}>
-                      <boxGeometry args={[0.01, 0.002, 0.02]} />
-                      <meshStandardMaterial color="#fb923c" metalness={0.6} roughness={0.3} />
-                    </mesh>
-                  ))}
-                </group>
-
-                {/* LED lights */}
-                <pointLight
-                  color={index < 2 ? "#22c55e" : "#ef4444"}
-                  intensity={robotState?.isMoving ? 2 : 1}
-                  distance={0.3}
-                  position={[0, 0.02, 0]}
-                />
               </group>
             ))}
+          </group>
 
-            {/* Status indicator */}
-            <pointLight
-              color="#3b82f6"
-              intensity={1.5}
-              distance={0.4}
-              position={[0, 0.04, -0.12]}
+          {/* Navigation LED */}
+          <pointLight
+            color={color}
+            intensity={robotState?.isMoving ? 3 : 1.5}
+            distance={0.5}
+            position={[0, 0.03, 0]}
+          />
+
+          {/* LED housing */}
+          <mesh castShadow position={[0, 0.02, 0]}>
+            <cylinderGeometry args={[0.005, 0.005, 0.002, 16]} />
+            <meshStandardMaterial 
+              color={color}
+              emissive={color}
+              emissiveIntensity={robotState?.isMoving ? 0.5 : 0.3}
             />
-          </>
-        );
+          </mesh>
+        </group>
+      ))}
 
-      default:
-        return null;
-    }
-  };
+      {/* Additional navigation lights */}
+      <pointLight
+        color="#ffffff"
+        intensity={2}
+        distance={0.6}
+        position={[0, 0.05, -0.15]}
+      />
+      <pointLight
+        color="#ff0000"
+        intensity={1.5}
+        distance={0.4}
+        position={[0, 0.05, 0.15]}
+      />
 
+      {/* Status indicator panel */}
+      <mesh castShadow position={[0, 0.03, -0.12]}>
+        <boxGeometry args={[0.08, 0.01, 0.02]} />
+        <meshStandardMaterial 
+          color="#000000" 
+          emissive="#3b82f6"
+          emissiveIntensity={robotState?.isMoving ? 0.4 : 0.2}
+        />
+      </mesh>
+    </>
+  );
+
+  // Realistic physics and movement simulation
   useFrame((state, delta) => {
     if (!group.current || !robotState) return;
     
-    // Smooth position and rotation updates
+    // Enhanced position interpolation with momentum
     const targetPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
     
-    group.current.position.lerp(targetPos, 0.1);
+    // Apply momentum and smooth movement
+    if (robotState.isMoving) {
+      velocity.current.lerp(
+        targetPos.clone().sub(group.current.position).multiplyScalar(PHYSICS.acceleration),
+        0.1
+      );
+      velocity.current.clampLength(0, PHYSICS.maxSpeed);
+    } else {
+      velocity.current.multiplyScalar(PHYSICS.deceleration);
+    }
     
-    const targetRot = new THREE.Euler(0, robotState.rotation.y, 0);
-    group.current.rotation.y = THREE.MathUtils.lerp(
-      group.current.rotation.y, 
-      targetRot.y, 
-      0.1
-    );
-
-    // Mobile robot wheel animation
-    if (robotConfig.type === 'mobile' && robotState.isMoving) {
-      const currentPos = group.current.position;
-      const distance = currentPos.distanceTo(prevPosition.current);
-      
-      if (distance > 0.001) {
-        wheelRotation.current += distance * 10;
-        
-        if (leftWheelRef.current) {
-          leftWheelRef.current.rotation.x = wheelRotation.current;
-        }
-        if (rightWheelRef.current) {
-          rightWheelRef.current.rotation.x = wheelRotation.current;
-        }
-        
-        prevPosition.current.copy(currentPos);
-      }
+    group.current.position.add(velocity.current);
+    
+    // Smooth rotation with angular momentum
+    const targetRot = robotState.rotation.y;
+    const currentRot = group.current.rotation.y;
+    const rotDiff = targetRot - currentRot;
+    
+    if (Math.abs(rotDiff) > 0.01) {
+      angularVelocity.current += rotDiff * 0.05;
+      angularVelocity.current *= 0.95; // Angular damping
+      group.current.rotation.y += angularVelocity.current;
     }
 
-    // Robotic arm animations
-    if (robotConfig.type === 'arm') {
-      const time = state.clock.elapsedTime;
-      
-      // Subtle base rotation
-      if (armBaseRef.current && robotState.isMoving) {
-        armBaseRef.current.rotation.y = Math.sin(time * 0.5) * 0.3;
-      }
-      
-      // Arm segment movements
-      if (armSegment1Ref.current && robotState.isMoving) {
-        armSegment1Ref.current.rotation.x = Math.sin(time * 0.7) * 0.2;
-      }
-      
-      if (armSegment2Ref.current && robotState.isMoving) {
-        armSegment2Ref.current.rotation.x = Math.sin(time * 0.9) * 0.3;
-      }
-    }
-
-    // Drone propeller animation and hovering
-    if (robotConfig.type === 'drone') {
-      // Hovering motion
-      group.current.position.y += Math.sin(state.clock.elapsedTime * 3) * 0.002;
-      
-      // Propeller rotation
-      if (robotState.isMoving || true) { // Drones always have spinning props when on
-        propellersRef.current.forEach((propeller, index) => {
-          if (propeller) {
-            const speed = robotState.isMoving ? 20 : 10;
-            const direction = index % 2 === 0 ? 1 : -1; // Counter-rotating pairs
-            propeller.rotation.y += delta * speed * direction;
+    // Type-specific animations
+    switch (robotConfig.type) {
+      case 'mobile':
+        // Realistic wheel physics
+        if (robotState.isMoving) {
+          const speed = velocity.current.length();
+          wheelRotation.current += speed / PHYSICS.wheelRadius;
+          
+          if (leftWheelRef.current && rightWheelRef.current) {
+            leftWheelRef.current.rotation.x = wheelRotation.current;
+            rightWheelRef.current.rotation.x = wheelRotation.current;
           }
-        });
-      }
+        }
+        break;
+
+      case 'arm':
+        // Realistic robotic arm joint control
+        if (moveCommands) {
+          const time = state.clock.elapsedTime;
+          
+          // Base rotation - smooth and controlled
+          if (armBaseRef.current) {
+            const baseTarget = moveCommands.joint === 'base' ? 
+              (moveCommands.direction === 'left' ? -0.5 : 0.5) : 0;
+            armAngles.base = THREE.MathUtils.lerp(armAngles.base, baseTarget, delta * PHYSICS.armSpeed);
+            armBaseRef.current.rotation.y = armAngles.base;
+          }
+          
+          // Shoulder joint
+          if (armSegment1Ref.current) {
+            const shoulderTarget = moveCommands.joint === 'shoulder' ?
+              (moveCommands.direction === 'forward' ? -0.3 : 0.3) : 0;
+            armAngles.shoulder = THREE.MathUtils.lerp(armAngles.shoulder, shoulderTarget, delta * PHYSICS.armSpeed);
+            armSegment1Ref.current.rotation.x = armAngles.shoulder;
+          }
+          
+          // Elbow joint
+          if (armSegment2Ref.current) {
+            const elbowTarget = moveCommands.joint === 'elbow' ?
+              (moveCommands.direction === 'forward' ? -0.8 : 0.2) : -0.2;
+            armAngles.elbow = THREE.MathUtils.lerp(armAngles.elbow, elbowTarget, delta * PHYSICS.armSpeed);
+            armSegment2Ref.current.rotation.x = armAngles.elbow;
+          }
+          
+          // Wrist rotation
+          if (armWristRef.current) {
+            const wristTarget = moveCommands.joint === 'wrist' ?
+              (moveCommands.direction === 'left' ? -1.5 : 1.5) : 0;
+            armAngles.wrist = THREE.MathUtils.lerp(armAngles.wrist, wristTarget, delta * PHYSICS.armSpeed);
+            armWristRef.current.rotation.z = armAngles.wrist;
+          }
+        }
+        break;
+
+      case 'drone':
+  // Enhanced drone physics with realistic flight dynamics
+  const time = state.clock.elapsedTime;
+  
+  // Smooth hovering motion with multiple oscillations for realism
+  const hoverY = Math.sin(time * PHYSICS.droneHoverSpeed) * PHYSICS.droneHoverAmplitude;
+  const microHover = Math.sin(time * 8) * 0.003; // Micro oscillations
+  group.current.position.y += (hoverY + microHover) * 0.5;
+  
+  // Advanced propeller physics with realistic counter-rotation
+  propellersRef.current.forEach((propeller, index) => {
+    if (propeller) {
+      const baseSpeed = PHYSICS.propellerSpeedIdle;
+      const activeSpeed = robotState.isMoving ? PHYSICS.propellerSpeedActive : PHYSICS.propellerSpeedIdle + 5;
       
-      // Slight tilting when moving
+      // Counter-rotating pairs for stability (front-left & back-right CW, front-right & back-left CCW)
+      const isClockwise = (index === 0 || index === 3); // Front-left and back-right
+      const direction = isClockwise ? 1 : -1;
+      const rotationSpeed = activeSpeed + Math.sin(time * 2 + index) * 2; // Slight variation per motor
+      
+      propeller.rotation.y += rotationSpeed * delta * direction;
+      
+      // Individual motor vibrations and slight position offsets
       if (robotState.isMoving) {
-        group.current.rotation.x = Math.sin(state.clock.elapsedTime * 2) * 0.05;
-        group.current.rotation.z = Math.cos(state.clock.elapsedTime * 1.5) * 0.03;
+        propeller.position.y = Math.sin(time * 25 + index * 1.5) * 0.001;
+        propeller.rotation.x = Math.sin(time * 15 + index) * 0.005;
+      } else {
+        // Return to neutral position when hovering
+        propeller.position.y = THREE.MathUtils.lerp(propeller.position.y, 0, delta * 5);
+        propeller.rotation.x = THREE.MathUtils.lerp(propeller.rotation.x, 0, delta * 3);
       }
     }
   });
-
-  return (
-    <group ref={group} dispose={null}>
-      <RobotGeometry />
-    </group>
+  
+  // Realistic flight dynamics with proper banking and pitching
+  if (robotState.isMoving) {
+    // Calculate movement direction
+    const moveDirection = new THREE.Vector3(
+      Math.cos(robotState.rotation.y),
+      0,
+      Math.sin(robotState.rotation.y)
+    );
+    
+    // Forward pitch when moving forward (nose down for acceleration)
+    const forwardTilt = -0.12;
+    group.current.rotation.x = THREE.MathUtils.lerp(
+      group.current.rotation.x,
+      forwardTilt,
+      delta * 3
+    );
+    
+    // Banking during turns (lean into turns)
+    const turnRate = angularVelocity.current;
+    const bankAngle = THREE.MathUtils.clamp(turnRate * 4, -0.25, 0.25);
+    group.current.rotation.z = THREE.MathUtils.lerp(
+      group.current.rotation.z,
+      bankAngle,
+      delta * 4
+    );
+    
+    // Slight yaw oscillation during flight for realism
+    const yawOscillation = Math.sin(time * 3) * 0.02;
+    group.current.rotation.y += yawOscillation * delta;
+    
+  } else {
+    // Smooth return to level flight with slight overshoot
+    group.current.rotation.x = THREE.MathUtils.lerp(
+      group.current.rotation.x,
+      Math.sin(time * 1.5) * 0.01, // Tiny natural sway
+      delta * 5
+    );
+    group.current.rotation.z = THREE.MathUtils.lerp(
+      group.current.rotation.z,
+      Math.cos(time * 1.2) * 0.008, // Tiny roll sway
+      delta * 5
+    );
+  }
+  
+  // Enhanced altitude control with smooth transitions
+  if (moveCommands) {
+    const altitudeSpeed = 0.03;
+    const targetAltitudeChange = moveCommands.direction === 'up' ? altitudeSpeed : 
+                                moveCommands.direction === 'down' ? -altitudeSpeed : 0;
+    
+    if (targetAltitudeChange !== 0) {
+      droneAltitude.current += targetAltitudeChange;
+      
+      // Propeller speed increase during altitude changes
+      propellersRef.current.forEach((propeller, index) => {
+        if (propeller && moveCommands.direction === 'up') {
+          propeller.rotation.y += 10 * delta * (index % 2 === 0 ? 1 : -1);
+        }
+      });
+      
+      // Slight tilt during altitude changes
+      if (moveCommands.direction === 'up') {
+        group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, -0.05, delta * 2);
+      } else if (moveCommands.direction === 'down') {
+        group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0.05, delta * 2);
+      }
+    }
+    
+    // Constrain altitude with ground effect simulation
+    droneAltitude.current = THREE.MathUtils.clamp(droneAltitude.current, 0.15, 4.0);
+    
+    // Ground effect - increased stability near ground
+    if (droneAltitude.current < 0.5) {
+      const groundEffect = (0.5 - droneAltitude.current) * 0.1;
+      group.current.position.y += groundEffect;
+      
+      // Reduced oscillations near ground
+      PHYSICS.droneHoverAmplitude *= 0.5;
+    }
+  }
+  
+  // Apply target altitude smoothly
+  group.current.position.y = THREE.MathUtils.lerp(
+    group.current.position.y,
+    droneAltitude.current,
+    delta * 2
   );
-};
+  
+  // Wind effect simulation - subtle random movements
+  if (Math.random() < 0.01) { // Occasional wind gusts
+    const windStrength = 0.002;
+    group.current.position.x += (Math.random() - 0.5) * windStrength;
+    group.current.position.z += (Math.random() - 0.5) * windStrength;
+    
+    // Compensate with slight tilt
+    group.current.rotation.z += (Math.random() - 0.5) * 0.01;
+  }
+  
+  // Advanced gimbal stabilization for camera
+  if (group.current.children.length > 0) {
+    // Counter-rotate camera gimbal to maintain stability
+    const cameraGimbal = group.current.getObjectByName('cameraGimbal');
+    if (cameraGimbal) {
+      cameraGimbal.rotation.x = -group.current.rotation.x * 0.8;
+      cameraGimbal.rotation.z = -group.current.rotation.z * 0.8;
+    }
+  }
+  
+  // Emergency landing detection
+  if (droneAltitude.current <= 0.2 && !robotState.isMoving) {
+    // Gradual propeller slowdown for landing
+    propellersRef.current.forEach((propeller, index) => {
+      if (propeller) {
+        const landingSpeed = 5;
+        propeller.rotation.y += landingSpeed * delta * (index % 2 === 0 ? 1 : -1);
+      }
+    });
+    
+    // Settle into landing position
+    group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0, delta * 8);
+    group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, 0, delta * 8);
+  }
+  
+  // Battery simulation - slight performance degradation over time
+  const batteryLevel = Math.max(0.3, 1 - (time * 0.001)); // Slowly decrease over time
+  const performanceMultiplier = 0.7 + (batteryLevel * 0.3);
+  
+  // Apply battery effect to movements
+  if (robotState.isMoving && batteryLevel < 0.5) {
+    // Slightly more unstable flight with low battery
+    group.current.position.y += Math.sin(time * 10) * 0.005 * (1 - batteryLevel);
+  }
+  
+  break;
 
-export default RobotModel;
+  export default RobotModel;
+
+  
+
+          
