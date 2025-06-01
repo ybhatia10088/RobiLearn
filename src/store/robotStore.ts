@@ -12,8 +12,9 @@ interface RobotStoreState {
   robotState: RobotState | null;
   environment: EnvironmentConfig | null;
   isMoving: boolean;
+  moveCommands: { joint: string; direction: string; speed: number } | null;
   selectRobot: (config: RobotConfig) => void;
-  moveRobot: (params: { direction: 'forward' | 'backward', speed: number, joint?: string }) => void;
+  moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: string }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
   grabObject: () => void;
   releaseObject: () => void;
@@ -27,6 +28,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   selectedRobot: null,
   robotState: null,
   isMoving: false,
+  moveCommands: null,
   environment: {
     id: 'warehouse',
     name: 'Warehouse',
@@ -48,7 +50,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         errors: [],
         currentJointCommand: null,
       },
-      isMoving: false
+      isMoving: false,
+      moveCommands: null
     });
   },
   
@@ -64,53 +67,45 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     }
     
     // Set moving state immediately
-    set({ isMoving: true });
+    set({ 
+      isMoving: true,
+      moveCommands: joint ? { joint, direction, speed } : null
+    });
     
-    // Store current joint movement for the robot model to read
-    if (joint) {
-      set({
-        robotState: {
-          ...state.robotState,
-          isMoving: true,
-          currentJointCommand: { joint, direction, speed }
+    // Regular movement for mobile robots, drones, spider, tank, humanoid
+    if (state.selectedRobot?.type !== 'arm' || !joint) {
+      const moveStep = 0.05 * speed;
+      const angle = state.robotState.rotation.y;
+      
+      const deltaX = Math.sin(angle) * moveStep;
+      const deltaZ = Math.cos(angle) * moveStep;
+      
+      const multiplier = direction === 'forward' ? 1 : -1;
+      
+      // Create movement interval for continuous movement
+      const moveInterval = setInterval(() => {
+        const currentState = get();
+        if (!currentState.robotState || !currentState.isMoving) {
+          clearInterval(moveInterval);
+          return;
         }
-      });
-    } else {
-      // Regular movement for mobile robots, drones, spider, tank, humanoid
-      if (state.selectedRobot?.type !== 'arm') {
-        const moveStep = 0.05 * speed;
-        const angle = state.robotState.rotation.y;
         
-        const deltaX = Math.sin(angle) * moveStep;
-        const deltaZ = Math.cos(angle) * moveStep;
-        
-        const multiplier = direction === 'forward' ? 1 : -1;
-        
-        // Create movement interval for continuous movement
-        const moveInterval = setInterval(() => {
-          const currentState = get();
-          if (!currentState.robotState || !currentState.isMoving) {
-            clearInterval(moveInterval);
-            return;
+        set({
+          robotState: {
+            ...currentState.robotState,
+            isMoving: true,
+            position: {
+              x: currentState.robotState.position.x + (deltaX * multiplier),
+              y: currentState.robotState.position.y,
+              z: currentState.robotState.position.z + (deltaZ * multiplier),
+            },
+            batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01)
           }
-          
-          set({
-            robotState: {
-              ...currentState.robotState,
-              isMoving: true,
-              position: {
-                x: currentState.robotState.position.x + (deltaX * multiplier),
-                y: currentState.robotState.position.y,
-                z: currentState.robotState.position.z + (deltaZ * multiplier),
-              },
-              batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01)
-            }
-          });
-        }, 16); // 60fps update rate
-        
-        // Store interval reference for cleanup
-        (window as any).robotMoveInterval = moveInterval;
-      }
+        });
+      }, 16); // 60fps update rate
+      
+      // Store interval reference for cleanup
+      (window as any).robotMoveInterval = moveInterval;
     }
   },
   
@@ -195,6 +190,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     
     set({
       isMoving: false,
+      moveCommands: null,
       robotState: {
         ...state.robotState,
         isMoving: false,
