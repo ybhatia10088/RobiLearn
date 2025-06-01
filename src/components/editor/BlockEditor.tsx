@@ -123,22 +123,26 @@ const BlockEditor: React.FC = () => {
         case 'Move Forward':
         case 'Move Backward': {
           const duration = (distance / speed) * 1000;
-          await moveRobot({
-            direction: block.name === 'Move Forward' ? 'forward' : 'backward',
-            speed
+          await new Promise(async (resolve) => {
+            await moveRobot({
+              direction: block.name === 'Move Forward' ? 'forward' : 'backward',
+              speed
+            });
+            setTimeout(resolve, duration);
           });
-          await smoothDelay(duration);
           break;
         }
 
         case 'Turn Left':
         case 'Turn Right': {
           const duration = (angle / speed) * 1000;
-          await rotateRobot({
-            direction: block.name === 'Turn Left' ? 'left' : 'right',
-            speed
+          await new Promise(async (resolve) => {
+            await rotateRobot({
+              direction: block.name === 'Turn Left' ? 'left' : 'right',
+              speed
+            });
+            setTimeout(resolve, duration);
           });
-          await smoothDelay(duration);
           break;
         }
 
