@@ -135,11 +135,12 @@ const BlockEditor: React.FC = () => {
 
         case 'Turn Left':
         case 'Turn Right': {
-          const duration = 1000; // fixed 1s rotation for realistic turn
-          await rotateRobot({
-            direction: block.name === 'Turn Left' ? 'left' : 'right',
-            speed
-          });
+          const duration = 1000; // steady, realistic single turn
+          await rotateRobot({ direction: block.name === 'Turn Left' ? 'left' : 'right', speed });
+          await smoothDelay(duration);
+          break;
+        });
+          await smoothDelay(duration); // ensure action completes before next
           await smoothDelay(duration);
           break;
         }
