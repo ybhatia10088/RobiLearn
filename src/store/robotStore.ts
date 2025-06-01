@@ -19,7 +19,6 @@ interface RobotStoreState {
   robotState: RobotState | null;
   environment: EnvironmentConfig | null;
   isMoving: boolean;
-  moveCommands: { joint: string; direction: string; speed: number } | null;
   jointPositions: JointState;
   selectRobot: (config: RobotConfig) => void;
   moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: string }) => void;
@@ -37,7 +36,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   selectedRobot: null,
   robotState: null,
   isMoving: false,
-  moveCommands: null,
   jointPositions: {
     base: 0,
     shoulder: 0,
@@ -66,7 +64,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         currentJointCommand: null,
       },
       isMoving: false,
-      moveCommands: null,
       jointPositions: {
         base: 0,
         shoulder: 0,
@@ -87,14 +84,39 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       clearInterval((window as any).robotMoveInterval);
     }
     
-    // Set moving state and commands immediately
-    set({ 
-      isMoving: true,
-      moveCommands: joint ? { joint, direction, speed } : null
-    });
+    set({ isMoving: true });
     
-    // Regular movement for mobile robots, drones, spider, tank, humanoid
-    if (state.selectedRobot?.type !== 'arm' || !joint) {
+    // Handle joint movement for robotic arm
+    if (state.selectedRobot?.type === 'arm' && joint) {
+      const currentPos = state.jointPositions[joint as keyof JointState];
+      const step = (direction === 'left' || direction === 'backward') ? -0.05 : 0.05;
+      
+      // Update joint position with limits
+      const newPos = currentPos + step;
+      const limits = {
+        base: { min: -Math.PI, max: Math.PI },
+        shoulder: { min: -Math.PI/2, max: Math.PI/4 },
+        elbow: { min: -Math.PI/2, max: Math.PI/2 },
+        wrist: { min: -Math.PI, max: Math.PI }
+      };
+      
+      const limitedPos = Math.max(
+        limits[joint as keyof typeof limits].min,
+        Math.min(newPos, limits[joint as keyof typeof limits].max)
+      );
+      
+      set((state) => ({
+        jointPositions: {
+          ...state.jointPositions,
+          [joint]: limitedPos
+        }
+      }));
+      
+      return;
+    }
+    
+    // Regular movement for mobile robots
+    if (state.selectedRobot?.type !== 'arm') {
       const moveStep = 0.05 * speed;
       const angle = state.robotState.rotation.y;
       
@@ -103,7 +125,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       
       const multiplier = direction === 'forward' ? 1 : -1;
       
-      // Create movement interval for continuous movement
       const moveInterval = setInterval(() => {
         const currentState = get();
         if (!currentState.robotState || !currentState.isMoving) {
@@ -123,23 +144,9 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
             batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01)
           }
         });
-      }, 16); // 60fps update rate
+      }, 16);
       
-      // Store interval reference for cleanup
       (window as any).robotMoveInterval = moveInterval;
-    } else if (joint) {
-      // Handle joint movement
-      const currentJointPos = state.jointPositions[joint as keyof JointState] || 0;
-      const jointStep = direction === 'left' || direction === 'backward' ? -0.1 : 0.1;
-      const newJointPos = currentJointPos + jointStep;
-      
-      // Update joint position
-      set((state) => ({
-        jointPositions: {
-          ...state.jointPositions,
-          [joint]: newJointPos
-        }
-      }));
     }
   },
   
@@ -149,18 +156,15 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     
     if (!state.robotState || state.selectedRobot?.type === 'arm') return;
     
-    // Clear any existing rotation intervals
     if ((window as any).robotRotateInterval) {
       clearInterval((window as any).robotRotateInterval);
     }
     
-    // Set moving state immediately
     set({ isMoving: true });
     
     const rotationStep = 0.02 * speed;
     const delta = direction === 'left' ? rotationStep : -rotationStep;
     
-    // Create rotation interval for continuous rotation
     const rotateInterval = setInterval(() => {
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
@@ -179,9 +183,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.005)
         }
       });
-    }, 16); // 60fps update rate
+    }, 16);
     
-    // Store interval reference for cleanup
     (window as any).robotRotateInterval = rotateInterval;
   },
   
@@ -208,7 +211,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
   
   stopRobot: () => {
-    // Clear any existing movement intervals
     if ((window as any).robotMoveInterval) {
       clearInterval((window as any).robotMoveInterval);
       (window as any).robotMoveInterval = null;
@@ -224,7 +226,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     
     set({
       isMoving: false,
-      moveCommands: null,
       robotState: {
         ...state.robotState,
         isMoving: false,
