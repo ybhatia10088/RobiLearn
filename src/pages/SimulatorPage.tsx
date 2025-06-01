@@ -58,9 +58,9 @@ const SimulatorPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-[calc(100vh-var(--header-height)-var(--footer-height))] bg-dark-900 p-4 md:p-6">
+      <div className="h-[calc(100vh-var(--header-height))] bg-dark-900 flex flex-col overflow-hidden">
         {currentChallenge && (
-          <div className="mb-6">
+          <div className="flex-none px-4 pt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button 
@@ -103,13 +103,13 @@ const SimulatorPage: React.FC = () => {
           </div>
         )}
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-          <div className="lg:col-span-2 flex flex-col space-y-6">
-            <div className="bg-dark-800 rounded-lg border border-dark-600 overflow-hidden h-[400px] md:h-[500px]">
+        <div className="flex-1 p-4 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col space-y-6 min-h-0">
+            <div className="h-[400px] md:h-[500px] bg-dark-800 rounded-lg border border-dark-600 overflow-hidden">
               <SceneContainer />
             </div>
             
-            <div className="flex-1 min-h-[400px]">
+            <div className="flex-1 min-h-0 flex flex-col">
               <div className="flex border-b border-dark-600">
                 <button 
                   className={`flex items-center px-4 py-2 text-sm font-medium ${activeTab === 'code' ? 'text-primary-400 border-b-2 border-primary-400' : 'text-dark-300'}`}
@@ -134,12 +134,11 @@ const SimulatorPage: React.FC = () => {
                 </button>
               </div>
               
-              <div className="h-[400px]">
+              <div className="flex-1 min-h-0">
                 {activeTab === 'code' && (
                   <CodeEditor 
                     initialCode={currentChallenge?.startingCode.code} 
                     onCodeRun={(code) => {
-                      // In a real app, this would execute the code and check objectives
                       console.log('Running code:', code);
                     }}
                   />
@@ -150,7 +149,7 @@ const SimulatorPage: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-full">
+          <div className="h-full min-h-0">
             <ControlPanel challenge={currentChallenge} />
           </div>
         </div>
