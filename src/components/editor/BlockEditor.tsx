@@ -111,48 +111,45 @@ const BlockEditor: React.FC = () => {
   const runProgram = async () => {
     const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
 
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      console.log(`Executing block #${i + 1}:`, block.name);
+    for (const block of blocks) {
+      console.log(`Executing block: ${block.name}`);
       const speed = block.params.speed || 50;
-      const distance = block.params.distance || 10;
-      const angle = block.params.angle || 90;
-      const seconds = block.params.seconds || 1;
-
-      const smoothDelay = async (ms: number) => new Promise((res) => setTimeout(res, ms));
+      const duration = 1000;
 
       switch (block.name) {
         case 'Move Forward':
-        case 'Move Backward': {
-          const duration = (distance / speed) * 1000;
-          await moveRobot({
-            direction: block.name === 'Move Forward' ? 'forward' : 'backward',
-            speed
-          });
-          await smoothDelay(duration);
+          await moveRobot({ direction: 'forward', speed: speed / 100 });
+          await new Promise(resolve => setTimeout(resolve, duration));
           break;
-        }
+
+        case 'Move Backward':
+          await moveRobot({ direction: 'backward', speed: speed / 100 });
+          await new Promise(resolve => setTimeout(resolve, duration));
+          break;
 
         case 'Turn Left':
-        case 'Turn Right': {
-          const duration = 1000; // steady, realistic single turn
-          await rotateRobot({ direction: block.name === 'Turn Left' ? 'left' : 'right', speed });
-          await smoothDelay(duration);
+          await rotateRobot({ direction: 'left', speed: speed / 100 });
+          await new Promise(resolve => setTimeout(resolve, duration));
           break;
-        }
+
+        case 'Turn Right':
+          await rotateRobot({ direction: 'right', speed: speed / 100 });
+          await new Promise(resolve => setTimeout(resolve, duration));
+          break;
 
         case 'Grab Object':
           await grabObject();
-          await smoothDelay(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
 
         case 'Release Object':
           await releaseObject();
-          await smoothDelay(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
 
         case 'Wait':
-          await smoothDelay(seconds * 1000);
+          const seconds = block.params.seconds || 1;
+          await new Promise(resolve => setTimeout(resolve, seconds * 1000));
           break;
 
         default:
@@ -160,8 +157,7 @@ const BlockEditor: React.FC = () => {
           break;
       }
 
-      console.log(`Finished block #${i + 1}, moving to next...`);
-      await smoothDelay(300); // Delay between blocks
+      await new Promise(resolve => setTimeout(resolve, 300)); // Delay between blocks
     }
 
     stopRobot();
@@ -176,28 +172,30 @@ const BlockEditor: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row">
-        <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-dark-600 p-4 overflow-auto">
-          <h4 className="text-sm font-medium text-white mb-3">Block Library</h4>
-          {blockTypes.map((bt) => (
-            <div key={bt.type} className="mb-4">
-              <h5 className={`text-xs font-medium mb-2 text-${bt.type}-400`}>{bt.name}</h5>
-              <div className="space-y-2">
-                {bt.blocks.map((b) => (
-                  <motion.div key={`${bt.type}-${b.name}`} className={`block block-${bt.type} cursor-pointer`} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => addBlock(bt.type, b.name, b.params)}>
-                    <div className="flex items-center">
-                      <PlusCircle size={14} className="mr-2 text-white" />
-                      <span className="text-sm text-white">{b.name}</span>
-                    </div>
-                  </motion.div>
-                ))}
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-dark-600 overflow-y-auto">
+          <div className="p-4">
+            <h4 className="text-sm font-medium text-white mb-3">Block Library</h4>
+            {blockTypes.map((bt) => (
+              <div key={bt.type} className="mb-4">
+                <h5 className={`text-xs font-medium mb-2 text-${bt.type}-400`}>{bt.name}</h5>
+                <div className="space-y-2">
+                  {bt.blocks.map((b) => (
+                    <motion.div key={`${bt.type}-${b.name}`} className={`block block-${bt.type} cursor-pointer`} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => addBlock(bt.type, b.name, b.params)}>
+                      <div className="flex items-center">
+                        <PlusCircle size={14} className="mr-2 text-white" />
+                        <span className="text-sm text-white">{b.name}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="flex-1 p-4 flex flex-col">
-          <div className="flex justify-between items-center mb-4">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="p-4 flex justify-between items-center">
             <h4 className="text-sm font-medium text-white">Program</h4>
             {blocks.length > 0 && (
               <button onClick={() => setBlocks([])} className="text-xs text-error-400 hover:text-error-300 flex items-center">
@@ -206,38 +204,40 @@ const BlockEditor: React.FC = () => {
             )}
           </div>
 
-          {blocks.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center border-2 border-dashed border-dark-600 rounded-lg">
-              <p className="text-center text-dark-400 p-6">Drag blocks from the library to build your program</p>
-            </div>
-          ) : (
-            <div className="flex-1 overflow-auto">
-              {blocks.map((block) => (
-                <motion.div key={block.id} className={`block block-${block.type} ${selectedBlockId === block.id ? 'ring-2 ring-white' : ''}`} whileHover={{ scale: 1.01 }} onClick={() => selectBlock(block.id)}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium text-white mb-1">{block.name}</div>
-                      {selectedBlockId === block.id && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-2">
-                          {Object.entries(block.params).map(([paramName, paramValue]) => (
-                            <div key={paramName} className="flex items-center">
-                              <label className="text-xs text-dark-300 w-24">{paramName}:</label>
-                              <input type={typeof paramValue === 'number' ? 'number' : 'text'} className="input text-xs py-1 h-8 bg-dark-700" value={paramValue} onChange={(e) => updateBlockParam(block.id, paramName, typeof paramValue === 'number' ? Number(e.target.value) : e.target.value)} />
-                            </div>
-                          ))}
-                        </motion.div>
-                      )}
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            {blocks.length === 0 ? (
+              <div className="h-full flex items-center justify-center border-2 border-dashed border-dark-600 rounded-lg">
+                <p className="text-center text-dark-400 p-6">Drag blocks from the library to build your program</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {blocks.map((block) => (
+                  <motion.div key={block.id} className={`block block-${block.type} ${selectedBlockId === block.id ? 'ring-2 ring-white' : ''}`} whileHover={{ scale: 1.01 }} onClick={() => selectBlock(block.id)}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium text-white mb-1">{block.name}</div>
+                        {selectedBlockId === block.id && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-2">
+                            {Object.entries(block.params).map(([paramName, paramValue]) => (
+                              <div key={paramName} className="flex items-center">
+                                <label className="text-xs text-dark-300 w-24">{paramName}:</label>
+                                <input type={typeof paramValue === 'number' ? 'number' : 'text'} className="input text-xs py-1 h-8 bg-dark-700" value={paramValue} onChange={(e) => updateBlockParam(block.id, paramName, typeof paramValue === 'number' ? Number(e.target.value) : e.target.value)} />
+                              </div>
+                            ))}
+                          </motion.div>
+                        )}
+                      </div>
+                      <div className="flex space-x-1">
+                        <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); moveBlockUp(block.id); }}><ArrowUp size={14} /></button>
+                        <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); moveBlockDown(block.id); }}><ArrowDown size={14} /></button>
+                        <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }}><X size={14} /></button>
+                      </div>
                     </div>
-                    <div className="flex space-x-1">
-                      <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); moveBlockUp(block.id); }}><ArrowUp size={14} /></button>
-                      <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); moveBlockDown(block.id); }}><ArrowDown size={14} /></button>
-                      <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }}><X size={14} /></button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
