@@ -601,176 +601,183 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         break;
 
       case 'drone':
-  // Enhanced drone physics with realistic flight dynamics
-  const time = state.clock.elapsedTime;
-  
-  // Smooth hovering motion with multiple oscillations for realism
-  const hoverY = Math.sin(time * PHYSICS.droneHoverSpeed) * PHYSICS.droneHoverAmplitude;
-  const microHover = Math.sin(time * 8) * 0.003; // Micro oscillations
-  group.current.position.y += (hoverY + microHover) * 0.5;
-  
-  // Advanced propeller physics with realistic counter-rotation
-  propellersRef.current.forEach((propeller, index) => {
-    if (propeller) {
-      const baseSpeed = PHYSICS.propellerSpeedIdle;
-      const activeSpeed = robotState.isMoving ? PHYSICS.propellerSpeedActive : PHYSICS.propellerSpeedIdle + 5;
-      
-      // Counter-rotating pairs for stability (front-left & back-right CW, front-right & back-left CCW)
-      const isClockwise = (index === 0 || index === 3); // Front-left and back-right
-      const direction = isClockwise ? 1 : -1;
-      const rotationSpeed = activeSpeed + Math.sin(time * 2 + index) * 2; // Slight variation per motor
-      
-      propeller.rotation.y += rotationSpeed * delta * direction;
-      
-      // Individual motor vibrations and slight position offsets
-      if (robotState.isMoving) {
-        propeller.position.y = Math.sin(time * 25 + index * 1.5) * 0.001;
-        propeller.rotation.x = Math.sin(time * 15 + index) * 0.005;
-      } else {
-        // Return to neutral position when hovering
-        propeller.position.y = THREE.MathUtils.lerp(propeller.position.y, 0, delta * 5);
-        propeller.rotation.x = THREE.MathUtils.lerp(propeller.rotation.x, 0, delta * 3);
-      }
+        // Enhanced drone physics with realistic flight dynamics
+        const time = state.clock.elapsedTime;
+        
+        // Smooth hovering motion with multiple oscillations for realism
+        const hoverY = Math.sin(time * PHYSICS.droneHoverSpeed) * PHYSICS.droneHoverAmplitude;
+        const microHover = Math.sin(time * 8) * 0.003; // Micro oscillations
+        group.current.position.y += (hoverY + microHover) * 0.5;
+        
+        // Advanced propeller physics with realistic counter-rotation
+        propellersRef.current.forEach((propeller, index) => {
+          if (propeller) {
+            const baseSpeed = PHYSICS.propellerSpeedIdle;
+            const activeSpeed = robotState.isMoving ? PHYSICS.propellerSpeedActive : PHYSICS.propellerSpeedIdle + 5;
+            
+            // Counter-rotating pairs for stability (front-left & back-right CW, front-right & back-left CCW)
+            const isClockwise = (index === 0 || index === 3); // Front-left and back-right
+            const direction = isClockwise ? 1 : -1;
+            const rotationSpeed = activeSpeed + Math.sin(time * 2 + index) * 2; // Slight variation per motor
+            
+            propeller.rotation.y += rotationSpeed * delta * direction;
+            
+            // Individual motor vibrations and slight position offsets
+            if (robotState.isMoving) {
+              propeller.position.y = Math.sin(time * 25 + index * 1.5) * 0.001;
+              propeller.rotation.x = Math.sin(time * 15 + index) * 0.005;
+            } else {
+              // Return to neutral position when hovering
+              propeller.position.y = THREE.MathUtils.lerp(propeller.position.y, 0, delta * 5);
+              propeller.rotation.x = THREE.MathUtils.lerp(propeller.rotation.x, 0, delta * 3);
+            }
+          }
+        });
+        
+        // Realistic flight dynamics with proper banking and pitching
+        if (robotState.isMoving) {
+          // Calculate movement direction
+          const moveDirection = new THREE.Vector3(
+            Math.cos(robotState.rotation.y),
+            0,
+            Math.sin(robotState.rotation.y)
+          );
+          
+          // Forward pitch when moving forward (nose down for acceleration)
+          const forwardTilt = -0.12;
+          group.current.rotation.x = THREE.MathUtils.lerp(
+            group.current.rotation.x,
+            forwardTilt,
+            delta * 3
+          );
+          
+          // Banking during turns (lean into turns)
+          const turnRate = angularVelocity.current;
+          const bankAngle = THREE.MathUtils.clamp(turnRate * 4, -0.25, 0.25);
+          group.current.rotation.z = THREE.MathUtils.lerp(
+            group.current.rotation.z,
+            bankAngle,
+            delta * 4
+          );
+          
+          // Slight yaw oscillation during flight for realism
+          const yawOscillation = Math.sin(time * 3) * 0.02;
+          group.current.rotation.y += yawOscillation * delta;
+          
+        } else {
+          // Smooth return to level flight with slight overshoot
+          group.current.rotation.x = THREE.MathUtils.lerp(
+            group.current.rotation.x,
+            Math.sin(time * 1.5) * 0.01, // Tiny natural sway
+            delta * 5
+          );
+          group.current.rotation.z = THREE.MathUtils.lerp(
+            group.current.rotation.z,
+            Math.cos(time * 1.2) * 0.008, // Tiny roll sway
+            delta * 5
+          );
+        }
+        
+        // Enhanced altitude control with smooth transitions
+        if (moveCommands) {
+          const altitudeSpeed = 0.03;
+          const targetAltitudeChange = moveCommands.direction === 'up' ? altitudeSpeed : 
+                                      moveCommands.direction === 'down' ? -altitudeSpeed : 0;
+          
+          if (targetAltitudeChange !== 0) {
+            droneAltitude.current += targetAltitudeChange;
+            
+            // Propeller speed increase during altitude changes
+            propellersRef.current.forEach((propeller, index) => {
+              if (propeller && moveCommands.direction === 'up') {
+                propeller.rotation.y += 10 * delta * (index % 2 === 0 ? 1 : -1);
+              }
+            });
+            
+            // Slight tilt during altitude changes
+            if (moveCommands.direction === 'up') {
+              group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, -0.05, delta * 2);
+            } else if (moveCommands.direction === 'down') {
+              group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0.05, delta * 2);
+            }
+          }
+          
+          // Constrain altitude with ground effect simulation
+          droneAltitude.current = THREE.MathUtils.clamp(droneAltitude.current, 0.15, 4.0);
+          
+          // Ground effect - increased stability near ground
+          if (droneAltitude.current < 0.5) {
+            const groundEffect = (0.5 - droneAltitude.current) * 0.1;
+            group.current.position.y += groundEffect;
+            
+            // Reduced oscillations near ground
+            PHYSICS.droneHoverAmplitude *= 0.5;
+          }
+        }
+        
+        // Apply target altitude smoothly
+        group.current.position.y = THREE.MathUtils.lerp(
+          group.current.position.y,
+          droneAltitude.current,
+          delta * 2
+        );
+        
+        // Wind effect simulation - subtle random movements
+        if (Math.random() < 0.01) { // Occasional wind gusts
+          const windStrength = 0.002;
+          group.current.position.x += (Math.random() - 0.5) * windStrength;
+          group.current.position.z += (Math.random() - 0.5) * windStrength;
+          
+          // Compensate with slight tilt
+          group.current.rotation.z += (Math.random() - 0.5) * 0.01;
+        }
+        
+        // Advanced gimbal stabilization for camera
+        if (group.current.children.length > 0) {
+          // Counter-rotate camera gimbal to maintain stability
+          const cameraGimbal = group.current.getObjectByName('cameraGimbal');
+          if (cameraGimbal) {
+            cameraGimbal.rotation.x = -group.current.rotation.x * 0.8;
+            cameraGimbal.rotation.z = -group.current.rotation.z * 0.8;
+          }
+        }
+        
+        // Emergency landing detection
+        if (droneAltitude.current <= 0.2 && !robotState.isMoving) {
+          // Gradual propeller slowdown for landing
+          propellersRef.current.forEach((propeller, index) => {
+            if (propeller) {
+              const landingSpeed = 5;
+              propeller.rotation.y += landingSpeed * delta * (index % 2 === 0 ? 1 : -1);
+            }
+          });
+          
+          // Settle into landing position
+          group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0, delta * 8);
+          group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, 0, delta * 8);
+        }
+        
+        // Battery simulation - slight performance degradation over time
+        const batteryLevel = Math.max(0.3, 1 - (time * 0.001)); // Slowly decrease over time
+        const performanceMultiplier = 0.7 + (batteryLevel * 0.3);
+        
+        // Apply battery effect to movements
+        if (robotState.isMoving && batteryLevel < 0.5) {
+          // Slightly more unstable flight with low battery
+          group.current.position.y += Math.sin(time * 10) * 0.005 * (1 - batteryLevel);
+        }
+        
+        break;
     }
   });
-  
-  // Realistic flight dynamics with proper banking and pitching
-  if (robotState.isMoving) {
-    // Calculate movement direction
-    const moveDirection = new THREE.Vector3(
-      Math.cos(robotState.rotation.y),
-      0,
-      Math.sin(robotState.rotation.y)
-    );
-    
-    // Forward pitch when moving forward (nose down for acceleration)
-    const forwardTilt = -0.12;
-    group.current.rotation.x = THREE.MathUtils.lerp(
-      group.current.rotation.x,
-      forwardTilt,
-      delta * 3
-    );
-    
-    // Banking during turns (lean into turns)
-    const turnRate = angularVelocity.current;
-    const bankAngle = THREE.MathUtils.clamp(turnRate * 4, -0.25, 0.25);
-    group.current.rotation.z = THREE.MathUtils.lerp(
-      group.current.rotation.z,
-      bankAngle,
-      delta * 4
-    );
-    
-    // Slight yaw oscillation during flight for realism
-    const yawOscillation = Math.sin(time * 3) * 0.02;
-    group.current.rotation.y += yawOscillation * delta;
-    
-  } else {
-    // Smooth return to level flight with slight overshoot
-    group.current.rotation.x = THREE.MathUtils.lerp(
-      group.current.rotation.x,
-      Math.sin(time * 1.5) * 0.01, // Tiny natural sway
-      delta * 5
-    );
-    group.current.rotation.z = THREE.MathUtils.lerp(
-      group.current.rotation.z,
-      Math.cos(time * 1.2) * 0.008, // Tiny roll sway
-      delta * 5
-    );
-  }
-  
-  // Enhanced altitude control with smooth transitions
-  if (moveCommands) {
-    const altitudeSpeed = 0.03;
-    const targetAltitudeChange = moveCommands.direction === 'up' ? altitudeSpeed : 
-                                moveCommands.direction === 'down' ? -altitudeSpeed : 0;
-    
-    if (targetAltitudeChange !== 0) {
-      droneAltitude.current += targetAltitudeChange;
-      
-      // Propeller speed increase during altitude changes
-      propellersRef.current.forEach((propeller, index) => {
-        if (propeller && moveCommands.direction === 'up') {
-          propeller.rotation.y += 10 * delta * (index % 2 === 0 ? 1 : -1);
-        }
-      });
-      
-      // Slight tilt during altitude changes
-      if (moveCommands.direction === 'up') {
-        group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, -0.05, delta * 2);
-      } else if (moveCommands.direction === 'down') {
-        group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0.05, delta * 2);
-      }
-    }
-    
-    // Constrain altitude with ground effect simulation
-    droneAltitude.current = THREE.MathUtils.clamp(droneAltitude.current, 0.15, 4.0);
-    
-    // Ground effect - increased stability near ground
-    if (droneAltitude.current < 0.5) {
-      const groundEffect = (0.5 - droneAltitude.current) * 0.1;
-      group.current.position.y += groundEffect;
-      
-      // Reduced oscillations near ground
-      PHYSICS.droneHoverAmplitude *= 0.5;
-    }
-  }
-  
-  // Apply target altitude smoothly
-  group.current.position.y = THREE.MathUtils.lerp(
-    group.current.position.y,
-    droneAltitude.current,
-    delta * 2
+
+  return (
+    <group ref={group}>
+      {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
+      {robotConfig.type === 'arm' && <RoboticArmGeometry />}
+      {robotConfig.type === 'drone' && <DroneGeometry />}
+    </group>
   );
-  
-  // Wind effect simulation - subtle random movements
-  if (Math.random() < 0.01) { // Occasional wind gusts
-    const windStrength = 0.002;
-    group.current.position.x += (Math.random() - 0.5) * windStrength;
-    group.current.position.z += (Math.random() - 0.5) * windStrength;
-    
-    // Compensate with slight tilt
-    group.current.rotation.z += (Math.random() - 0.5) * 0.01;
-  }
-  
-  // Advanced gimbal stabilization for camera
-  if (group.current.children.length > 0) {
-    // Counter-rotate camera gimbal to maintain stability
-    const cameraGimbal = group.current.getObjectByName('cameraGimbal');
-    if (cameraGimbal) {
-      cameraGimbal.rotation.x = -group.current.rotation.x * 0.8;
-      cameraGimbal.rotation.z = -group.current.rotation.z * 0.8;
-    }
-  }
-  
-  // Emergency landing detection
-  if (droneAltitude.current <= 0.2 && !robotState.isMoving) {
-    // Gradual propeller slowdown for landing
-    propellersRef.current.forEach((propeller, index) => {
-      if (propeller) {
-        const landingSpeed = 5;
-        propeller.rotation.y += landingSpeed * delta * (index % 2 === 0 ? 1 : -1);
-      }
-    });
-    
-    // Settle into landing position
-    group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0, delta * 8);
-    group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, 0, delta * 8);
-  }
-  
-  // Battery simulation - slight performance degradation over time
-  const batteryLevel = Math.max(0.3, 1 - (time * 0.001)); // Slowly decrease over time
-  const performanceMultiplier = 0.7 + (batteryLevel * 0.3);
-  
-  // Apply battery effect to movements
-  if (robotState.isMoving && batteryLevel < 0.5) {
-    // Slightly more unstable flight with low battery
-    group.current.position.y += Math.sin(time * 10) * 0.005 * (1 - batteryLevel);
-  }
-  
-  break;
+};
 
-  export default RobotModel;
-
-  
-
-          
+export default RobotModel;
