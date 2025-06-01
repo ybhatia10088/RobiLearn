@@ -139,10 +139,6 @@ const BlockEditor: React.FC = () => {
           await rotateRobot({ direction: block.name === 'Turn Left' ? 'left' : 'right', speed });
           await smoothDelay(duration);
           break;
-        });
-          await smoothDelay(duration); // ensure action completes before next
-          await smoothDelay(duration);
-          break;
         }
 
         case 'Grab Object':
