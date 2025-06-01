@@ -112,30 +112,54 @@ const BlockEditor: React.FC = () => {
     const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
 
     for (const block of blocks) {
+      const speed = block.params.speed || 50;
+      const distance = block.params.distance || 10;
+      const angle = block.params.angle || 90;
+      const seconds = block.params.seconds || 1;
+
       switch (block.name) {
         case 'Move Forward':
-          moveRobot({ direction: 'forward', speed: block.params.speed });
-          break;
         case 'Move Backward':
-          moveRobot({ direction: 'backward', speed: block.params.speed });
+          await new Promise((resolve) => {
+            moveRobot({
+              direction: block.name === 'Move Forward' ? 'forward' : 'backward',
+              speed
+            });
+            const duration = (distance / speed) * 1000;
+            setTimeout(resolve, Math.max(duration, 300));
+          });
           break;
+
         case 'Turn Left':
-          rotateRobot({ direction: 'left', speed: block.params.speed });
-          break;
         case 'Turn Right':
-          rotateRobot({ direction: 'right', speed: block.params.speed });
+          await new Promise((resolve) => {
+            rotateRobot({
+              direction: block.name === 'Turn Left' ? 'left' : 'right',
+              speed
+            });
+            const duration = (angle / speed) * 1000;
+            setTimeout(resolve, Math.max(duration, 300));
+          });
           break;
+
         case 'Grab Object':
           await grabObject();
           break;
+
         case 'Release Object':
           await releaseObject();
           break;
+
         case 'Wait':
-          await new Promise((res) => setTimeout(res, block.params.seconds * 1000));
+          await new Promise((res) => setTimeout(res, seconds * 1000));
+          break;
+
+        default:
+          console.warn(`Unhandled block: ${block.name}`);
           break;
       }
-      await new Promise((res) => setTimeout(res, 400));
+
+      await new Promise((res) => setTimeout(res, 200)); // Add buffer between blocks
     }
 
     stopRobot();
