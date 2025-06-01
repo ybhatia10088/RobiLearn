@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid } from '@react-three/drei';
+import { OrbitControls, Environment, Grid, ContactShadows, BakeShadows, SoftShadows } from '@react-three/drei';
 import { useRobotStore } from '@/store/robotStore';
 import RobotModel from './RobotModel';
 
@@ -19,6 +19,7 @@ const SceneContainer: React.FC = () => {
         className="w-full h-full bg-dark-900 rounded-lg"
         style={{ minHeight: '400px' }}
       >
+        <SoftShadows size={25} samples={16} />
         <color attach="background" args={['#111827']} />
         
         <ambientLight intensity={0.5} />
@@ -29,7 +30,8 @@ const SceneContainer: React.FC = () => {
           shadow-mapSize={[2048, 2048]}
         />
         
-        <Environment preset="warehouse" />
+        <Environment preset="warehouse" background blur={0.8} />
+        
         <Grid 
           infiniteGrid 
           cellSize={1}
@@ -44,6 +46,17 @@ const SceneContainer: React.FC = () => {
         />
         
         {selectedRobot && <RobotModel robotConfig={selectedRobot} />}
+        
+        <ContactShadows
+          opacity={0.4}
+          scale={10}
+          blur={2}
+          far={10}
+          resolution={256}
+          color="#000000"
+        />
+        
+        <BakeShadows />
         
         <OrbitControls 
           makeDefault 
