@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { create } from 'zustand'; // Re-import zustand if useRobotStore is defined in the same file
-import { FaPlay, FaPause, FaArrowUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaHandPaper, FaHandRock, FaPlane, FaCloudDownloadAlt, FaRotateLeft, FaRotateRight, FaBatteryFull, FaBatteryHalf, FaBatteryQuarter, FaBatteryEmpty, FaWifi, FaWifiSlash } from 'react-icons/fa';
+import { FaPlay, FaPause, FaArrowUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaHandPaper, FaHandRock, FaPlane, FaCloudDownloadAlt, FaUndo, FaRedo, FaBatteryFull, FaBatteryHalf, FaBatteryQuarter, FaBatteryEmpty, FaWifi, FaWifiSlash } from 'react-icons/fa';
 
 // Define types (these should ideally be in a separate '@/types/robot.types' file as you had)
 // For a single file, we'll put them here.
@@ -425,7 +425,7 @@ const ControlPanel: React.FC = () => {
                 className="p-4 bg-blue-700 hover:bg-blue-600 active:bg-blue-800 rounded-lg text-white text-2xl flex justify-center items-center shadow-md transition-all duration-150"
                 aria-label="Rotate Left"
               >
-                <FaRotateLeft />
+                <FaUndo />
               </button>
               <button
                 onMouseDown={() => moveRobot({ direction: 'backward', speed })}
@@ -443,7 +443,7 @@ const ControlPanel: React.FC = () => {
                 className="p-4 bg-blue-700 hover:bg-blue-600 active:bg-blue-800 rounded-lg text-white text-2xl flex justify-center items-center shadow-md transition-all duration-150"
                 aria-label="Rotate Right"
               >
-                <FaRotateRight />
+                <FaRedo />
               </button>
             </div>
 
@@ -620,7 +620,7 @@ const ControlPanel: React.FC = () => {
                     className="p-4 bg-blue-700 hover:bg-blue-600 active:bg-blue-800 rounded-lg text-white text-2xl shadow-md transition-all duration-150"
                     aria-label="Rotate Left"
                   >
-                    <FaRotateLeft />
+                    <FaUndo />
                   </button>
                   <button
                     onMouseDown={() => rotateRobot({ direction: 'right', speed })}
@@ -629,7 +629,7 @@ const ControlPanel: React.FC = () => {
                     className="p-4 bg-blue-700 hover:bg-blue-600 active:bg-blue-800 rounded-lg text-white text-2xl shadow-md transition-all duration-150"
                     aria-label="Rotate Right"
                   >
-                    <FaRotateRight />
+                    <FaRedo />
                   </button>
                 </div>
               </div>
@@ -672,7 +672,8 @@ const ControlPanel: React.FC = () => {
               }`}
             >
               {isFlying ? <FaCloudDownloadAlt className="mr-2 text-xl" /> : <FaPlane className="mr-2 text-xl" />}
-              {isFlying ? 'Land Drone' : 'Takeoff Drone'}
+              {isFlying ? 'Lan
+d Drone' : 'Takeoff Drone'}
             </button>
           </>
         );
