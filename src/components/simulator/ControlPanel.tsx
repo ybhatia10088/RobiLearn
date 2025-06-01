@@ -20,7 +20,7 @@ interface Quaternion {
 interface RobotConfig {
   id: string;
   name: string;
-  type: 'mobile' | 'arm' | 'drone' | 'spider' | 'tank' | 'humanoid'\; // Added common robot types
+  type: 'mobile' | 'arm' | 'drone' | 'spider' | 'tank' | 'humanoid'; // Added common robot types
   basePosition: Vector3;
   baseRotation: Quaternion;
   // Add other config properties as needed (e.g., joint limits for arm, max speed for mobile)
