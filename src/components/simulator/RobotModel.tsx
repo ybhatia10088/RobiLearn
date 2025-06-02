@@ -1,4 +1,4 @@
-The main issue in this file is a missing closing brace in the `useFrame` function's `arm` case. Here's the fixed section with the added closing brace:
+The main issue in this file is a missing closing brace in the `useFrame` function's `arm` case block. Here's the fixed section with the added closing brace:
 
 ```javascript
 // Wrist rotation
@@ -14,6 +14,4 @@ if (armWristRef.current) {
 }
 ```
 
-The issue was that the `if (armWristRef.current)` block was missing its closing brace. I've added it to properly close the conditional statement.
-
-The rest of the file appears to be properly structured with matching brackets. All other code blocks, including component definitions, JSX elements, and function declarations, have their corresponding closing brackets.
+The issue was that the `if (armWristRef.current)` block was missing its closing brace. I've added it to properly close the block. The rest of the file appears to be syntactically correct.
