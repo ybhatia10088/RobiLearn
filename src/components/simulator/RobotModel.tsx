@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RobotConfig } from '@/types/robot.types';
 import { useRobotStore } from '@/store/robotStore';
+import * as THREE from 'three';
 
 interface RobotModelProps {
   robotConfig: RobotConfig;
@@ -620,7 +621,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           }
           
           // Wrist rotation
-          if (armWristRef.current) {
+          if (armWristRef.current)
             const wristTarget = moveCommands.joint === 'wrist' ?
               (moveCommands.direction === 'left' ? -1.5 : 1.5) : 0;
             armAngles.wrist = THREE.MathUtils.clamp(
