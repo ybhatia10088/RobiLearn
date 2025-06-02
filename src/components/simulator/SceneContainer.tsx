@@ -1,14 +1,45 @@
-import React, { useRef, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useRef, useEffect, useState } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, Grid, ContactShadows, BakeShadows, SoftShadows } from '@react-three/drei';
 import { useRobotStore } from '@/store/robotStore';
 import RobotModel from './RobotModel';
 
+// Component to handle camera reset from inside the canvas
+const CameraController: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) => {
+  const { camera, controls } = useThree();
+  
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      camera.position.set(5, 5, 5);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+      
+      // If using OrbitControls, reset the target and update
+      if (controls) {
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+    }
+  }, [resetTrigger, camera, controls]);
+  
+  return null;
+};
+
 const SceneContainer: React.FC = () => {
   const { selectedRobot, environment } = useRobotStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showGrid, setShowGrid] = useState(true);
+  const [resetTrigger, setResetTrigger] = useState(0);
   
   const environmentName = environment?.name || 'warehouse';
+  
+  const handleResetView = () => {
+    setResetTrigger(prev => prev + 1);
+  };
+  
+  const handleToggleGrid = () => {
+    setShowGrid(prev => !prev);
+  };
   
   return (
     <div className="relative w-full h-full">
@@ -19,6 +50,8 @@ const SceneContainer: React.FC = () => {
         className="w-full h-full bg-dark-900 rounded-lg"
         style={{ minHeight: '400px' }}
       >
+        <CameraController resetTrigger={resetTrigger} />
+        
         <SoftShadows size={25} samples={16} />
         <color attach="background" args={['#111827']} />
         
@@ -32,18 +65,20 @@ const SceneContainer: React.FC = () => {
         
         <Environment preset="warehouse" background blur={0.8} />
         
-        <Grid 
-          infiniteGrid 
-          cellSize={1}
-          cellThickness={0.5}
-          cellColor="#666"
-          sectionSize={3}
-          sectionThickness={1}
-          sectionColor="#888"
-          fadeDistance={30}
-          fadeStrength={1}
-          followCamera={false}
-        />
+        {showGrid && (
+          <Grid 
+            infiniteGrid 
+            cellSize={1}
+            cellThickness={0.5}
+            cellColor="#666"
+            sectionSize={3}
+            sectionThickness={1}
+            sectionColor="#888"
+            fadeDistance={30}
+            fadeStrength={1}
+            followCamera={false}
+          />
+        )}
         
         {selectedRobot && <RobotModel robotConfig={selectedRobot} />}
         
@@ -74,20 +109,15 @@ const SceneContainer: React.FC = () => {
       <div className="absolute bottom-4 right-4 flex space-x-2">
         <button 
           className="btn-primary text-sm px-3 py-1.5 hover:bg-primary-600 active:bg-primary-700 transition-colors"
-          onClick={() => {
-            if (canvasRef.current) {
-              const camera = canvasRef.current.camera;
-              if (camera) {
-                camera.position.set(5, 5, 5);
-                camera.lookAt(0, 0, 0);
-              }
-            }
-          }}
+          onClick={handleResetView}
         >
           Reset View
         </button>
-        <button className="btn bg-dark-700 hover:bg-dark-600 active:bg-dark-500 text-white text-sm px-3 py-1.5 transition-colors">
-          Toggle Grid
+        <button 
+          className="btn bg-dark-700 hover:bg-dark-600 active:bg-dark-500 text-white text-sm px-3 py-1.5 transition-colors"
+          onClick={handleToggleGrid}
+        >
+          {showGrid ? 'Hide Grid' : 'Show Grid'}
         </button>
       </div>
     </div>
