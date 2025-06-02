@@ -565,7 +565,7 @@ const SceneContainer: React.FC = () => {
         
         {/* Fog */}
         {config.fog && (
-          <fog attach="fog\" args={[config.fog.color, config.fog.near, config.fog.far]} />
+          <fog attach="fog" args={[config.fog.color, config.fog.near, config.fog.far]} />
         )}
         
         {/* Advanced lighting setup */}
@@ -659,7 +659,8 @@ const SceneContainer: React.FC = () => {
         {/* Environment-specific props */}
         {renderEnvironmentProps()}
         
-        {selectedRobot && <RobotModel />}
+        {/* Only render RobotModel if selectedRobot exists */}
+        {selectedRobot && <RobotModel robotConfig={selectedRobot} />}
         
         <ContactShadows 
           position={[0, -0.005, 0]} 
