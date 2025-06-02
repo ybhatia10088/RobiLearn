@@ -1,9 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react';More actions
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RobotConfig } from '@/types/robot.types';
 import { useRobotStore } from '@/store/robotStore';
-@@ -10,764 +10,22 @@ interface RobotModelProps {
+
+interface RobotModelProps {
+  robotConfig: RobotConfig;
+}
 
 const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const group = useRef<THREE.Group>(null);
@@ -276,7 +278,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
               <cylinderGeometry args={[0.04, 0.05, 0.35, 32]} />
               <meshStandardMaterial color="#fb923c" metalness={0.6} roughness={0.4} />
             </mesh>
-  const { robotState, updatePhysics } = useRobotStore();
 
             {/* Wrist assembly */}
             <group ref={armWristRef} position={[0, 0, 0.37]}>
@@ -529,8 +530,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   // Realistic physics and movement simulation
   useFrame((state, delta) => {
-  // Update physics on each frame
-  useFrame((_, delta) => {
     if (!group.current || !robotState) return;
     
     // Enhanced position interpolation with momentum
@@ -759,7 +758,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         
         break;
     }
-    updatePhysics(delta);
   });
 
   return (
@@ -767,13 +765,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
       {robotConfig.type === 'arm' && <RoboticArmGeometry />}
       {robotConfig.type === 'drone' && <DroneGeometry />}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#3b82f6" />
-      </mesh>
     </group>
   );
 };
 
-export default RobotModel;
 export default RobotModel;
