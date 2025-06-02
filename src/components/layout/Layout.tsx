@@ -10,12 +10,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow pt-16">
-        {children}
+      <main className="flex-1 pt-4 pb-8 px-4 overflow-auto">
+        <div className="container mx-auto h-full">
+          {children}
+        </div>
       </main>
       <Footer />
     </div>
   );
 };
-
-export default Layout;
