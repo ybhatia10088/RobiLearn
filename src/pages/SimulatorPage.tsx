@@ -15,7 +15,7 @@ const SimulatorPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>('code');
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const challengeId = params.get('challenge');
@@ -58,9 +58,9 @@ const SimulatorPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="h-[calc(100vh-var(--header-height))] bg-dark-900 flex flex-col overflow-hidden">
+      <div className="min-h-[calc(100vh-var(--header-height)-var(--footer-height))] bg-dark-900">
         {currentChallenge && (
-          <div className="flex-none px-4 pt-4">
+          <div className="px-4 pt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button 
@@ -103,13 +103,13 @@ const SimulatorPage: React.FC = () => {
           </div>
         )}
         
-        <div className="flex-1 p-4 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col space-y-6 min-h-0">
-            <div className="h-[400px] md:h-[500px] bg-dark-800 rounded-lg border border-dark-600 overflow-hidden">
+        <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col space-y-6">
+            <div className="h-[500px] bg-dark-800 rounded-lg border border-dark-600 overflow-hidden">
               <SceneContainer />
             </div>
             
-            <div className="flex-1 min-h-0 flex flex-col">
+            <div className="editor-container">
               <div className="flex border-b border-dark-600">
                 <button 
                   className={`flex items-center px-4 py-2 text-sm font-medium ${activeTab === 'code' ? 'text-primary-400 border-b-2 border-primary-400' : 'text-dark-300'}`}
@@ -134,7 +134,7 @@ const SimulatorPage: React.FC = () => {
                 </button>
               </div>
               
-              <div className="flex-1 min-h-0">
+              <div className="h-full">
                 {activeTab === 'code' && (
                   <CodeEditor 
                     initialCode={currentChallenge?.startingCode.code} 
@@ -149,7 +149,7 @@ const SimulatorPage: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-full min-h-0">
+          <div className="h-full">
             <ControlPanel challenge={currentChallenge} />
           </div>
         </div>
