@@ -4,37 +4,23 @@ import { OrbitControls, Environment, Grid, ContactShadows, BakeShadows, SoftShad
 import { useRobotStore } from '@/store/robotStore';
 import RobotModel from './RobotModel';
 
-// Component to handle camera reset from inside the canvas
-const CameraController: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) => {
-  const { camera, controls } = useThree();
-  
-  useEffect(() => {
-    if (resetTrigger > 0) {
-      camera.position.set(5, 5, 5);
-      camera.lookAt(0, 0, 0);
-      camera.updateProjectionMatrix();
-      
-      // If using OrbitControls, reset the target and update
-      if (controls) {
-        controls.target.set(0, 0, 0);
-        controls.update();
-      }
-    }
-  }, [resetTrigger, camera, controls]);
-  
-  return null;
-};
-
 const SceneContainer: React.FC = () => {
   const { selectedRobot, environment } = useRobotStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const controlsRef = useRef<any>(null);
   const [showGrid, setShowGrid] = useState(true);
-  const [resetTrigger, setResetTrigger] = useState(0);
   
   const environmentName = environment?.name || 'warehouse';
   
   const handleResetView = () => {
-    setResetTrigger(prev => prev + 1);
+    if (controlsRef.current) {
+      // Reset camera position
+      controlsRef.current.object.position.set(5, 5, 5);
+      // Reset target to origin
+      controlsRef.current.target.set(0, 0, 0);
+      // Update the controls
+      controlsRef.current.update();
+    }
   };
   
   const handleToggleGrid = () => {
@@ -50,8 +36,6 @@ const SceneContainer: React.FC = () => {
         className="w-full h-full bg-dark-900 rounded-lg"
         style={{ minHeight: '400px' }}
       >
-        <CameraController resetTrigger={resetTrigger} />
-        
         <SoftShadows size={25} samples={16} />
         <color attach="background" args={['#111827']} />
         
@@ -94,6 +78,7 @@ const SceneContainer: React.FC = () => {
         <BakeShadows />
         
         <OrbitControls 
+          ref={controlsRef}
           makeDefault 
           enableDamping
           dampingFactor={0.1}
