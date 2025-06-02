@@ -107,11 +107,20 @@
 /* Editor layouts */
 .editor-container {
   height: calc(100vh - var(--header-height) - 180px);
-  min-height: 600px;
+  min-height: 800px;
+  @apply bg-dark-900 rounded-lg border border-dark-600;
 }
 
 .code-editor, .block-editor, .natural-language-editor {
-  @apply h-full min-h-[600px];
+  @apply h-full min-h-[800px] bg-dark-900;
+}
+
+.editor-content {
+  @apply h-[calc(100%-48px)] bg-dark-900;
+}
+
+.editor-textarea {
+  @apply w-full h-full resize-none outline-none bg-dark-900 text-white p-6 font-mono text-sm;
 }
 
 /* Custom scrollbar */

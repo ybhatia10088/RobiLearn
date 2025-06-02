@@ -134,7 +134,7 @@ const SimulatorPage: React.FC = () => {
                 </button>
               </div>
               
-              <div className="h-full">
+              <div className="editor-content">
                 {activeTab === 'code' && (
                   <CodeEditor 
                     initialCode={currentChallenge?.startingCode.code} 
