@@ -5,6 +5,8 @@
 :root {
   --header-height: 64px;
   --footer-height: 48px;
+  --editor-tabs-height: 40px;
+  --editor-header-height: 48px;
 }
 
 @layer base {
@@ -155,6 +157,8 @@
 /* Code editor styling */
 .code-editor {
   @apply font-mono text-sm bg-dark-900 p-4 rounded-md border border-dark-600;
+  height: calc(100vh - var(--header-height) - var(--editor-tabs-height) - var(--editor-header-height) - 32px);
+  min-height: 600px;
 }
 
 /* Block editor styling */
@@ -199,11 +203,20 @@
 
 /* Block editor specific styles */
 .block-library {
-  @apply overflow-y-auto;
-  max-height: calc(100vh - var(--header-height) - 200px);
+  @apply overflow-y-auto p-4;
+  height: calc(100vh - var(--header-height) - var(--editor-tabs-height) - var(--editor-header-height) - 32px);
+  min-height: 600px;
 }
 
 .block-workspace {
+  @apply overflow-y-auto p-4;
+  height: calc(100vh - var(--header-height) - var(--editor-tabs-height) - var(--editor-header-height) - 32px);
+  min-height: 600px;
+}
+
+/* Natural language editor styles */
+.natural-language-editor {
   @apply overflow-y-auto;
-  height: calc(100vh - var(--header-height) - 180px);
+  height: calc(100vh - var(--header-height) - var(--editor-tabs-height) - var(--editor-header-height) - 32px);
+  min-height: 600px;
 }
