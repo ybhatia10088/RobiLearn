@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Play, PlusCircle, X, ArrowDown, ArrowUp, Trash2, Square } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRobotStore } from '@/store/robotStore';
@@ -24,6 +24,10 @@ const BlockEditor: React.FC = () => {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(-1);
+  
+  // Use ref to track running state to avoid stale closure issues
+  const isRunningRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const blockTypes: Array<{ type: BlockType, name: string, blocks: Array<{ name: string, params: Record<string, any> }> }> = [
     {
@@ -111,15 +115,44 @@ const BlockEditor: React.FC = () => {
   };
 
   const stopProgram = () => {
-    const { stopRobot } = useRobotStore.getState();
+    console.log('Stopping program...');
+    isRunningRef.current = false;
     setIsRunning(false);
     setCurrentBlockIndex(-1);
-    stopRobot();
+    
+    // Abort any ongoing operations
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Stop robot using store
+    try {
+      const { stopRobot } = useRobotStore.getState();
+      stopRobot();
+    } catch (error) {
+      console.warn('Error stopping robot:', error);
+    }
+    
     console.log('Program stopped');
   };
 
+  // Helper function to create abortable delay
+  const delay = (ms: number, abortSignal?: AbortSignal): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(resolve, ms);
+      
+      if (abortSignal) {
+        abortSignal.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Aborted'));
+        });
+      }
+    });
+  };
+
   const runProgram = async () => {
-    if (isRunning) {
+    // If already running, stop the program
+    if (isRunningRef.current) {
       stopProgram();
       return;
     }
@@ -129,12 +162,27 @@ const BlockEditor: React.FC = () => {
       return;
     }
 
+    console.log('Starting program execution...');
+    
+    // Set running state
+    isRunningRef.current = true;
     setIsRunning(true);
-    const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
+    setCurrentBlockIndex(0);
+    
+    // Create new abort controller for this execution
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
 
     try {
+      // Get robot control functions
+      const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
+
       for (let i = 0; i < blocks.length; i++) {
-        if (!isRunning) break; // Check if program was stopped
+        // Check if program was stopped
+        if (!isRunningRef.current || signal.aborted) {
+          console.log('Program execution interrupted');
+          break;
+        }
         
         const block = blocks[i];
         setCurrentBlockIndex(i);
@@ -142,100 +190,128 @@ const BlockEditor: React.FC = () => {
         
         // Always stop the robot before starting a new action
         await stopRobot();
-        await new Promise(resolve => setTimeout(resolve, 100)); // Brief pause for state to settle
+        await delay(100, signal); // Brief pause for state to settle
 
         const speed = Math.max(0.1, Math.min(1.0, (block.params.speed || 50) / 100));
         
-        switch (block.name) {
-          case 'Move Forward':
-            const forwardDistance = block.params.distance || 10;
-            const forwardDuration = Math.max(500, forwardDistance * 100); // More realistic duration based on distance
-            
-            await moveRobot({ direction: 'forward', speed });
-            await new Promise(resolve => setTimeout(resolve, forwardDuration));
-            await stopRobot();
-            break;
+        try {
+          switch (block.name) {
+            case 'Move Forward':
+              const forwardDistance = block.params.distance || 10;
+              const forwardDuration = Math.max(500, forwardDistance * 100);
+              
+              await moveRobot({ direction: 'forward', speed });
+              await delay(forwardDuration, signal);
+              await stopRobot();
+              break;
 
-          case 'Move Backward':
-            const backwardDistance = block.params.distance || 10;
-            const backwardDuration = Math.max(500, backwardDistance * 100);
-            
-            await moveRobot({ direction: 'backward', speed });
-            await new Promise(resolve => setTimeout(resolve, backwardDuration));
-            await stopRobot();
-            break;
+            case 'Move Backward':
+              const backwardDistance = block.params.distance || 10;
+              const backwardDuration = Math.max(500, backwardDistance * 100);
+              
+              await moveRobot({ direction: 'backward', speed });
+              await delay(backwardDuration, signal);
+              await stopRobot();
+              break;
 
-          case 'Turn Left':
-            const leftAngle = block.params.angle || 90;
-            const leftDuration = Math.max(300, leftAngle * 10); // Duration based on angle
-            
-            await rotateRobot({ direction: 'left', speed });
-            await new Promise(resolve => setTimeout(resolve, leftDuration));
-            await stopRobot();
-            break;
+            case 'Turn Left':
+              const leftAngle = block.params.angle || 90;
+              const leftDuration = Math.max(300, leftAngle * 10);
+              
+              await rotateRobot({ direction: 'left', speed });
+              await delay(leftDuration, signal);
+              await stopRobot();
+              break;
 
-          case 'Turn Right':
-            const rightAngle = block.params.angle || 90;
-            const rightDuration = Math.max(300, rightAngle * 10);
-            
-            await rotateRobot({ direction: 'right', speed });
-            await new Promise(resolve => setTimeout(resolve, rightDuration));
-            await stopRobot();
-            break;
+            case 'Turn Right':
+              const rightAngle = block.params.angle || 90;
+              const rightDuration = Math.max(300, rightAngle * 10);
+              
+              await rotateRobot({ direction: 'right', speed });
+              await delay(rightDuration, signal);
+              await stopRobot();
+              break;
 
-          case 'Grab Object':
-            await grabObject();
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for grabbing action
-            break;
+            case 'Grab Object':
+              await grabObject();
+              await delay(1000, signal);
+              break;
 
-          case 'Release Object':
-            await releaseObject();
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for releasing action
-            break;
+            case 'Release Object':
+              await releaseObject();
+              await delay(1000, signal);
+              break;
 
-          case 'Wait':
-            const seconds = Math.max(0.1, block.params.seconds || 1);
-            await new Promise(resolve => setTimeout(resolve, seconds * 1000));
-            break;
+            case 'Wait':
+              const seconds = Math.max(0.1, block.params.seconds || 1);
+              await delay(seconds * 1000, signal);
+              break;
 
-          case 'Check Distance':
-            console.log(`Checking distance with ${block.params.sensor} sensor (threshold: ${block.params.threshold})`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Simulate sensor reading time
-            break;
+            case 'Check Distance':
+              console.log(`Checking distance with ${block.params.sensor} sensor (threshold: ${block.params.threshold})`);
+              await delay(500, signal);
+              break;
 
-          case 'Detect Color':
-            console.log(`Detecting ${block.params.color} color with ${block.params.sensor} sensor`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            break;
+            case 'Detect Color':
+              console.log(`Detecting ${block.params.color} color with ${block.params.sensor} sensor`);
+              await delay(500, signal);
+              break;
 
-          case 'Check Light Level':
-            console.log(`Checking light level with ${block.params.sensor} sensor (threshold: ${block.params.threshold})`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            break;
+            case 'Check Light Level':
+              console.log(`Checking light level with ${block.params.sensor} sensor (threshold: ${block.params.threshold})`);
+              await delay(500, signal);
+              break;
 
-          case 'Light LED':
-            console.log(`Lighting LED with color: ${block.params.color}`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            break;
+            case 'Light LED':
+              console.log(`Lighting LED with color: ${block.params.color}`);
+              await delay(500, signal);
+              break;
 
-          default:
-            console.warn(`Unhandled block: ${block.name}`);
-            await new Promise(resolve => setTimeout(resolve, 300));
-            break;
+            default:
+              console.warn(`Unhandled block: ${block.name}`);
+              await delay(300, signal);
+              break;
+          }
+        } catch (blockError) {
+          if (blockError instanceof Error && blockError.message === 'Aborted') {
+            throw blockError; // Re-throw abort errors
+          }
+          console.error(`Error executing block ${block.name}:`, blockError);
+          // Continue with next block on non-abort errors
         }
 
         // Pause between blocks for better visualization and control
-        await new Promise(resolve => setTimeout(resolve, 200));
+        if (isRunningRef.current && !signal.aborted) {
+          await delay(200, signal);
+        }
       }
 
-      console.log('Program execution completed');
+      if (isRunningRef.current && !signal.aborted) {
+        console.log('Program execution completed successfully');
+      }
+      
     } catch (error) {
-      console.error('Error during program execution:', error);
+      if (error instanceof Error && error.message === 'Aborted') {
+        console.log('Program execution was aborted');
+      } else {
+        console.error('Error during program execution:', error);
+      }
     } finally {
       // Ensure robot is stopped and state is reset
-      await stopRobot();
+      try {
+        const { stopRobot } = useRobotStore.getState();
+        await stopRobot();
+      } catch (error) {
+        console.warn('Error stopping robot in cleanup:', error);
+      }
+      
+      // Reset state
+      isRunningRef.current = false;
       setIsRunning(false);
       setCurrentBlockIndex(-1);
+      abortControllerRef.current = null;
+      
+      console.log('Program execution cleanup completed');
     }
   };
 
