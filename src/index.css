@@ -4,7 +4,7 @@
 
 :root {
   --header-height: 64px;
-  --footer-height: 40px;
+  --footer-height: 48px;
 }
 
 @layer base {
@@ -159,7 +159,7 @@
 
 /* Block editor styling */
 .block {
-  @apply cursor-pointer rounded-md p-2 mb-2 border-2 border-dark-500 transition-all duration-200;
+  @apply cursor-pointer rounded-md p-3 mb-3 border-2 border-dark-500 transition-all duration-200;
 }
 
 .block-motion {
@@ -185,6 +185,7 @@
 
 .main-content {
   @apply flex-1 flex flex-col;
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
 }
 
 .content-wrapper {
@@ -193,4 +194,16 @@
 
 .scrollable-content {
   @apply overflow-y-auto;
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+}
+
+/* Block editor specific styles */
+.block-library {
+  @apply overflow-y-auto;
+  max-height: calc(100vh - var(--header-height) - 200px);
+}
+
+.block-workspace {
+  @apply overflow-y-auto;
+  height: calc(100vh - var(--header-height) - 180px);
 }
