@@ -274,7 +274,7 @@ const LaboratoryProps = () => {
           
           {/* Computer workstation */}
           <Box args={[0.4, 0.25, 0.3]} position={[2.5, 2.23, 0]} castShadow>
-            <meshStandardMaterial color="#1c1c1c" metalness={0.1" roughness={0.7} />
+            <meshStandardMaterial color="#1c1c1c" metalness={0.1} roughness={0.7} />
           </Box>
           <Box args={[0.02, 0.3, 0.25]} position={[2.7, 2.35, 0]} castShadow>
             <meshStandardMaterial color="#000000" metalness={0.9} roughness={0.1} />
@@ -343,7 +343,7 @@ const LaboratoryProps = () => {
           <meshStandardMaterial color="#f0f0f0" metalness={0.4} roughness={0.2} />
         </Box>
         <Cylinder args={[0.3, 0.3, 0.8]} position={[0, 2.2, 0]} castShadow>
-          <meshStandardMaterial color="#4682b4" metalness={0.6" roughness={0.3} />
+          <meshStandardMaterial color="#4682b4" metalness={0.6} roughness={0.3} />
         </Cylinder>
         {/* Control panel */}
         <Box args={[0.8, 0.6, 0.1]} position={[0, 1.5, 0.8]} castShadow>
@@ -357,7 +357,7 @@ const LaboratoryProps = () => {
           <meshStandardMaterial color="#ffffff" metalness={0.2} roughness={0.1} />
         </Box>
         <Box args={[7.8, 0.1, 2.3]} position={[0, 0.05, 0]} castShadow>
-          <meshStandardMaterial color="#e6e6fa" metalness={0.8" roughness={0.1} />
+          <meshStandardMaterial color="#e6e6fa" metalness={0.8} roughness={0.1} />
         </Box>
         {/* Glass front */}
         <Box args={[7.5, 2.5, 0.05]} position={[0, 1.75, 1.2]} castShadow>
@@ -369,15 +369,11 @@ const LaboratoryProps = () => {
       <group position={[12, 0, 12]}>
         <Cylinder args={[0.1, 0.1, 2.5]} position={[0, 1.25, 0]} castShadow>
           <meshStandardMaterial color="#ffd700" metalness={0.7} roughness={0.3} />
-        </Box>
+        </Cylinder>
         <Box args={[0.3, 0.3, 0.3]} position={[0, 2.7, 0]} castShadow>
           <meshStandardMaterial color="#ff6347" roughness={0.4} />
         </Box>
       </group>
-    </group>
-  );
-};<meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.1} />
-      </Cylinder>
     </group>
   );
 };
@@ -488,7 +484,7 @@ const OutdoorProps = () => {
       <Cylinder args={[0.4, 0.4, 6]} position={[5, 0.4, -12]} rotation={[0, Math.PI/4, 0]} castShadow>
         <meshStandardMaterial color="#8B4513" roughness={0.8} />
       </Cylinder>
-      <Cylinder args={[0.3, 0.3, 4]} position={[-8, 0.3, 8]} rotation={[0, -Math.PI/6, 0]} castShadow>
+      <Cylinder args={[0.3,0.3, 4]} position={[-8, 0.3, 8]} rotation={[0, -Math.PI/6, 0]} castShadow>
         <meshStandardMaterial color="#654321" roughness={0.8} />
       </Cylinder>
       
@@ -714,8 +710,6 @@ const SceneContainer: React.FC = () => {
           </div>
         </div>
       </div>
-
-
     </div>
   );
 };
