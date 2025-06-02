@@ -16,4 +16,4 @@ if (armWristRef.current) {
 
 The original had a missing opening curly brace after the if statement and was missing proper nesting. I've added the necessary curly braces to properly scope the wrist rotation logic.
 
-The rest of the file appears syntactically correct. Let me know if you need any other clarification!
+The rest of the file appears to be syntactically correct. Let me know if you need any other clarification!
