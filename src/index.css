@@ -4,7 +4,7 @@
 
 :root {
   --header-height: 64px;
-  --footer-height: 48px;
+  --footer-height: 320px;
 }
 
 @layer base {
@@ -102,6 +102,16 @@
   .glow-text {
     text-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
   }
+}
+
+/* Editor layouts */
+.editor-container {
+  height: calc(100vh - var(--header-height) - 180px);
+  min-height: 600px;
+}
+
+.code-editor, .block-editor, .natural-language-editor {
+  @apply h-full min-h-[600px];
 }
 
 /* Custom scrollbar */
