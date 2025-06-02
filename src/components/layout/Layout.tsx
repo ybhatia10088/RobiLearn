@@ -8,9 +8,9 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="page-container">
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="main-content pt-[var(--header-height)]">
+      <main className="flex-grow pt-16">
         {children}
       </main>
       <Footer />
