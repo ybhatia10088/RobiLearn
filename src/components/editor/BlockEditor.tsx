@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, PlusCircle, X, ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import { Play, PlusCircle, X, ArrowDown, ArrowUp, Trash2, Square } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRobotStore } from '@/store/robotStore';
 
@@ -22,6 +22,8 @@ const BlockEditor: React.FC = () => {
   }]);
 
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(-1);
 
   const blockTypes: Array<{ type: BlockType, name: string, blocks: Array<{ name: string, params: Record<string, any> }> }> = [
     {
@@ -108,68 +110,167 @@ const BlockEditor: React.FC = () => {
     }
   };
 
+  const stopProgram = () => {
+    const { stopRobot } = useRobotStore.getState();
+    setIsRunning(false);
+    setCurrentBlockIndex(-1);
+    stopRobot();
+    console.log('Program stopped');
+  };
+
   const runProgram = async () => {
-    const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
-
-    for (const block of blocks) {
-      console.log(`Executing block: ${block.name}`);
-      const speed = block.params.speed || 50;
-      const duration = 1000;
-
-      switch (block.name) {
-        case 'Move Forward':
-          await moveRobot({ direction: 'forward', speed: speed / 100 });
-          await new Promise(resolve => setTimeout(resolve, duration));
-          break;
-
-        case 'Move Backward':
-          await moveRobot({ direction: 'backward', speed: speed / 100 });
-          await new Promise(resolve => setTimeout(resolve, duration));
-          break;
-
-        case 'Turn Left':
-          await rotateRobot({ direction: 'left', speed: speed / 100 });
-          await new Promise(resolve => setTimeout(resolve, duration));
-          break;
-
-        case 'Turn Right':
-          await rotateRobot({ direction: 'right', speed: speed / 100 });
-          await new Promise(resolve => setTimeout(resolve, duration));
-          break;
-
-        case 'Grab Object':
-          await grabObject();
-          await new Promise(resolve => setTimeout(resolve, 500));
-          break;
-
-        case 'Release Object':
-          await releaseObject();
-          await new Promise(resolve => setTimeout(resolve, 500));
-          break;
-
-        case 'Wait':
-          const seconds = block.params.seconds || 1;
-          await new Promise(resolve => setTimeout(resolve, seconds * 1000));
-          break;
-
-        default:
-          console.warn(`Unhandled block: ${block.name}`);
-          break;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 300)); // Delay between blocks
+    if (isRunning) {
+      stopProgram();
+      return;
     }
 
-    stopRobot();
+    if (blocks.length === 0) {
+      console.log('No blocks to execute');
+      return;
+    }
+
+    setIsRunning(true);
+    const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
+
+    try {
+      for (let i = 0; i < blocks.length; i++) {
+        if (!isRunning) break; // Check if program was stopped
+        
+        const block = blocks[i];
+        setCurrentBlockIndex(i);
+        console.log(`Executing block ${i + 1}/${blocks.length}: ${block.name}`);
+        
+        // Always stop the robot before starting a new action
+        await stopRobot();
+        await new Promise(resolve => setTimeout(resolve, 100)); // Brief pause for state to settle
+
+        const speed = Math.max(0.1, Math.min(1.0, (block.params.speed || 50) / 100));
+        
+        switch (block.name) {
+          case 'Move Forward':
+            const forwardDistance = block.params.distance || 10;
+            const forwardDuration = Math.max(500, forwardDistance * 100); // More realistic duration based on distance
+            
+            await moveRobot({ direction: 'forward', speed });
+            await new Promise(resolve => setTimeout(resolve, forwardDuration));
+            await stopRobot();
+            break;
+
+          case 'Move Backward':
+            const backwardDistance = block.params.distance || 10;
+            const backwardDuration = Math.max(500, backwardDistance * 100);
+            
+            await moveRobot({ direction: 'backward', speed });
+            await new Promise(resolve => setTimeout(resolve, backwardDuration));
+            await stopRobot();
+            break;
+
+          case 'Turn Left':
+            const leftAngle = block.params.angle || 90;
+            const leftDuration = Math.max(300, leftAngle * 10); // Duration based on angle
+            
+            await rotateRobot({ direction: 'left', speed });
+            await new Promise(resolve => setTimeout(resolve, leftDuration));
+            await stopRobot();
+            break;
+
+          case 'Turn Right':
+            const rightAngle = block.params.angle || 90;
+            const rightDuration = Math.max(300, rightAngle * 10);
+            
+            await rotateRobot({ direction: 'right', speed });
+            await new Promise(resolve => setTimeout(resolve, rightDuration));
+            await stopRobot();
+            break;
+
+          case 'Grab Object':
+            await grabObject();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for grabbing action
+            break;
+
+          case 'Release Object':
+            await releaseObject();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for releasing action
+            break;
+
+          case 'Wait':
+            const seconds = Math.max(0.1, block.params.seconds || 1);
+            await new Promise(resolve => setTimeout(resolve, seconds * 1000));
+            break;
+
+          case 'Check Distance':
+            console.log(`Checking distance with ${block.params.sensor} sensor (threshold: ${block.params.threshold})`);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Simulate sensor reading time
+            break;
+
+          case 'Detect Color':
+            console.log(`Detecting ${block.params.color} color with ${block.params.sensor} sensor`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            break;
+
+          case 'Check Light Level':
+            console.log(`Checking light level with ${block.params.sensor} sensor (threshold: ${block.params.threshold})`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            break;
+
+          case 'Light LED':
+            console.log(`Lighting LED with color: ${block.params.color}`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            break;
+
+          default:
+            console.warn(`Unhandled block: ${block.name}`);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            break;
+        }
+
+        // Pause between blocks for better visualization and control
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      console.log('Program execution completed');
+    } catch (error) {
+      console.error('Error during program execution:', error);
+    } finally {
+      // Ensure robot is stopped and state is reset
+      await stopRobot();
+      setIsRunning(false);
+      setCurrentBlockIndex(-1);
+    }
   };
 
   return (
     <div className="bg-dark-800 rounded-lg border border-dark-600 h-full flex flex-col">
       <div className="border-b border-dark-600 p-3 flex justify-between items-center">
         <h3 className="text-lg font-semibold text-white">Block Editor</h3>
-        <button onClick={runProgram} className="btn bg-primary-500 hover:bg-primary-600 text-white text-sm py-1 px-3 flex items-center">
-          <Play size={14} className="mr-1" /> <span>Run Program</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {isRunning && (
+            <div className="flex items-center text-sm text-primary-400">
+              <div className="w-2 h-2 bg-primary-400 rounded-full animate-pulse mr-2"></div>
+              Running ({currentBlockIndex + 1}/{blocks.length})
+            </div>
+          )}
+          <button 
+            onClick={runProgram} 
+            className={`btn text-white text-sm py-1 px-3 flex items-center ${
+              isRunning 
+                ? 'bg-error-500 hover:bg-error-600' 
+                : 'bg-primary-500 hover:bg-primary-600'
+            }`}
+          >
+            {isRunning ? (
+              <>
+                <Square size={14} className="mr-1" /> 
+                <span>Stop</span>
+              </>
+            ) : (
+              <>
+                <Play size={14} className="mr-1" /> 
+                <span>Run Program</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row min-h-0">
@@ -181,7 +282,13 @@ const BlockEditor: React.FC = () => {
                 <h5 className={`text-xs font-medium mb-2 text-${bt.type}-400`}>{bt.name}</h5>
                 <div className="space-y-2">
                   {bt.blocks.map((b) => (
-                    <motion.div key={`${bt.type}-${b.name}`} className={`block block-${bt.type} cursor-pointer`} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => addBlock(bt.type, b.name, b.params)}>
+                    <motion.div 
+                      key={`${bt.type}-${b.name}`} 
+                      className={`block block-${bt.type} cursor-pointer ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                      whileHover={!isRunning ? { scale: 1.02 } : {}} 
+                      whileTap={!isRunning ? { scale: 0.98 } : {}} 
+                      onClick={() => !isRunning && addBlock(bt.type, b.name, b.params)}
+                    >
                       <div className="flex items-center">
                         <PlusCircle size={14} className="mr-2 text-white" />
                         <span className="text-sm text-white">{b.name}</span>
@@ -197,9 +304,13 @@ const BlockEditor: React.FC = () => {
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <div className="p-4 flex justify-between items-center">
             <h4 className="text-sm font-medium text-white">Program</h4>
-            {blocks.length > 0 && (
-              <button onClick={() => setBlocks([])} className="text-xs text-error-400 hover:text-error-300 flex items-center">
-                <Trash2 size={12} className="mr-1" /> <span>Clear All</span>
+            {blocks.length > 0 && !isRunning && (
+              <button 
+                onClick={() => setBlocks([])} 
+                className="text-xs text-error-400 hover:text-error-300 flex items-center"
+              >
+                <Trash2 size={12} className="mr-1" /> 
+                <span>Clear All</span>
               </button>
             )}
           </div>
@@ -211,27 +322,85 @@ const BlockEditor: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-2">
-                {blocks.map((block) => (
-                  <motion.div key={block.id} className={`block block-${block.type} ${selectedBlockId === block.id ? 'ring-2 ring-white' : ''}`} whileHover={{ scale: 1.01 }} onClick={() => selectBlock(block.id)}>
+                {blocks.map((block, index) => (
+                  <motion.div 
+                    key={block.id} 
+                    className={`block block-${block.type} ${
+                      selectedBlockId === block.id ? 'ring-2 ring-white' : ''
+                    } ${
+                      currentBlockIndex === index ? 'ring-2 ring-primary-400 bg-primary-900/20' : ''
+                    } ${
+                      isRunning && currentBlockIndex !== index ? 'opacity-60' : ''
+                    }`} 
+                    whileHover={!isRunning ? { scale: 1.01 } : {}} 
+                    onClick={() => !isRunning && selectBlock(block.id)}
+                  >
                     <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-medium text-white mb-1">{block.name}</div>
-                        {selectedBlockId === block.id && (
-                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-2">
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <span className="text-xs text-dark-400 mr-2">#{index + 1}</span>
+                          <div className="font-medium text-white mb-1">{block.name}</div>
+                          {currentBlockIndex === index && (
+                            <div className="ml-2 flex items-center">
+                              <div className="w-2 h-2 bg-primary-400 rounded-full animate-pulse"></div>
+                            </div>
+                          )}
+                        </div>
+                        {selectedBlockId === block.id && !isRunning && (
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0 }} 
+                            animate={{ opacity: 1, height: 'auto' }} 
+                            exit={{ opacity: 0, height: 0 }} 
+                            className="mt-2 space-y-2"
+                          >
                             {Object.entries(block.params).map(([paramName, paramValue]) => (
                               <div key={paramName} className="flex items-center">
-                                <label className="text-xs text-dark-300 w-24">{paramName}:</label>
-                                <input type={typeof paramValue === 'number' ? 'number' : 'text'} className="input text-xs py-1 h-8 bg-dark-700" value={paramValue} onChange={(e) => updateBlockParam(block.id, paramName, typeof paramValue === 'number' ? Number(e.target.value) : e.target.value)} />
+                                <label className="text-xs text-dark-300 w-24 capitalize">{paramName}:</label>
+                                <input 
+                                  type={typeof paramValue === 'number' ? 'number' : 'text'} 
+                                  className="input text-xs py-1 h-8 bg-dark-700" 
+                                  value={paramValue} 
+                                  min={typeof paramValue === 'number' ? 0 : undefined}
+                                  max={paramName === 'speed' ? 100 : undefined}
+                                  onChange={(e) => updateBlockParam(
+                                    block.id, 
+                                    paramName, 
+                                    typeof paramValue === 'number' ? Number(e.target.value) : e.target.value
+                                  )} 
+                                />
+                                {paramName === 'speed' && <span className="text-xs text-dark-400 ml-1">%</span>}
+                                {paramName === 'distance' && <span className="text-xs text-dark-400 ml-1">units</span>}
+                                {paramName === 'angle' && <span className="text-xs text-dark-400 ml-1">°</span>}
+                                {paramName === 'seconds' && <span className="text-xs text-dark-400 ml-1">sec</span>}
                               </div>
                             ))}
                           </motion.div>
                         )}
                       </div>
-                      <div className="flex space-x-1">
-                        <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); moveBlockUp(block.id); }}><ArrowUp size={14} /></button>
-                        <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); moveBlockDown(block.id); }}><ArrowDown size={14} /></button>
-                        <button className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }}><X size={14} /></button>
-                      </div>
+                      {!isRunning && (
+                        <div className="flex space-x-1">
+                          <button 
+                            className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" 
+                            onClick={(e) => { e.stopPropagation(); moveBlockUp(block.id); }}
+                            disabled={index === 0}
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button 
+                            className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" 
+                            onClick={(e) => { e.stopPropagation(); moveBlockDown(block.id); }}
+                            disabled={index === blocks.length - 1}
+                          >
+                            <ArrowDown size={14} />
+                          </button>
+                          <button 
+                            className="p-1 rounded hover:bg-dark-600 text-dark-400 hover:text-white" 
+                            onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 ))}
