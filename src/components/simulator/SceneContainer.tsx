@@ -565,7 +565,7 @@ const SceneContainer: React.FC = () => {
         
         {/* Fog */}
         {config.fog && (
-          <fog attach="fog" args={[config.fog.color, config.fog.near, config.fog.far]} />
+          <fog attach="fog\" args={[config.fog.color, config.fog.near, config.fog.far]} />
         )}
         
         {/* Advanced lighting setup */}
