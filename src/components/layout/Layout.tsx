@@ -8,10 +8,15 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen">
       <Header />
-      <main className="flex-1 pt-4 pb-8 px-4 overflow-auto">
-        <div className="container mx-auto h-full">
+      <main 
+        className="flex-1 overflow-hidden"
+        style={{ 
+          height: `calc(100vh - var(--header-height) - var(--footer-height))` 
+        }}
+      >
+        <div className="container mx-auto h-full p-4">
           {children}
         </div>
       </main>
