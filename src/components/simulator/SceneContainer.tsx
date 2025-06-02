@@ -65,56 +65,154 @@ const environments = [
 const WarehouseProps = () => {
   return (
     <group>
-      {/* Shelving Units */}
-      {[...Array(6)].map((_, i) => (
+      {/* Heavy-duty shelving units with realistic proportions */}
+      {[...Array(8)].map((_, i) => (
         <group key={`shelf-${i}`} position={[
-          -15 + (i % 3) * 15, 
+          -18 + (i % 4) * 12, 
           0, 
-          -10 + Math.floor(i / 3) * 20
+          -12 + Math.floor(i / 4) * 24
         ]}>
-          {/* Shelf frame */}
-          <Box args={[0.2, 8, 4]} position={[0, 4, 0]} castShadow>
-            <meshStandardMaterial color="#666666" metalness={0.7} roughness={0.3} />
+          {/* Vertical steel beams */}
+          <Box args={[0.3, 10, 0.3]} position={[0, 5, -2]} castShadow>
+            <meshStandardMaterial color="#4a4a4a" metalness={0.8} roughness={0.4} />
           </Box>
-          <Box args={[0.2, 8, 4]} position={[8, 4, 0]} castShadow>
-            <meshStandardMaterial color="#666666" metalness={0.7} roughness={0.3} />
+          <Box args={[0.3, 10, 0.3]} position={[0, 5, 2]} castShadow>
+            <meshStandardMaterial color="#4a4a4a" metalness={0.8} roughness={0.4} />
           </Box>
-          {/* Shelf levels */}
-          {[1, 3, 5, 7].map(height => (
-            <Box key={height} args={[8, 0.2, 4]} position={[4, height, 0]} castShadow>
-              <meshStandardMaterial color="#444444" metalness={0.5} roughness={0.6} />
-            </Box>
+          <Box args={[0.3, 10, 0.3]} position={[6, 5, -2]} castShadow>
+            <meshStandardMaterial color="#4a4a4a" metalness={0.8} roughness={0.4} />
+          </Box>
+          <Box args={[0.3, 10, 0.3]} position={[6, 5, 2]} castShadow>
+            <meshStandardMaterial color="#4a4a4a" metalness={0.8} roughness={0.4} />
+          </Box>
+          
+          {/* Horizontal shelf platforms */}
+          {[2, 4.5, 7, 9.5].map(height => (
+            <group key={height}>
+              <Box args={[6.5, 0.15, 4.5]} position={[3, height, 0]} castShadow>
+                <meshStandardMaterial color="#8B4513" roughness={0.8} metalness={0.1} />
+              </Box>
+              {/* Support beams under shelves */}
+              <Box args={[6.5, 0.1, 0.2]} position={[3, height - 0.1, -2]} castShadow>
+                <meshStandardMaterial color="#666666" metalness={0.7} roughness={0.3} />
+              </Box>
+              <Box args={[6.5, 0.1, 0.2]} position={[3, height - 0.1, 2]} castShadow>
+                <meshStandardMaterial color="#666666" metalness={0.7} roughness={0.3} />
+              </Box>
+            </group>
           ))}
-          {/* Cargo boxes */}
-          <Box args={[2, 1.5, 1.5]} position={[2, 2.25, 0]} castShadow>
-            <meshStandardMaterial color="#8B4513" roughness={0.8} />
+          
+          {/* Realistic cardboard boxes and packages */}
+          <Box args={[1.8, 1.2, 1.2]} position={[1.5, 3.1, 0.5]} castShadow>
+            <meshStandardMaterial color="#CD853F" roughness={0.9} />
           </Box>
-          <Box args={[1.5, 1, 1]} position={[6, 3.5, 1]} castShadow>
-            <meshStandardMaterial color="#2F4F4F" roughness={0.7} />
+          <Box args={[1.5, 0.8, 1]} position={[4.5, 2.9, -0.5]} castShadow>
+            <meshStandardMaterial color="#DEB887" roughness={0.85} />
+          </Box>
+          <Box args={[1, 1.5, 0.8]} position={[2.5, 5.85, 1]} castShadow>
+            <meshStandardMaterial color="#F4A460" roughness={0.9} />
+          </Box>
+          
+          {/* Plastic storage bins */}
+          <Box args={[2, 0.6, 1.5]} position={[4, 8.8, 0]} castShadow>
+            <meshStandardMaterial color="#4169E1" roughness={0.3} metalness={0.1} />
           </Box>
         </group>
       ))}
       
-      {/* Large containers */}
-      <Box args={[4, 4, 8]} position={[20, 2, 0]} castShadow>
-        <meshStandardMaterial color="#800080" metalness={0.3} roughness={0.8} />
-      </Box>
-      <Box args={[4, 4, 8]} position={[20, 2, -12]} castShadow>
-        <meshStandardMaterial color="#008080" metalness={0.3} roughness={0.8} />
+      {/* Shipping containers with realistic details */}
+      <group position={[25, 0, 0]}>
+        <Box args={[2.5, 2.6, 12]} position={[0, 1.3, 0]} castShadow>
+          <meshStandardMaterial color="#DC143C" metalness={0.6} roughness={0.7} />
+        </Box>
+        {/* Container doors */}
+        <Box args={[0.1, 2.4, 2]} position={[-1.3, 1.3, 5]} castShadow>
+          <meshStandardMaterial color="#8B0000" metalness={0.5} roughness={0.6} />
+        </Box>
+        <Box args={[0.1, 2.4, 2]} position={[-1.3, 1.3, 3]} castShadow>
+          <meshStandardMaterial color="#8B0000" metalness={0.5} roughness={0.6} />
+        </Box>
+        {/* Container ridges */}
+        {[...Array(8)].map((_, i) => (
+          <Box key={i} args={[2.6, 0.05, 0.1]} position={[0, 0.4 + i * 0.3, -6]} castShadow>
+            <meshStandardMaterial color="#B22222" metalness={0.7} roughness={0.5} />
+          </Box>
+        ))}
+      </group>
+      
+      <group position={[25, 0, -15]}>
+        <Box args={[2.5, 2.6, 12]} position={[0, 1.3, 0]} castShadow>
+          <meshStandardMaterial color="#228B22" metalness={0.6} roughness={0.7} />
+        </Box>
+        <Box args={[0.1, 2.4, 2]} position={[-1.3, 1.3, 5]} castShadow>
+          <meshStandardMaterial color="#006400" metalness={0.5} roughness={0.6} />
+        </Box>
+      </group>
+      
+      {/* Industrial forklift with detailed components */}
+      <group position={[12, 0, 18]} rotation={[0, Math.PI/4, 0]}>
+        {/* Main body */}
+        <Box args={[2.2, 1.2, 4]} position={[0, 0.6, 0]} castShadow>
+          <meshStandardMaterial color="#FF8C00" metalness={0.7} roughness={0.5} />
+        </Box>
+        {/* Operator seat */}
+        <Box args={[0.8, 0.6, 0.8]} position={[0, 1.5, -0.5]} castShadow>
+          <meshStandardMaterial color="#2F2F2F" roughness={0.8} />
+        </Box>
+        {/* Front wheels */}
+        <Cylinder args={[0.6, 0.6, 0.4]} position={[-0.8, 0.6, 1.8]} rotation={[Math.PI/2, 0, 0]} castShadow>
+          <meshStandardMaterial color="#1C1C1C" roughness={0.9} />
+        </Cylinder>
+        <Cylinder args={[0.6, 0.6, 0.4]} position={[0.8, 0.6, 1.8]} rotation={[Math.PI/2, 0, 0]} castShadow>
+          <meshStandardMaterial color="#1C1C1C" roughness={0.9} />
+        </Cylinder>
+        {/* Rear wheels */}
+        <Cylinder args={[0.5, 0.5, 0.3]} position={[-0.7, 0.5, -1.8]} rotation={[Math.PI/2, 0, 0]} castShadow>
+          <meshStandardMaterial color="#1C1C1C" roughness={0.9} />
+        </Cylinder>
+        <Cylinder args={[0.5, 0.5, 0.3]} position={[0.7, 0.5, -1.8]} rotation={[Math.PI/2, 0, 0]} castShadow>
+          <meshStandardMaterial color="#1C1C1C" roughness={0.9} />
+        </Cylinder>
+        {/* Forks */}
+        <Box args={[0.1, 0.1, 2]} position={[-0.3, 0.3, 3]} castShadow>
+          <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
+        </Box>
+        <Box args={[0.1, 0.1, 2]} position={[0.3, 0.3, 3]} castShadow>
+          <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
+        </Box>
+        {/* Mast */}
+        <Box args={[0.15, 4, 0.15]} position={[0, 2.5, 2.5]} castShadow>
+          <meshStandardMaterial color="#808080" metalness={0.8} roughness={0.3} />
+        </Box>
+      </group>
+      
+      {/* Loading dock area */}
+      <Box args={[8, 1.2, 2]} position={[-22, 0.6, 0]} castShadow>
+        <meshStandardMaterial color="#696969" metalness={0.2} roughness={0.8} />
       </Box>
       
-      {/* Forklift */}
-      <group position={[10, 0, 15]}>
-        <Box args={[2, 1, 4]} position={[0, 0.5, 0]} castShadow>
-          <meshStandardMaterial color="#FF4500" metalness={0.6} roughness={0.4} />
+      {/* Pallet jacks and equipment */}
+      <group position={[8, 0, -8]}>
+        <Box args={[0.8, 0.1, 2]} position={[0, 0.1, 0]} castShadow>
+          <meshStandardMaterial color="#4682B4" metalness={0.6} roughness={0.4} />
         </Box>
-        <Cylinder args={[0.5, 0.5, 0.3]} position={[-0.7, 0.3, 1.5]} rotation={[Math.PI/2, 0, 0]} castShadow>
-          <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
-        </Cylinder>
-        <Cylinder args={[0.5, 0.5, 0.3]} position={[0.7, 0.3, 1.5]} rotation={[Math.PI/2, 0, 0]} castShadow>
-          <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+        <Cylinder args={[0.15, 0.15, 1]} position={[0, 0.5, -0.8]} castShadow>
+          <meshStandardMaterial color="#2F4F4F" metalness={0.7} roughness={0.3} />
         </Cylinder>
       </group>
+      
+      {/* Warning signs and safety equipment */}
+      <Box args={[0.05, 1.5, 1]} position={[15, 0.75, 25]} castShadow>
+        <meshStandardMaterial color="#FFD700" roughness={0.3} />
+      </Box>
+      
+      {/* Concrete pillars */}
+      <Cylinder args={[0.4, 0.4, 8]} position={[0, 4, 30]} castShadow>
+        <meshStandardMaterial color="#696969" roughness={0.9} />
+      </Cylinder>
+      <Cylinder args={[0.4, 0.4, 8]} position={[-15, 4, 30]} castShadow>
+        <meshStandardMaterial color="#696969" roughness={0.9} />
+      </Cylinder>
     </group>
   );
 };
@@ -123,50 +221,162 @@ const WarehouseProps = () => {
 const LaboratoryProps = () => {
   return (
     <group>
-      {/* Workbenches */}
-      {[...Array(4)].map((_, i) => (
+      {/* Advanced scientific workbenches */}
+      {[...Array(6)].map((_, i) => (
         <group key={`bench-${i}`} position={[
-          -12 + i * 8, 
+          -15 + (i % 3) * 10, 
           0, 
-          i % 2 === 0 ? -8 : 8
+          i < 3 ? -8 : 8
         ]}>
-          <Box args={[6, 0.2, 2]} position={[0, 2, 0]} castShadow>
-            <meshStandardMaterial color="#f5f5f5" metalness={0.1} roughness={0.2} />
+          {/* Stainless steel bench surface */}
+          <Box args={[7, 0.08, 2.2]} position={[0, 2, 0]} castShadow>
+            <meshStandardMaterial color="#f8f8ff" metalness={0.8} roughness={0.1} />
           </Box>
-          <Box args={[0.2, 2, 0.2]} position={[-2.8, 1, -0.8]} castShadow>
-            <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
+          {/* Under-bench storage */}
+          <Box args={[6.8, 1.5, 2]} position={[0, 1.2, 0]} castShadow>
+            <meshStandardMaterial color="#e6e6fa" metalness={0.3} roughness={0.2} />
           </Box>
-          <Box args={[0.2, 2, 0.2]} position={[2.8, 1, -0.8]} castShadow>
-            <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
+          {/* Adjustable legs */}
+          <Cylinder args={[0.04, 0.04, 2]} position={[-3.2, 1, -0.9]} castShadow>
+            <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+          </Cylinder>
+          <Cylinder args={[0.04, 0.04, 2]} position={[3.2, 1, -0.9]} castShadow>
+            <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+          </Cylinder>
+          <Cylinder args={[0.04, 0.04, 2]} position={[-3.2, 1, 0.9]} castShadow>
+            <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+          </Cylinder>
+          <Cylinder args={[0.04, 0.04, 2]} position={[3.2, 1, 0.9]} castShadow>
+            <meshStandardMaterial color="#c0c0c0" metalness={0.9} roughness={0.1} />
+          </Cylinder>
+          
+          {/* Laboratory equipment */}
+          {/* Centrifuge */}
+          <Cylinder args={[0.4, 0.4, 0.6]} position={[-2, 2.4, 0]} castShadow>
+            <meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.2} />
+          </Cylinder>
+          <Cylinder args={[0.42, 0.42, 0.1]} position={[-2, 2.75, 0]} castShadow>
+            <meshStandardMaterial color="#4169e1" metalness={0.6} roughness={0.3} />
+          </Cylinder>
+          
+          {/* Microscope */}
+          <group position={[0, 2.1, 0]}>
+            <Cylinder args={[0.15, 0.15, 0.3]} position={[0, 0.15, 0]} castShadow>
+              <meshStandardMaterial color="#2f2f2f" metalness={0.8} roughness={0.2} />
+            </Cylinder>
+            <Box args={[0.3, 0.1, 0.4]} position={[0, 0.35, 0]} castShadow>
+              <meshStandardMaterial color="#2f2f2f" metalness={0.8} roughness={0.2} />
+            </Box>
+            <Cylinder args={[0.03, 0.03, 0.5]} position={[0, 0.65, 0]} castShadow>
+              <meshStandardMaterial color="#2f2f2f" metalness={0.8} roughness={0.2} />
+            </Cylinder>
+          </group>
+          
+          {/* Computer workstation */}
+          <Box args={[0.4, 0.25, 0.3]} position={[2.5, 2.23, 0]} castShadow>
+            <meshStandardMaterial color="#1c1c1c" metalness={0.1" roughness={0.7} />
           </Box>
-          <Box args={[0.2, 2, 0.2]} position={[-2.8, 1, 0.8]} castShadow>
-            <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
-          </Box>
-          <Box args={[0.2, 2, 0.2]} position={[2.8, 1, 0.8]} castShadow>
-            <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
+          <Box args={[0.02, 0.3, 0.25]} position={[2.7, 2.35, 0]} castShadow>
+            <meshStandardMaterial color="#000000" metalness={0.9} roughness={0.1} />
           </Box>
           
-          {/* Equipment on benches */}
-          <Cylinder args={[0.3, 0.3, 0.8]} position={[-1, 2.6, 0]} castShadow>
-            <meshStandardMaterial color="#4169E1" metalness={0.5} roughness={0.3} />
-          </Cylinder>
-          <Box args={[0.8, 0.4, 0.6]} position={[1, 2.4, 0]} castShadow>
-            <meshStandardMaterial color="#708090" metalness={0.7} roughness={0.2} />
+          {/* Analytical balance */}
+          <Box args={[0.25, 0.2, 0.25]} position={[-1, 2.2, 0.5]} castShadow>
+            <meshStandardMaterial color="#f5f5f5" metalness={0.2} roughness={0.1} />
           </Box>
+          <Box args={[0.3, 0.3, 0.05]} position={[-1, 2.45, 0.5]} castShadow>
+            <meshStandardMaterial color="#e0e0e0" metalness={0.1} roughness={0.2} />
+          </Box>
+          
+          {/* Chemical bottles and beakers */}
+          <Cylinder args={[0.08, 0.08, 0.3]} position={[1, 2.25, 0.7]} castShadow>
+            <meshStandardMaterial color="#87ceeb" metalness={0.1} roughness={0.1} transparent opacity={0.8} />
+          </Cylinder>
+          <Cylinder args={[0.06, 0.06, 0.25]} position={[1.3, 2.23, 0.7]} castShadow>
+            <meshStandardMaterial color="#98fb98" metalness={0.1} roughness={0.1} transparent opacity={0.8} />
+          </Cylinder>
+          <Cylinder args={[0.1, 0.1, 0.35]} position={[0.7, 2.28, 0.7]} castShadow>
+            <meshStandardMaterial color="#ffd700" metalness={0.1} roughness={0.1} transparent opacity={0.8} />
+          </Cylinder>
         </group>
       ))}
       
-      {/* Server racks */}
-      <Box args={[2, 6, 1]} position={[15, 3, -5]} castShadow>
-        <meshStandardMaterial color="#2F2F2F" metalness={0.8} roughness={0.2} />
-      </Box>
-      <Box args={[2, 6, 1]} position={[15, 3, 5]} castShadow>
-        <meshStandardMaterial color="#2F2F2F" metalness={0.8} roughness={0.2} />
-      </Box>
+      {/* Professional server/data processing racks */}
+      <group position={[18, 0, -5]}>
+        <Box args={[2.2, 6.5, 1.2]} position={[0, 3.25, 0]} castShadow>
+          <meshStandardMaterial color="#1a1a1a" metalness={0.9} roughness={0.2} />
+        </Box>
+        {/* Server rack details */}
+        {[...Array(12)].map((_, i) => (
+          <Box key={i} args={[2, 0.2, 1]} position={[0, 0.8 + i * 0.45, 0]} castShadow>
+            <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.3} />
+          </Box>
+        ))}
+        {/* LED indicators */}
+        {[...Array(6)].map((_, i) => (
+          <group key={i}>
+            <Box args={[0.05, 0.05, 0.02]} position={[-0.8, 1 + i * 0.9, 0.62]} castShadow>
+              <meshStandardMaterial color="#00ff00" emissive="#004400" />
+            </Box>
+            <Box args={[0.05, 0.05, 0.02]} position={[-0.6, 1 + i * 0.9, 0.62]} castShadow>
+              <meshStandardMaterial color="#ff0000" emissive="#440000" />
+            </Box>
+          </group>
+        ))}
+      </group>
       
-      {/* Large equipment */}
-      <Cylinder args={[1.5, 1.5, 3]} position={[-15, 1.5, 0]} castShadow>
-        <meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.1} />
+      <group position={[18, 0, 5]}>
+        <Box args={[2.2, 6.5, 1.2]} position={[0, 3.25, 0]} castShadow>
+          <meshStandardMaterial color="#1a1a1a" metalness={0.9} roughness={0.2} />
+        </Box>
+        {[...Array(12)].map((_, i) => (
+          <Box key={i} args={[2, 0.2, 1]} position={[0, 0.8 + i * 0.45, 0]} castShadow>
+            <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.3} />
+          </Box>
+        ))}
+      </group>
+      
+      {/* Large analytical equipment */}
+      <group position={[-18, 0, 0]}>
+        {/* Mass spectrometer */}
+        <Box args={[2, 1.8, 1.5]} position={[0, 0.9, 0]} castShadow>
+          <meshStandardMaterial color="#f0f0f0" metalness={0.4} roughness={0.2} />
+        </Box>
+        <Cylinder args={[0.3, 0.3, 0.8]} position={[0, 2.2, 0]} castShadow>
+          <meshStandardMaterial color="#4682b4" metalness={0.6" roughness={0.3} />
+        </Cylinder>
+        {/* Control panel */}
+        <Box args={[0.8, 0.6, 0.1]} position={[0, 1.5, 0.8]} castShadow>
+          <meshStandardMaterial color="#000000" metalness={0.9} roughness={0.1} />
+        </Box>
+      </group>
+      
+      {/* Fume hoods */}
+      <group position={[0, 0, -15]}>
+        <Box args={[8, 3, 2.5]} position={[0, 1.5, 0]} castShadow>
+          <meshStandardMaterial color="#ffffff" metalness={0.2} roughness={0.1} />
+        </Box>
+        <Box args={[7.8, 0.1, 2.3]} position={[0, 0.05, 0]} castShadow>
+          <meshStandardMaterial color="#e6e6fa" metalness={0.8" roughness={0.1} />
+        </Box>
+        {/* Glass front */}
+        <Box args={[7.5, 2.5, 0.05]} position={[0, 1.75, 1.2]} castShadow>
+          <meshStandardMaterial color="#e0ffff" metalness={0.1} roughness={0.05} transparent opacity={0.3} />
+        </Box>
+      </group>
+      
+      {/* Emergency shower and eyewash station */}
+      <group position={[12, 0, 12]}>
+        <Cylinder args={[0.1, 0.1, 2.5]} position={[0, 1.25, 0]} castShadow>
+          <meshStandardMaterial color="#ffd700" metalness={0.7} roughness={0.3} />
+        </Box>
+        <Box args={[0.3, 0.3, 0.3]} position={[0, 2.7, 0]} castShadow>
+          <meshStandardMaterial color="#ff6347" roughness={0.4} />
+        </Box>
+      </group>
+    </group>
+  );
+};<meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.1} />
       </Cylinder>
     </group>
   );
@@ -359,7 +569,7 @@ const SceneContainer: React.FC = () => {
         
         {/* Fog */}
         {config.fog && (
-          <fog attach="fog\" args={[config.fog.color, config.fog.near, config.fog.far]} />
+          <fog attach="fog" args={[config.fog.color, config.fog.near, config.fog.far]} />
         )}
         
         {/* Advanced lighting setup */}
@@ -453,7 +663,7 @@ const SceneContainer: React.FC = () => {
         {/* Environment-specific props */}
         {renderEnvironmentProps()}
         
-        {selectedRobot && <RobotModel robotConfig={selectedRobot} />}
+        {selectedRobot && <RobotModel />}
         
         <ContactShadows 
           position={[0, -0.005, 0]} 
@@ -505,18 +715,7 @@ const SceneContainer: React.FC = () => {
         </div>
       </div>
 
-      {/* Environment Details Panel */}
-      <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md text-white p-4 rounded-lg shadow-xl border border-gray-700">
-        <div className="text-sm space-y-2">
-          <div className="font-bold text-yellow-300">{currentEnvironment.name.toUpperCase()}</div>
-          <div className="text-xs text-gray-300 space-y-1">
-            <div>Lighting: {Math.round(currentEnvironment.lighting.intensity * 100)}%</div>
-            <div>Shadows: {currentEnvironment.lighting.shadows ? 'Enabled' : 'Disabled'}</div>
-            <div>Surface: {currentEnvironment.ground.roughness > 0.5 ? 'Rough' : 'Smooth'}</div>
-            {currentEnvironment.fog && <div>Atmosphere: Foggy</div>}
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 };
