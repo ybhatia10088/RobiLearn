@@ -108,7 +108,7 @@
 .editor-container {
   height: calc(100vh - var(--header-height) - 180px);
   min-height: 800px;
-  @apply bg-dark-900 rounded-lg border border-dark-600;
+  @apply bg-dark-900 rounded-xl border border-dark-600 overflow-hidden;
 }
 
 .code-editor, .block-editor, .natural-language-editor {
@@ -116,7 +116,7 @@
 }
 
 .editor-content {
-  @apply h-[calc(100%-48px)] bg-dark-900;
+  @apply h-[calc(100%-56px)] bg-dark-900;
 }
 
 .editor-textarea {
