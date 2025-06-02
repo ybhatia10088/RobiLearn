@@ -453,7 +453,7 @@ const SceneContainer: React.FC = () => {
         {/* Environment-specific props */}
         {renderEnvironmentProps()}
         
-        {selectedRobot && <RobotModel />}
+        {selectedRobot && <RobotModel robotConfig={selectedRobot} />}
         
         <ContactShadows 
           position={[0, -0.005, 0]} 
