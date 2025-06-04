@@ -5,33 +5,20 @@ import { useRobotStore } from '@/store/robotStore';
 import RobotModel from './RobotModel';
 import * as THREE from 'three';
 
-// Global robot position and reference
-const robotTracker = {
+// Simple robot position tracker
+const robotState = {
   position: new THREE.Vector3(0, 0, 0),
-  ref: null as THREE.Object3D | null,
-  hasRobot: false
+  initialized: false
 };
 
-// Robot Model wrapper that continuously tracks position
-const TrackedRobotModel: React.FC<{ robotConfig: any }> = ({ robotConfig }) => {
+// Robot wrapper that tracks position without affecting the model
+const RobotWrapper: React.FC<{ robotConfig: any }> = ({ robotConfig }) => {
   const groupRef = useRef<THREE.Group>(null);
-  
-  useEffect(() => {
-    if (groupRef.current) {
-      robotTracker.ref = groupRef.current;
-      robotTracker.hasRobot = true;
-    }
-    
-    return () => {
-      robotTracker.hasRobot = false;
-      robotTracker.ref = null;
-    };
-  }, []);
   
   useFrame(() => {
     if (groupRef.current) {
-      // Continuously update robot position
-      groupRef.current.getWorldPosition(robotTracker.position);
+      groupRef.current.getWorldPosition(robotState.position);
+      robotState.initialized = true;
     }
   });
   
@@ -42,44 +29,38 @@ const TrackedRobotModel: React.FC<{ robotConfig: any }> = ({ robotConfig }) => {
   );
 };
 
-// Camera that always follows the robot - no other mode
-const AlwaysFollowCamera: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) => {
+// Simple camera follower
+const CameraFollower: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) => {
   const { camera } = useThree();
-  const cameraOffset = new THREE.Vector3(5, 4, 5); // Fixed offset behind and above robot
-  const smoothingFactor = 0.08; // Smooth but responsive following
+  const targetRef = useRef(new THREE.Vector3(0, 0, 0));
+  const cameraPositionRef = useRef(new THREE.Vector3(5, 4, 5));
   
   useEffect(() => {
-    if (resetTrigger > 0 && robotTracker.hasRobot) {
-      // Reset camera to follow position
-      const robotPos = robotTracker.position.clone();
-      const initialCameraPos = robotPos.clone().add(cameraOffset);
-      
-      camera.position.copy(initialCameraPos);
-      camera.lookAt(robotPos);
-      camera.updateProjectionMatrix();
+    // Initial camera setup
+    camera.position.set(5, 4, 5);
+    camera.lookAt(0, 0, 0);
+  }, [camera]);
+  
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      camera.position.set(5, 4, 5);
+      camera.lookAt(robotState.position);
     }
   }, [resetTrigger, camera]);
   
-  useFrame((state, delta) => {
-    if (robotTracker.hasRobot && robotTracker.ref) {
-      const currentRobotPos = robotTracker.position.clone();
+  useFrame(() => {
+    if (robotState.initialized) {
+      // Simple following logic
+      const robotPos = robotState.position;
+      const offset = new THREE.Vector3(5, 4, 5);
+      const desiredPos = robotPos.clone().add(offset);
       
-      // Calculate desired camera position - always behind and above robot
-      const desiredCameraPos = currentRobotPos.clone().add(cameraOffset);
+      // Smooth camera movement
+      camera.position.lerp(desiredPos, 0.05);
       
-      // Smoothly move camera to desired position
-      const lerpSpeed = Math.min(delta * 4, 1); // Responsive but smooth
-      camera.position.lerp(desiredCameraPos, lerpSpeed);
-      
-      // Always look at the robot
-      const lookAtTarget = currentRobotPos.clone();
-      // Smoothly update look-at target
-      const currentTarget = new THREE.Vector3();
-      camera.getWorldDirection(currentTarget);
-      currentTarget.multiplyScalar(-1).add(camera.position);
-      
-      const smoothLookAt = currentTarget.lerp(lookAtTarget, lerpSpeed);
-      camera.lookAt(smoothLookAt);
+      // Smooth target following
+      targetRef.current.lerp(robotPos, 0.05);
+      camera.lookAt(targetRef.current);
     }
   });
   
@@ -102,15 +83,6 @@ const SceneContainer: React.FC = () => {
     setShowGrid(prev => !prev);
   };
   
-  // Auto-reset camera when robot changes
-  useEffect(() => {
-    if (selectedRobot) {
-      setTimeout(() => {
-        setResetTrigger(prev => prev + 1);
-      }, 100);
-    }
-  }, [selectedRobot]);
-  
   return (
     <div className="relative w-full h-full">
       <Canvas
@@ -120,17 +92,17 @@ const SceneContainer: React.FC = () => {
         className="w-full h-full bg-dark-900 rounded-lg"
         style={{ minHeight: '400px' }}
       >
-        <AlwaysFollowCamera resetTrigger={resetTrigger} />
+        <CameraFollower resetTrigger={resetTrigger} />
         
         <SoftShadows size={25} samples={16} />
         <color attach="background" args={['#111827']} />
         
-        <ambientLight intensity={0.5} />
+        <ambientLight intensity={0.4} />
         <directionalLight 
           position={[10, 10, 5]} 
-          intensity={1} 
+          intensity={0.8} 
           castShadow 
-          shadow-mapSize={[2048, 2048]}
+          shadow-mapSize={[1024, 1024]}
         />
         
         <Environment preset="warehouse" background blur={0.8} />
@@ -146,16 +118,15 @@ const SceneContainer: React.FC = () => {
             sectionColor="#888"
             fadeDistance={30}
             fadeStrength={1}
-            followCamera={true}
           />
         )}
         
         {selectedRobot && (
-          <TrackedRobotModel robotConfig={selectedRobot} />
+          <RobotWrapper robotConfig={selectedRobot} />
         )}
         
         <ContactShadows
-          opacity={0.4}
+          opacity={0.3}
           scale={10}
           blur={2}
           far={10}
@@ -164,15 +135,10 @@ const SceneContainer: React.FC = () => {
         />
         
         <BakeShadows />
-        
-        {/* No OrbitControls - camera is always locked to robot */}
       </Canvas>
       
       <div className="absolute top-4 left-4 bg-dark-800/80 backdrop-blur-sm px-3 py-2 rounded-md text-sm text-white border border-dark-600">
-        <div>Environment: {environmentName}</div>
-        <div className="text-xs mt-1 text-green-400">
-          🎥 Camera Following Robot
-        </div>
+        Environment: {environmentName}
       </div>
       
       <div className="absolute bottom-4 right-4 flex space-x-2">
