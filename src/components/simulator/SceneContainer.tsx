@@ -10,6 +10,7 @@ const CameraController: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) 
   
   useEffect(() => {
     if (resetTrigger > 0) {
+      // Reset camera position and rotation
       camera.position.set(5, 5, 5);
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
@@ -26,7 +27,7 @@ const CameraController: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) 
 };
 
 const SceneContainer: React.FC = () => {
-  const { selectedRobot, environment } = useRobotStore();
+  const { selectedRobot, environment, resetRobotState } = useRobotStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [resetTrigger, setResetTrigger] = useState(0);
@@ -34,7 +35,13 @@ const SceneContainer: React.FC = () => {
   const environmentName = environment?.name || 'warehouse';
   
   const handleResetView = () => {
+    // Reset camera view
     setResetTrigger(prev => prev + 1);
+    
+    // Reset robot state - this function should be implemented in your robotStore
+    if (resetRobotState) {
+      resetRobotState();
+    }
   };
   
   const handleToggleGrid = () => {
@@ -110,8 +117,9 @@ const SceneContainer: React.FC = () => {
         <button 
           className="btn-primary text-sm px-3 py-1.5 hover:bg-primary-600 active:bg-primary-700 transition-colors"
           onClick={handleResetView}
+          title="Reset camera view and robot position"
         >
-          Reset View
+          Reset Scene
         </button>
         <button 
           className="btn bg-dark-700 hover:bg-dark-600 active:bg-dark-500 text-white text-sm px-3 py-1.5 transition-colors"
