@@ -18,7 +18,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     rotateRobot, 
     grabObject, 
     releaseObject,
-    stopRobot 
+    stopRobot,
+    landDrone,
+    startHover
   } = useRobotStore();
   
   const [speed, setSpeed] = useState(50);
@@ -98,15 +100,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     setIsHovering(!isHovering);
     
     if (!isHovering) {
-      // Start hover mode
-      moveRobot({ 
-        direction: 'forward',
-        speed: 0.3,
-        joint: 'altitude'
-      });
+      startHover();
     } else {
-      // Stop hover mode
-      stopRobot();
+      landDrone();
     }
   };
 
@@ -295,7 +291,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   e.preventDefault();
                   handleMoveEnd();
                 }}
-                disabled={!selectedRobot}
+                disabled={!selectedRobot || !isHovering}
               >
                 <ArrowUp size={20} />
               </button>
@@ -316,7 +312,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   e.preventDefault();
                   handleRotateEnd();
                 }}
-                disabled={!selectedRobot}
+                disabled={!selectedRobot || !isHovering}
               >
                 <ArrowLeft size={20} />
               </button>
@@ -335,7 +331,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   e.preventDefault();
                   handleMoveEnd();
                 }}
-                disabled={!selectedRobot}
+                disabled={!selectedRobot || !isHovering}
               >
                 <ArrowDown size={20} />
               </button>
@@ -354,7 +350,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                   e.preventDefault();
                   handleRotateEnd();
                 }}
-                disabled={!selectedRobot}
+                disabled={!selectedRobot || !isHovering}
               >
                 <ArrowRight size={20} />
               </button>
@@ -381,7 +377,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                     : 'bg-dark-700 hover:bg-dark-600'
                 } text-white py-2`}
                 onClick={handleDroneBoost}
-                disabled={!selectedRobot}
+                disabled={!selectedRobot || !isHovering}
               >
                 <Zap size={18} className="mr-2" />
                 <span>Boost {isBoosting ? 'Off' : 'On'}</span>

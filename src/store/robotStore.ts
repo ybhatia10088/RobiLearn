@@ -43,6 +43,7 @@ interface RobotStoreState {
   resetRobotState: () => void;
   resetRobotStateByType: () => void;
   landDrone: () => void;
+  startHover: () => void;
 }
 
 const INITIAL_ROBOT_STATE = {
@@ -98,20 +99,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       const { selectedRobot } = state;
       let initialPosition = { x: 0, y: 0, z: 0 };
 
-      switch (selectedRobot?.type) {
-        case 'mobile':
-          initialPosition = { x: 0, y: 0, z: 0 };
-          break;
-        case 'arm':
-          initialPosition = { x: 0, y: 0, z: 0 };
-          break;
-        case 'drone':
-          initialPosition = { x: 0, y: 1.5, z: 0 };
-          break;
-        default:
-          initialPosition = { x: 0, y: 0, z: 0 };
-      }
-
+      // All robots, including drone, start at ground level
       return {
         ...state,
         robotState: {
@@ -127,6 +115,52 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         isMoving: false,
       };
     });
+  },
+
+  startHover: () => {
+    const state = get();
+    if (!state.robotState || state.selectedRobot?.type !== 'drone') return;
+
+    // Start hover sequence
+    const hoverInterval = setInterval(() => {
+      const currentState = get();
+      if (!currentState.robotState) {
+        clearInterval(hoverInterval);
+        return;
+      }
+
+      const currentHeight = currentState.robotState.position.y;
+      const targetHeight = 1.5; // Target hover height
+
+      if (currentHeight >= targetHeight) {
+        // Reached hover height
+        set((state) => ({
+          robotState: {
+            ...state.robotState!,
+            position: {
+              ...state.robotState!.position,
+              y: targetHeight
+            },
+            isMoving: true
+          },
+          isMoving: true
+        }));
+        clearInterval(hoverInterval);
+      } else {
+        // Continue ascending
+        set((state) => ({
+          robotState: {
+            ...state.robotState!,
+            position: {
+              ...state.robotState!.position,
+              y: Math.min(targetHeight, currentHeight + 0.05)
+            },
+            isMoving: true
+          },
+          isMoving: true
+        }));
+      }
+    }, 16);
   },
 
   landDrone: () => {
@@ -174,11 +208,16 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
 
   selectRobot: (config) => {
+    const initialPosition = { 
+      ...config.basePosition,
+      y: config.type === 'drone' ? 0 : config.basePosition.y // Drones start on ground
+    };
+
     set({
       selectedRobot: config,
       robotState: {
         robotId: config.id,
-        position: { ...config.basePosition },
+        position: initialPosition,
         rotation: { ...config.baseRotation },
         jointPositions: {},
         sensorReadings: [],
