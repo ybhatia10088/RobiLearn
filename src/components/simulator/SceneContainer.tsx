@@ -1,69 +1,33 @@
-import React, { useRef, useEffect, useState, forwardRef } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import React, { useRef, useEffect, useState } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, Grid, ContactShadows, BakeShadows, SoftShadows } from '@react-three/drei';
 import { useRobotStore } from '@/store/robotStore';
 import RobotModel from './RobotModel';
-import * as THREE from 'three';
 
-// Unified camera management component
-const CameraManager: React.FC<{ 
-  resetTrigger: number, 
-  robotRef: React.RefObject<THREE.Group> 
-}> = ({ resetTrigger, robotRef }) => {
+// Component to handle camera reset from inside the canvas
+const CameraController: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) => {
   const { camera, controls } = useThree();
-  const orbitControls = controls as any;
-  const initialOffset = useRef(new THREE.Vector3(5, 5, 5));
-  const targetOffset = useRef(new THREE.Vector3());
-  const resetInProgress = useRef(false);
-  const _robotPosition = useRef(new THREE.Vector3());
-  const _delta = useRef(new THREE.Vector3());
-
-  // Handle view reset
+  
   useEffect(() => {
-    if (resetTrigger > 0 && robotRef.current) {
-      resetInProgress.current = true;
-      robotRef.current.getWorldPosition(_robotPosition.current);
+    if (resetTrigger > 0) {
+      camera.position.set(5, 5, 5);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
       
-      // Set new camera position relative to robot
-      camera.position.copy(_robotPosition.current.clone().add(initialOffset.current));
-      camera.lookAt(_robotPosition.current);
-      
-      if (orbitControls) {
-        orbitControls.target.copy(_robotPosition.current);
-        orbitControls.update();
+      // If using OrbitControls, reset the target and update
+      if (controls) {
+        controls.target.set(0, 0, 0);
+        controls.update();
       }
-      
-      // Reset after animation completes
-      setTimeout(() => resetInProgress.current = false, 500);
     }
-  }, [resetTrigger, camera, orbitControls, robotRef]);
-
-  // Smooth follow logic
-  useFrame((_, delta) => {
-    if (!robotRef.current || !orbitControls || resetInProgress.current) return;
-    
-    robotRef.current.getWorldPosition(_robotPosition.current);
-    
-    // Update controls target to follow robot
-    orbitControls.target.lerp(_robotPosition.current, 5 * delta);
-    
-    // Maintain camera distance while allowing orbital movement
-    targetOffset.current.copy(camera.position).sub(orbitControls.target);
-    const distance = targetOffset.current.length();
-    targetOffset.current.normalize().multiplyScalar(Math.max(distance, 3));
-    
-    // Update camera position relative to robot
-    camera.position.copy(orbitControls.target).add(targetOffset.current);
-    orbitControls.update();
-  });
-
+  }, [resetTrigger, camera, controls]);
+  
   return null;
 };
 
 const SceneContainer: React.FC = () => {
   const { selectedRobot, environment } = useRobotStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const robotRef = useRef<THREE.Group>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [resetTrigger, setResetTrigger] = useState(0);
   
@@ -86,10 +50,7 @@ const SceneContainer: React.FC = () => {
         className="w-full h-full bg-dark-900 rounded-lg"
         style={{ minHeight: '400px' }}
       >
-        <CameraManager 
-          resetTrigger={resetTrigger} 
-          robotRef={robotRef} 
-        />
+        <CameraController resetTrigger={resetTrigger} />
         
         <SoftShadows size={25} samples={16} />
         <color attach="background" args={['#111827']} />
@@ -102,7 +63,7 @@ const SceneContainer: React.FC = () => {
           shadow-mapSize={[2048, 2048]}
         />
         
-        <Environment preset={environmentName} background blur={0.8} />
+        <Environment preset="warehouse" background blur={0.8} />
         
         {showGrid && (
           <Grid 
@@ -119,12 +80,7 @@ const SceneContainer: React.FC = () => {
           />
         )}
         
-        {selectedRobot && (
-          <RobotModel 
-            robotConfig={selectedRobot} 
-            ref={robotRef} 
-          />
-        )}
+        {selectedRobot && <RobotModel robotConfig={selectedRobot} />}
         
         <ContactShadows
           opacity={0.4}
