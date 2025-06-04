@@ -97,14 +97,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   resetRobotStateByType: () => {
     set((state) => {
       const { selectedRobot } = state;
-      let initialPosition = { x: 0, y: 0, z: 0 };
-
-      // All robots, including drone, start at ground level
       return {
         ...state,
         robotState: {
           ...INITIAL_ROBOT_STATE,
-          position: initialPosition,
+          position: { x: 0, y: 0, z: 0 }, // Always start at ground level
           type: selectedRobot?.type || 'mobile',
           robotId: state.robotState?.robotId || '',
           jointPositions: {},
@@ -208,10 +205,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
 
   selectRobot: (config) => {
-    const initialPosition = { 
-      ...config.basePosition,
-      y: config.type === 'drone' ? 0 : config.basePosition.y // Drones start on ground
-    };
+    // Always start robots at ground level
+    const initialPosition = { x: 0, y: 0, z: 0 };
 
     set({
       selectedRobot: config,
