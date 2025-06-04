@@ -8,6 +8,204 @@ interface RobotModelProps {
   robotConfig: RobotConfig;
 }
 
+// --- Body Part Components ---
+
+const Head = ({ headRef }) => (
+  <group ref={headRef} position={[0, 1.6, 0]}>
+    <mesh castShadow>
+      <sphereGeometry args={[0.12, 32, 32]} />
+      <meshStandardMaterial color="#fcd34d" metalness={0.1} roughness={0.8} />
+    </mesh>
+    <mesh position={[0, 0, 0.12]}>
+      <boxGeometry args={[0.08, 0.05, 0.02]} />
+      <meshStandardMaterial color="#1f293b" />
+    </mesh>
+    {[-0.05, 0.05].map((x, i) => (
+      <mesh key={i} position={[x, 0.03, 0.13]}>
+        <sphereGeometry args={[0.015, 16, 16]} />
+        <meshStandardMaterial color="#3b82f6" emissive="#3b82f6" emissiveIntensity={0.5} />
+      </mesh>
+    ))}
+    <mesh position={[0, -0.05, 0.12]}>
+      <boxGeometry args={[0.06, 0.01, 0.02]} />
+      <meshStandardMaterial color="#1f293b" />
+    </mesh>
+  </group>
+);
+
+const Torso = () => (
+  <group position={[0, 1.2, 0]}>
+    {/* Upper torso */}
+    <mesh>
+      <boxGeometry args={[0.3, 0.2, 0.15]} />
+      <meshStandardMaterial color="#475569" metalness={0.3} roughness={0.7} />
+    </mesh>
+    {/* Lower torso */}
+    <mesh position={[0, -0.15, 0]}>
+      <boxGeometry args={[0.3, 0.2, 0.15]} />
+      <meshStandardMaterial color="#64748b" metalness={0.3} roughness={0.7} />
+    </mesh>
+  </group>
+);
+
+const Arm = ({ side, x, upperRef, lowerRef }) => (
+  <group key={side} ref={upperRef} position={[x, 1.2, 0]}>
+    {/* Upper arm */}
+    <mesh position={[0, 0, 0]}>
+      <sphereGeometry args={[0.06, 16, 16]} />
+      <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+    </mesh>
+    <mesh position={[0, -0.15, 0]}>
+      <cylinderGeometry args={[0.05, 0.05, 0.3, 32]} rotation={[Math.PI / 2, 0, 0]} />
+      <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+    </mesh>
+    {/* Lower arm */}
+    <group ref={lowerRef} position={[0, -0.3, 0]}>
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.05, 16, 16]} />
+        <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, -0.15, 0]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.3, 32]} rotation={[Math.PI / 2, 0, 0]} />
+        <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+      </mesh>
+      {/* Hand */}
+      <mesh position={[0, -0.3, 0]}>
+        <boxGeometry args={[0.08, 0.03, 0.1]} />
+        <meshStandardMaterial color="#cbd5e1" metalness={0.2} roughness={0.8} />
+      </mesh>
+    </group>
+  </group>
+);
+
+const Leg = ({ side, x, upperRef, lowerRef }) => (
+  <group key={side} ref={upperRef} position={[x, 0.8, 0]}>
+    {/* Upper leg */}
+    <mesh position={[0, 0, 0]}>
+      <sphereGeometry args={[0.07, 16, 16]} />
+      <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+    </mesh>
+    <mesh position={[0, -0.2, 0]}>
+      <cylinderGeometry args={[0.06, 0.06, 0.4, 32]} rotation={[Math.PI / 2, 0, 0]} />
+      <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+    </mesh>
+    {/* Lower leg */}
+    <group ref={lowerRef} position={[0, -0.4, 0]}>
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.06, 16, 16]} />
+        <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, -0.2, 0]}>
+        <cylinderGeometry args={[0.05, 0.05, 0.4, 32]} rotation={[Math.PI / 2, 0, 0]} />
+        <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+      </mesh>
+      {/* Foot */}
+      <mesh position={[0, -0.25, 0.05]}>
+        <boxGeometry args={[0.15, 0.03, 0.2]} />
+        <meshStandardMaterial color="#1f293b" metalness={0.3} roughness={0.7} />
+      </mesh>
+    </group>
+  </group>
+);
+
+// --- Main Humanoid Component ---
+const HumanoidGeometry = ({ robotState }) => {
+  const headRef = useRef<THREE.Group>(null);
+  const leftArmUpperRef = useRef<THREE.Group>(null);
+  const leftArmLowerRef = useRef<THREE.Group>(null);
+  const rightArmUpperRef = useRef<THREE.Group>(null);
+  const rightArmLowerRef = useRef<THREE.Group>(null);
+  const leftLegUpperRef = useRef<THREE.Group>(null);
+  const leftLegLowerRef = useRef<THREE.Group>(null);
+  const rightLegUpperRef = useRef<THREE.Group>(null);
+  const rightLegLowerRef = useRef<THREE.Group>(null);
+
+  // Walking state
+  const [stepPhase, setStepPhase] = useState(0); // 0-1
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+
+    // Head motion
+    if (headRef.current) {
+      const headBob = Math.sin(time * 6) * 0.01;
+      headRef.current.position.y = 0.08 + headBob;
+      headRef.current.rotation.y = Math.sin(time * 0.5) * 0.1;
+    }
+
+    // Arms swing naturally
+    if (leftArmUpperRef.current && rightArmUpperRef.current) {
+      const armSwing = Math.sin(time * 1.2) * 0.4;
+      leftArmUpperRef.current.rotation.x = armSwing;
+      rightArmUpperRef.current.rotation.x = -armSwing;
+    }
+
+    // Elbows bend slightly
+    if (leftArmLowerRef.current && rightArmLowerRef.current) {
+      const elbowBend = Math.abs(Math.sin(time * 1.2)) * 0.2;
+      leftArmLowerRef.current.rotation.x = elbowBend;
+      rightArmLowerRef.current.rotation.x = elbowBend;
+    }
+
+    // Legs walk forward motion
+    if (leftLegUpperRef.current && rightLegUpperRef.current) {
+      const legLeft = Math.sin(time * 1.2 + Math.PI) * 0.6;
+      const legRight = Math.sin(time * 1.2) * 0.6;
+      leftLegUpperRef.current.rotation.x = legLeft;
+      rightLegUpperRef.current.rotation.x = legRight;
+    }
+
+    if (leftLegLowerRef.current && rightLegLowerRef.current) {
+      const kneeLeft = Math.max(Math.sin(time * 1.2 + Math.PI), 0) * 0.8;
+      const kneeRight = Math.max(Math.sin(time * 1.2), 0) * 0.8;
+      leftLegLowerRef.current.rotation.x = kneeLeft;
+      rightLegLowerRef.current.rotation.x = kneeRight;
+    }
+
+    setStepPhase((prev) => (prev + state.delta * 1) % 1);
+  });
+
+  return (
+    <group position={[0, 1.2, 0]}>
+      <Head headRef={headRef} />
+      <Torso />
+
+      {/* Left Arm */}
+      <Arm
+        side="left"
+        x={-0.35}
+        upperRef={leftArmUpperRef}
+        lowerRef={leftArmLowerRef}
+      />
+
+      {/* Right Arm */}
+      <Arm
+        side="right"
+        x={0.35}
+        upperRef={rightArmUpperRef}
+        lowerRef={rightArmLowerRef}
+      />
+
+      {/* Left Leg */}
+      <Leg
+        side="left"
+        x={-0.15}
+        upperRef={leftLegUpperRef}
+        lowerRef={leftLegLowerRef}
+      />
+
+      {/* Right Leg */}
+      <Leg
+        side="right"
+        x={0.15}
+        upperRef={rightLegUpperRef}
+        lowerRef={rightLegLowerRef}
+      />
+    </group>
+  );
+};
+
+// --- Robot Model Component ---
 const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const group = useRef<THREE.Group>(null);
   const leftWheelRef = useRef<THREE.Group>(null);
@@ -18,24 +216,19 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const armWristRef = useRef<THREE.Group>(null);
   const gripperRef = useRef<THREE.Group>(null);
   const propellersRef = useRef<THREE.Group[]>([]);
-  
   const { robotState, moveCommands } = useRobotStore();
-  
-  // Enhanced state management for realistic movements
   const [armAngles, setArmAngles] = useState({
     base: 0,
     shoulder: 0,
     elbow: 0,
     wrist: 0
   });
-  
   const wheelRotation = useRef(0);
   const prevPosition = useRef(new THREE.Vector3());
   const velocity = useRef(new THREE.Vector3());
   const angularVelocity = useRef(0);
   const droneAltitude = useRef(robotState?.position.y || 0);
 
-  // Physics constants
   const PHYSICS = {
     acceleration: 0.02,
     deceleration: 0.95,
@@ -51,48 +244,32 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     droneMinAltitude: 0.15
   };
 
-  // Arm joint limits for realistic movement
   const ARM_LIMITS = {
     base: { min: -Math.PI, max: Math.PI },
-    shoulder: { min: -Math.PI/2, max: Math.PI/4 },
-    elbow: { min: 0, max: Math.PI*0.75 },
+    shoulder: { min: -Math.PI / 2, max: Math.PI / 4 },
+    elbow: { min: 0, max: Math.PI * 0.75 },
     wrist: { min: -Math.PI, max: Math.PI }
   };
 
-  // Move useEffect to the top level of the component
   useEffect(() => {
-    // Reset internal state when robot state is reset
-    if (robotState && 
-        robotState.position.x === 0 && 
-        robotState.position.y === 0 && 
-        robotState.position.z === 0 && 
-        !robotState.isMoving) {
-      
-      // Reset internal physics state
+    if (
+      robotState &&
+      robotState.position.x === 0 &&
+      robotState.position.y === 0 &&
+      robotState.position.z === 0 &&
+      !robotState.isMoving
+    ) {
       velocity.current.set(0, 0, 0);
       angularVelocity.current = 0;
       wheelRotation.current = 0;
       prevPosition.current.set(0, 0, 0);
-      
-      // Reset arm angles
-      setArmAngles({
-        base: 0,
-        shoulder: 0,
-        elbow: 0,
-        wrist: 0
-      });
-      
-      // Reset drone altitude
+      setArmAngles({ base: 0, shoulder: 0, elbow: 0, wrist: 0 });
       if (robotConfig.type === 'drone') {
-        droneAltitude.current = 1.5; // Default drone hover height
+        droneAltitude.current = 1.5;
       }
-      
-      // Immediately set group position to origin
       if (group.current) {
         group.current.position.set(0, 0, 0);
         group.current.rotation.set(0, 0, 0);
-        
-        // Set drone to proper initial height
         if (robotConfig.type === 'drone') {
           group.current.position.y = 1.5;
         }
@@ -570,65 +747,41 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     </>
   );
 
-  // Realistic physics and movement simulation
+
   useFrame((state, delta) => {
     if (!group.current || !robotState) return;
-    
-    // Enhanced position interpolation with momentum
-    const targetPos = new THREE.Vector3(
-      robotState.position.x,
-      robotState.position.y,
-      robotState.position.z
-    );
-    
-    // Apply momentum and smooth movement
+    const targetPos = new THREE.Vector3(robotState.position.x, robotState.position.y, robotState.position.z);
     if (robotState.isMoving) {
-      velocity.current.lerp(
-        targetPos.clone().sub(group.current.position).multiplyScalar(PHYSICS.acceleration),
-        0.1
-      );
+      velocity.current.lerp(targetPos.clone().sub(group.current.position).multiplyScalar(PHYSICS.acceleration), 0.1);
       velocity.current.clampLength(0, PHYSICS.maxSpeed);
     } else {
       velocity.current.multiplyScalar(PHYSICS.deceleration);
     }
-    
     group.current.position.add(velocity.current);
-    
-    // Smooth rotation with angular momentum
     const targetRot = robotState.rotation.y;
     const currentRot = group.current.rotation.y;
     const rotDiff = targetRot - currentRot;
-    
     if (Math.abs(rotDiff) > 0.01) {
       angularVelocity.current += rotDiff * 0.05;
-      angularVelocity.current *= 0.95; // Angular damping
+      angularVelocity.current *= 0.95;
       group.current.rotation.y += angularVelocity.current;
     }
-
-    // Calculate distance traveled for wheel rotation
     const distance = group.current.position.distanceTo(prevPosition.current);
     wheelRotation.current += distance / PHYSICS.wheelRadius;
     prevPosition.current.copy(group.current.position);
 
-    // Type-specific animations
     switch (robotConfig.type) {
       case 'mobile':
-        // Realistic wheel physics
         if (leftWheelRef.current && rightWheelRef.current) {
           leftWheelRef.current.rotation.x = wheelRotation.current;
           rightWheelRef.current.rotation.x = wheelRotation.current;
         }
         break;
-
       case 'arm':
-        // Realistic robotic arm joint control with constraints
         if (moveCommands) {
           const jointStep = delta * PHYSICS.armSpeed;
-          
-          // Base rotation - smooth and controlled
           if (armBaseRef.current) {
-            const baseTarget = moveCommands.joint === 'base' ? 
-              (moveCommands.direction === 'left' ? -0.5 : 0.5) : 0;
+            const baseTarget = moveCommands.joint === 'base' ? (moveCommands.direction === 'left' ? -0.5 : 0.5) : 0;
             armAngles.base = THREE.MathUtils.clamp(
               THREE.MathUtils.lerp(armAngles.base, baseTarget, jointStep),
               ARM_LIMITS.base.min,
@@ -636,11 +789,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             );
             armBaseRef.current.rotation.y = armAngles.base;
           }
-          
-          // Shoulder joint
           if (armSegment1Ref.current) {
-            const shoulderTarget = moveCommands.joint === 'shoulder' ?
-              (moveCommands.direction === 'forward' ? -0.3 : 0.3) : 0;
+            const shoulderTarget = moveCommands.joint === 'shoulder' ? (moveCommands.direction === 'forward' ? -0.3 : 0.3) : 0;
             armAngles.shoulder = THREE.MathUtils.clamp(
               THREE.MathUtils.lerp(armAngles.shoulder, shoulderTarget, jointStep),
               ARM_LIMITS.shoulder.min,
@@ -648,11 +798,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             );
             armSegment1Ref.current.rotation.x = armAngles.shoulder;
           }
-          
-          // Elbow joint
           if (armSegment2Ref.current) {
-            const elbowTarget = moveCommands.joint === 'elbow' ?
-              (moveCommands.direction === 'forward' ? -0.8 : 0.2) : -0.2;
+            const elbowTarget = moveCommands.joint === 'elbow' ? (moveCommands.direction === 'forward' ? -0.8 : 0.2) : -0.2;
             armAngles.elbow = THREE.MathUtils.clamp(
               THREE.MathUtils.lerp(armAngles.elbow, elbowTarget, jointStep),
               ARM_LIMITS.elbow.min,
@@ -660,11 +807,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             );
             armSegment2Ref.current.rotation.x = armAngles.elbow;
           }
-          
-          // Wrist rotation
           if (armWristRef.current) {
-            const wristTarget = moveCommands.joint === 'wrist' ?
-              (moveCommands.direction === 'left' ? -1.5 : 1.5) : 0;
+            const wristTarget = moveCommands.joint === 'wrist' ? (moveCommands.direction === 'left' ? -1.5 : 1.5) : 0;
             armAngles.wrist = THREE.MathUtils.clamp(
               THREE.MathUtils.lerp(armAngles.wrist, wristTarget, jointStep * 0.7),
               ARM_LIMITS.wrist.min,
@@ -674,130 +818,64 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           }
         }
         break;
-
       case 'drone':
-        // Enhanced drone physics with realistic flight dynamics
         const time = state.clock.elapsedTime;
-        
-        // Apply altitude changes
         if (moveCommands?.joint === 'altitude') {
-          const altitudeChange = moveCommands.direction === 'up' 
-            ? PHYSICS.droneLiftAcceleration 
-            : -PHYSICS.droneLiftAcceleration;
-          droneAltitude.current = THREE.MathUtils.clamp(
-            droneAltitude.current + altitudeChange,
-            PHYSICS.droneMinAltitude,
-            PHYSICS.droneMaxAltitude
-          );
+          const altitudeChange = moveCommands.direction === 'up' ? PHYSICS.droneLiftAcceleration : -PHYSICS.droneLiftAcceleration;
+          droneAltitude.current = THREE.MathUtils.clamp(droneAltitude.current + altitudeChange, PHYSICS.droneMinAltitude, PHYSICS.droneMaxAltitude);
         }
-        
-        // Smooth hovering motion with multiple oscillations for realism
         const hoverY = Math.sin(time * PHYSICS.droneHoverSpeed) * PHYSICS.droneHoverAmplitude;
-        const microHover = Math.sin(time * 8) * 0.003; // Micro oscillations
+        const microHover = Math.sin(time * 8) * 0.003;
         group.current.position.y += (hoverY + microHover) * 0.5;
-        
-        // Advanced propeller physics with realistic counter-rotation
         propellersRef.current.forEach((propeller, index) => {
           if (propeller) {
-            const baseSpeed = robotState.isMoving 
-              ? PHYSICS.propellerSpeedActive 
-              : PHYSICS.propellerSpeedIdle;
-            
-            // Counter-rotating pairs for stability (front-left & back-right CW, front-right & back-left CCW)
-            const isClockwise = (index === 0 || index === 3); // Front-left and back-right
+            const baseSpeed = robotState.isMoving ? PHYSICS.propellerSpeedActive : PHYSICS.propellerSpeedIdle;
+            const isClockwise = (index === 0 || index === 3);
             const direction = isClockwise ? 1 : -1;
-            const rotationSpeed = baseSpeed + Math.sin(time * 2 + index) * 2; // Slight variation per motor
-            
+            const rotationSpeed = baseSpeed + Math.sin(time * 2 + index) * 2;
             propeller.rotation.y += rotationSpeed * delta * direction;
-            
-            // Individual motor vibrations
             if (robotState.isMoving) {
               propeller.position.y = Math.sin(time * 25 + index * 1.5) * 0.001;
               propeller.rotation.x = Math.sin(time * 15 + index) * 0.005;
             } else {
-              // Return to neutral position when hovering
               propeller.position.y = THREE.MathUtils.lerp(propeller.position.y, 0, delta * 5);
               propeller.rotation.x = THREE.MathUtils.lerp(propeller.rotation.x, 0, delta * 3);
             }
           }
         });
-        
-        // Realistic flight dynamics with proper banking and pitching
         if (robotState.isMoving) {
-          // Calculate movement direction
-          const moveDirection = new THREE.Vector3(
-            Math.cos(robotState.rotation.y),
-            0,
-            Math.sin(robotState.rotation.y)
-          );
-          
-          // Forward pitch when moving forward (nose down for acceleration)
+          const moveDirection = new THREE.Vector3(Math.cos(robotState.rotation.y), 0, Math.sin(robotState.rotation.y));
           const forwardTilt = -0.12;
-          group.current.rotation.x = THREE.MathUtils.lerp(
-            group.current.rotation.x,
-            forwardTilt,
-            delta * 3
-          );
-          
-          // Banking during turns (lean into turns)
+          group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, forwardTilt, delta * 3);
           const turnRate = angularVelocity.current;
           const bankAngle = THREE.MathUtils.clamp(turnRate * 4, -0.25, 0.25);
-          group.current.rotation.z = THREE.MathUtils.lerp(
-            group.current.rotation.z,
-            bankAngle,
-            delta * 4
-          );
-          
-          // Slight yaw oscillation during flight for realism
+          group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, bankAngle, delta * 4);
           const yawOscillation = Math.sin(time * 3) * 0.02;
           group.current.rotation.y += yawOscillation * delta;
-          
         } else {
-          // Smooth return to level flight with slight overshoot
-          group.current.rotation.x = THREE.MathUtils.lerp(
-            group.current.rotation.x,
-            Math.sin(time * 1.5) * 0.01, // Tiny natural sway
-            delta * 5
-          );
-          group.current.rotation.z = THREE.MathUtils.lerp(
-            group.current.rotation.z,
-            Math.cos(time * 1.2) * 0.008, // Tiny roll sway
-            delta * 5
-          );
+          group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, Math.sin(time * 1.5) * 0.01, delta * 5);
+          group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, Math.cos(time * 1.2) * 0.008, delta * 5);
         }
-        
-        // Apply target altitude smoothly
-        group.current.position.y = THREE.MathUtils.lerp(
-          group.current.position.y,
-          droneAltitude.current,
-          delta * 2
-        );
-        
-        // Wind effect simulation - subtle random movements
-        if (Math.random() < 0.01) { // Occasional wind gusts
+        group.current.position.y = THREE.MathUtils.lerp(group.current.position.y, droneAltitude.current, delta * 2);
+        if (Math.random() < 0.01) {
           const windStrength = 0.002;
           group.current.position.x += (Math.random() - 0.5) * windStrength;
           group.current.position.z += (Math.random() - 0.5) * windStrength;
-          
-          // Compensate with slight tilt
           group.current.rotation.z += (Math.random() - 0.5) * 0.01;
         }
-        
-        // Emergency landing detection
         if (droneAltitude.current <= 0.2 && !robotState.isMoving) {
-          // Gradual propeller slowdown for landing
           propellersRef.current.forEach((propeller, index) => {
             if (propeller) {
               const landingSpeed = 5;
               propeller.rotation.y += landingSpeed * delta * (index % 2 === 0 ? 1 : -1);
             }
           });
-          
-          // Settle into landing position
           group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0, delta * 8);
           group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, 0, delta * 8);
         }
-        
+        break;
+      case 'humanoid':
+        // Already handled in HumanoidGeometry via useFrame
         break;
     }
   });
@@ -807,6 +885,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
       {robotConfig.type === 'arm' && <RoboticArmGeometry />}
       {robotConfig.type === 'drone' && <DroneGeometry />}
+      {robotConfig.type === 'humanoid' && <HumanoidGeometry robotState={robotState} />}
     </group>
   );
 };
