@@ -59,6 +59,47 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     wrist: { min: -Math.PI, max: Math.PI }
   };
 
+  // Move useEffect to the top level of the component
+  useEffect(() => {
+    // Reset internal state when robot state is reset
+    if (robotState && 
+        robotState.position.x === 0 && 
+        robotState.position.y === 0 && 
+        robotState.position.z === 0 && 
+        !robotState.isMoving) {
+      
+      // Reset internal physics state
+      velocity.current.set(0, 0, 0);
+      angularVelocity.current = 0;
+      wheelRotation.current = 0;
+      prevPosition.current.set(0, 0, 0);
+      
+      // Reset arm angles
+      setArmAngles({
+        base: 0,
+        shoulder: 0,
+        elbow: 0,
+        wrist: 0
+      });
+      
+      // Reset drone altitude
+      if (robotConfig.type === 'drone') {
+        droneAltitude.current = 1.5; // Default drone hover height
+      }
+      
+      // Immediately set group position to origin
+      if (group.current) {
+        group.current.position.set(0, 0, 0);
+        group.current.rotation.set(0, 0, 0);
+        
+        // Set drone to proper initial height
+        if (robotConfig.type === 'drone') {
+          group.current.position.y = 1.5;
+        }
+      }
+    }
+  }, [robotState?.position, robotState?.isMoving, robotConfig.type]);
+
   // Enhanced Mobile Robot
   const MobileRobotGeometry = () => (
     <>
@@ -539,47 +580,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       robotState.position.y,
       robotState.position.z
     );
-
-    useEffect(() => {
-  // Reset internal state when robot state is reset
-  if (robotState && 
-      robotState.position.x === 0 && 
-      robotState.position.y === 0 && 
-      robotState.position.z === 0 && 
-      !robotState.isMoving) {
-    
-    // Reset internal physics state
-    velocity.current.set(0, 0, 0);
-    angularVelocity.current = 0;
-    wheelRotation.current = 0;
-    prevPosition.current.set(0, 0, 0);
-    
-    // Reset arm angles
-    setArmAngles({
-      base: 0,
-      shoulder: 0,
-      elbow: 0,
-      wrist: 0
-    });
-    
-    // Reset drone altitude
-    if (robotConfig.type === 'drone') {
-      droneAltitude.current = 1.5; // Default drone hover height
-    }
-    
-    // Immediately set group position to origin
-    if (group.current) {
-      group.current.position.set(0, 0, 0);
-      group.current.rotation.set(0, 0, 0);
-      
-      // Set drone to proper initial height
-      if (robotConfig.type === 'drone') {
-        group.current.position.y = 1.5;
-      }
-    }
-  }
-}, [robotState?.position, robotState?.isMoving, robotConfig.type]);
-
     
     // Apply momentum and smooth movement
     if (robotState.isMoving) {
