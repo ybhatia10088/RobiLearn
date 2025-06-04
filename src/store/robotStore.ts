@@ -28,6 +28,7 @@ const INITIAL_ROBOT_STATE = {
   rotation: { x: 0, y: 0, z: 0 },
   isMoving: false,
   isGrabbing: false,
+  batteryLevel: 100, // Added batteryLevel to initial state
 };
 
 interface RobotStoreState {
@@ -81,6 +82,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       robotState: {
         ...INITIAL_ROBOT_STATE,
         type: state.robotState?.type || 'mobile',
+        robotId: state.robotState?.robotId || '',
+        jointPositions: {},
+        sensorReadings: [],
+        errors: [],
+        currentJointCommand: null,
       },
       isMoving: false,
     }));
@@ -111,6 +117,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           ...INITIAL_ROBOT_STATE,
           position: initialPosition,
           type: selectedRobot?.type || 'mobile',
+          robotId: state.robotState?.robotId || '',
+          jointPositions: {},
+          sensorReadings: [],
+          errors: [],
+          currentJointCommand: null,
         },
         isMoving: false,
       };
