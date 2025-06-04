@@ -8,7 +8,24 @@ interface RobotModelProps {
   robotConfig: RobotConfig;
 }
 
-const MobileRobotGeometry: React.FC = () => {
+interface MobileRobotGeometryProps {
+  leftWheelRef: React.RefObject<THREE.Group>;
+  rightWheelRef: React.RefObject<THREE.Group>;
+}
+
+interface RoboticArmGeometryProps {
+  armBaseRef: React.RefObject<THREE.Group>;
+  armSegment1Ref: React.RefObject<THREE.Group>;
+  armSegment2Ref: React.RefObject<THREE.Group>;
+  armWristRef: React.RefObject<THREE.Group>;
+  gripperRef: React.RefObject<THREE.Group>;
+}
+
+interface DroneGeometryProps {
+  propellerRefs: React.MutableRefObject<THREE.Group[]>;
+}
+
+const MobileRobotGeometry: React.FC<MobileRobotGeometryProps> = ({ leftWheelRef, rightWheelRef }) => {
   return (
     <group>
       {/* Robot Body */}
@@ -36,7 +53,13 @@ const MobileRobotGeometry: React.FC = () => {
   );
 };
 
-const RoboticArmGeometry: React.FC = () => {
+const RoboticArmGeometry: React.FC<RoboticArmGeometryProps> = ({
+  armBaseRef,
+  armSegment1Ref,
+  armSegment2Ref,
+  armWristRef,
+  gripperRef
+}) => {
   return (
     <group>
       {/* Base */}
@@ -92,13 +115,7 @@ const RoboticArmGeometry: React.FC = () => {
   );
 };
 
-const DroneGeometry: React.FC = () => {
-  const propellerRefs = useRef<THREE.Group[]>([]);
-
-  useEffect(() => {
-    propellersRef.current = propellerRefs.current;
-  }, []);
-
+const DroneGeometry: React.FC<DroneGeometryProps> = ({ propellerRefs }) => {
   return (
     <group>
       {/* Main Body */}
@@ -383,9 +400,24 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   return (
     <group ref={group}>
-      {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
-      {robotConfig.type === 'arm' && <RoboticArmGeometry />}
-      {robotConfig.type === 'drone' && <DroneGeometry />}
+      {robotConfig.type === 'mobile' && (
+        <MobileRobotGeometry
+          leftWheelRef={leftWheelRef}
+          rightWheelRef={rightWheelRef}
+        />
+      )}
+      {robotConfig.type === 'arm' && (
+        <RoboticArmGeometry
+          armBaseRef={armBaseRef}
+          armSegment1Ref={armSegment1Ref}
+          armSegment2Ref={armSegment2Ref}
+          armWristRef={armWristRef}
+          gripperRef={gripperRef}
+        />
+      )}
+      {robotConfig.type === 'drone' && (
+        <DroneGeometry propellerRefs={propellersRef} />
+      )}
     </group>
   );
 };
