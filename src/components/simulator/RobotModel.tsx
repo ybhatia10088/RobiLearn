@@ -734,6 +734,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   useFrame((state, delta) => {
     if (!group.current || !robotState) return;
 
+    // Get the current time once at the start of the frame
+    const time = state.clock.elapsedTime;
+
     // Enhanced position interpolation with momentum
     const targetPos = new THREE.Vector3(
       robotState.position.x,
@@ -837,7 +840,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
       case 'drone':
         // Enhanced drone physics with realistic flight dynamics
-        const time = state.clock.elapsedTime;
 
         // Apply altitude changes
         if (moveCommands?.joint === 'altitude') {
@@ -961,9 +963,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         break;
 
       case 'humanoid':
-        // Realistic humanoid movement
-        const time = state.clock.elapsedTime;
-
         // Head movement
         if (group.current.children[0]) {
           group.current.children[0].rotation.y = Math.sin(time * 0.5) * 0.1;
