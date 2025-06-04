@@ -8,6 +8,131 @@ interface RobotModelProps {
   robotConfig: RobotConfig;
 }
 
+const MobileRobotGeometry: React.FC = () => {
+  return (
+    <group>
+      {/* Robot Body */}
+      <mesh position={[0, 0.25, 0]}>
+        <boxGeometry args={[0.6, 0.3, 0.8]} />
+        <meshStandardMaterial color="#4a4a4a" />
+      </mesh>
+
+      {/* Left Wheel */}
+      <group position={[-0.35, 0.14, 0]} ref={leftWheelRef}>
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.14, 0.14, 0.1, 32]} />
+          <meshStandardMaterial color="#2a2a2a" />
+        </mesh>
+      </group>
+
+      {/* Right Wheel */}
+      <group position={[0.35, 0.14, 0]} ref={rightWheelRef}>
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.14, 0.14, 0.1, 32]} />
+          <meshStandardMaterial color="#2a2a2a" />
+        </mesh>
+      </group>
+    </group>
+  );
+};
+
+const RoboticArmGeometry: React.FC = () => {
+  return (
+    <group>
+      {/* Base */}
+      <mesh position={[0, 0.1, 0]}>
+        <cylinderGeometry args={[0.3, 0.4, 0.2, 32]} />
+        <meshStandardMaterial color="#4a4a4a" />
+      </mesh>
+
+      {/* Rotating Base */}
+      <group ref={armBaseRef} position={[0, 0.2, 0]}>
+        <mesh>
+          <cylinderGeometry args={[0.2, 0.2, 0.3, 32]} />
+          <meshStandardMaterial color="#666666" />
+        </mesh>
+
+        {/* First Arm Segment */}
+        <group ref={armSegment1Ref} position={[0, 0.3, 0]}>
+          <mesh position={[0, 0.4, 0]}>
+            <boxGeometry args={[0.15, 0.8, 0.15]} />
+            <meshStandardMaterial color="#4a4a4a" />
+          </mesh>
+
+          {/* Second Arm Segment */}
+          <group ref={armSegment2Ref} position={[0, 0.8, 0]}>
+            <mesh position={[0, 0.3, 0]}>
+              <boxGeometry args={[0.12, 0.6, 0.12]} />
+              <meshStandardMaterial color="#666666" />
+            </mesh>
+
+            {/* Wrist */}
+            <group ref={armWristRef} position={[0, 0.6, 0]}>
+              <mesh>
+                <boxGeometry args={[0.1, 0.2, 0.1]} />
+                <meshStandardMaterial color="#4a4a4a" />
+              </mesh>
+
+              {/* Gripper */}
+              <group ref={gripperRef}>
+                <mesh position={[0.05, 0.1, 0]}>
+                  <boxGeometry args={[0.02, 0.1, 0.02]} />
+                  <meshStandardMaterial color="#2a2a2a" />
+                </mesh>
+                <mesh position={[-0.05, 0.1, 0]}>
+                  <boxGeometry args={[0.02, 0.1, 0.02]} />
+                  <meshStandardMaterial color="#2a2a2a" />
+                </mesh>
+              </group>
+            </group>
+          </group>
+        </group>
+      </group>
+    </group>
+  );
+};
+
+const DroneGeometry: React.FC = () => {
+  const propellerRefs = useRef<THREE.Group[]>([]);
+
+  useEffect(() => {
+    propellersRef.current = propellerRefs.current;
+  }, []);
+
+  return (
+    <group>
+      {/* Main Body */}
+      <mesh>
+        <boxGeometry args={[0.4, 0.1, 0.4]} />
+        <meshStandardMaterial color="#4a4a4a" />
+      </mesh>
+
+      {/* Arms */}
+      {[[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]].map((pos, index) => (
+        <group key={index}>
+          <mesh position={[pos[0], 0, pos[1]]}>
+            <boxGeometry args={[0.1, 0.05, 0.1]} />
+            <meshStandardMaterial color="#666666" />
+          </mesh>
+
+          {/* Propellers */}
+          <group 
+            ref={el => {
+              if (el) propellerRefs.current[index] = el;
+            }}
+            position={[pos[0], 0.05, pos[1]]}
+          >
+            <mesh rotation={[0, 0, 0]}>
+              <cylinderGeometry args={[0.2, 0.2, 0.01, 32]} />
+              <meshStandardMaterial color="#2a2a2a" />
+            </mesh>
+          </group>
+        </group>
+      ))}
+    </group>
+  );
+};
+
 const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const group = useRef<THREE.Group>(null);
   const leftWheelRef = useRef<THREE.Group>(null);
