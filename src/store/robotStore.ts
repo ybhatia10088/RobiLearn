@@ -54,7 +54,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
   environment: {
     id: 'warehouse',
-    name: 'Warehouse',
+    name: 'warehouse',
     description: 'A warehouse environment with shelves, boxes, and robots.',
     temperature: 22,
     humidity: 45,
