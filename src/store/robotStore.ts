@@ -23,14 +23,6 @@ interface PerformanceMetrics {
   batteryUsed: number;
 }
 
-const INITIAL_ROBOT_STATE = {
-  position: { x: 0, y: 0, z: 0 },
-  rotation: { x: 0, y: 0, z: 0 },
-  isMoving: false,
-  isGrabbing: false,
-  batteryLevel: 100, // Added batteryLevel to initial state
-};
-
 interface RobotStoreState {
   selectedRobot: RobotConfig | null;
   robotState: RobotState | null;
@@ -50,7 +42,16 @@ interface RobotStoreState {
   updateJointPosition: (joint: keyof JointState, value: number) => void;
   resetRobotState: () => void;
   resetRobotStateByType: () => void;
+  landDrone: () => void;
 }
+
+const INITIAL_ROBOT_STATE = {
+  position: { x: 0, y: 0, z: 0 },
+  rotation: { x: 0, y: 0, z: 0 },
+  isMoving: false,
+  isGrabbing: false,
+  batteryLevel: 100,
+};
 
 export const useRobotStore = create<RobotStoreState>((set, get) => ({
   selectedRobot: null,
@@ -126,6 +127,50 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         isMoving: false,
       };
     });
+  },
+
+  landDrone: () => {
+    const state = get();
+    if (!state.robotState || state.selectedRobot?.type !== 'drone') return;
+
+    // Start landing sequence
+    const landingInterval = setInterval(() => {
+      const currentState = get();
+      if (!currentState.robotState) {
+        clearInterval(landingInterval);
+        return;
+      }
+
+      const currentHeight = currentState.robotState.position.y;
+      if (currentHeight <= 0.1) {
+        // Drone has landed
+        set((state) => ({
+          robotState: {
+            ...state.robotState!,
+            position: {
+              ...state.robotState!.position,
+              y: 0
+            },
+            isMoving: false
+          },
+          isMoving: false
+        }));
+        clearInterval(landingInterval);
+      } else {
+        // Continue descent
+        set((state) => ({
+          robotState: {
+            ...state.robotState!,
+            position: {
+              ...state.robotState!.position,
+              y: Math.max(0, currentHeight - 0.05)
+            },
+            isMoving: true
+          },
+          isMoving: true
+        }));
+      }
+    }, 16);
   },
 
   selectRobot: (config) => {
