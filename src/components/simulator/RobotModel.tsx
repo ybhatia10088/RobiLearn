@@ -18,9 +18,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const armWristRef = useRef<THREE.Group>(null);
   const gripperRef = useRef<THREE.Group>(null);
   const propellersRef = useRef<THREE.Group[]>([]);
-  
+
   const { robotState, moveCommands } = useRobotStore();
-  
+
   // Enhanced state management for realistic movements
   const [armAngles, setArmAngles] = useState({
     base: 0,
@@ -28,7 +28,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     elbow: 0,
     wrist: 0
   });
-  
+
   const wheelRotation = useRef(0);
   const prevPosition = useRef(new THREE.Vector3());
   const velocity = useRef(new THREE.Vector3());
@@ -62,18 +62,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   // Move useEffect to the top level of the component
   useEffect(() => {
     // Reset internal state when robot state is reset
-    if (robotState && 
-        robotState.position.x === 0 && 
-        robotState.position.y === 0 && 
-        robotState.position.z === 0 && 
+    if (robotState &&
+        robotState.position.x === 0 &&
+        robotState.position.y === 0 &&
+        robotState.position.z === 0 &&
         !robotState.isMoving) {
-      
+
       // Reset internal physics state
       velocity.current.set(0, 0, 0);
       angularVelocity.current = 0;
       wheelRotation.current = 0;
       prevPosition.current.set(0, 0, 0);
-      
+
       // Reset arm angles
       setArmAngles({
         base: 0,
@@ -81,17 +81,17 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         elbow: 0,
         wrist: 0
       });
-      
+
       // Reset drone altitude
       if (robotConfig.type === 'drone') {
         droneAltitude.current = 1.5; // Default drone hover height
       }
-      
+
       // Immediately set group position to origin
       if (group.current) {
         group.current.position.set(0, 0, 0);
         group.current.rotation.set(0, 0, 0);
-        
+
         // Set drone to proper initial height
         if (robotConfig.type === 'drone') {
           group.current.position.y = 1.5;
@@ -106,9 +106,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       {/* Main chassis - more sophisticated design */}
       <mesh castShadow receiveShadow position={[0, 0.1, 0]}>
         <boxGeometry args={[0.5, 0.15, 0.7]} />
-        <meshStandardMaterial 
-          color="#e2e8f0" 
-          metalness={0.4} 
+        <meshStandardMaterial
+          color="#e2e8f0"
+          metalness={0.4}
           roughness={0.6}
           envMapIntensity={1}
         />
@@ -140,7 +140,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           <boxGeometry args={[0.16, 0.08, 0.1]} />
           <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
         </mesh>
-        
+
         {/* Multiple sensor types */}
         {[
           { pos: [-0.05, 0, 0.051], color: "#3b82f6", size: 0.018 }, // Main camera
@@ -149,7 +149,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         ].map((sensor, i) => (
           <mesh key={i} castShadow position={sensor.pos}>
             <cylinderGeometry args={[sensor.size, sensor.size, 0.025, 16]} />
-            <meshStandardMaterial 
+            <meshStandardMaterial
               color={sensor.color}
               emissive={sensor.color}
               emissiveIntensity={0.3}
@@ -177,19 +177,19 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             <cylinderGeometry args={[0.1, 0.1, 0.08, 32]} />
             <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
           </mesh>
-          
+
           {/* Hub details */}
           <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.08, 0.08, 0.09, 6]} />
             <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
           </mesh>
-          
+
           {/* Tire - larger and more realistic */}
           <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.14, 0.14, 0.06, 32]} />
             <meshStandardMaterial color="#1f2937" metalness={0.1} roughness={0.95} />
           </mesh>
-          
+
           {/* Tire sidewall details */}
           <mesh castShadow rotation={[0, 0, Math.PI / 2]} position={[0, 0, 0.035]}>
             <cylinderGeometry args={[0.13, 0.13, 0.01, 32]} />
@@ -199,15 +199,15 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             <cylinderGeometry args={[0.13, 0.13, 0.01, 32]} />
             <meshStandardMaterial color="#374151" metalness={0.2} roughness={0.8} />
           </mesh>
-          
+
           {/* Tire treads - more realistic pattern */}
           {[...Array(16)].map((_, i) => {
             const angle = (i * Math.PI * 2) / 16;
             return (
-              <mesh 
-                key={i} 
-                castShadow 
-                rotation={[0, 0, Math.PI / 2]} 
+              <mesh
+                key={i}
+                castShadow
+                rotation={[0, 0, Math.PI / 2]}
                 position={[
                   Math.cos(angle) * 0.145,
                   0,
@@ -236,8 +236,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       {[-0.18, -0.06, 0.06, 0.18].map((x, i) => (
         <mesh key={i} castShadow position={[x, 0.18, 0.32]}>
           <cylinderGeometry args={[0.008, 0.008, 0.003, 16]} />
-          <meshStandardMaterial 
-            color={robotState?.isMoving ? "#22c55e" : "#ef4444"} 
+          <meshStandardMaterial
+            color={robotState?.isMoving ? "#22c55e" : "#ef4444"}
             emissive={robotState?.isMoving ? "#22c55e" : "#ef4444"}
             emissiveIntensity={0.4}
           />
@@ -347,16 +347,16 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
                 {/* Gripper fingers with realistic movement */}
                 <group>
-                  <mesh 
-                    castShadow 
+                  <mesh
+                    castShadow
                     position={[robotState?.isGrabbing ? -0.015 : -0.05, 0, 0.12]}
                     rotation={[0, robotState?.isGrabbing ? 0.2 : 0, 0]}
                   >
                     <boxGeometry args={[0.02, 0.1, 0.06]} />
                     <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
                   </mesh>
-                  <mesh 
-                    castShadow 
+                  <mesh
+                    castShadow
                     position={[robotState?.isGrabbing ? 0.015 : 0.05, 0, 0.12]}
                     rotation={[0, robotState?.isGrabbing ? -0.2 : 0, 0]}
                   >
@@ -365,15 +365,15 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
                   </mesh>
 
                   {/* Gripper tips */}
-                  <mesh 
-                    castShadow 
+                  <mesh
+                    castShadow
                     position={[robotState?.isGrabbing ? -0.01 : -0.04, 0, 0.16]}
                   >
                     <boxGeometry args={[0.01, 0.02, 0.02]} />
                     <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
                   </mesh>
-                  <mesh 
-                    castShadow 
+                  <mesh
+                    castShadow
                     position={[robotState?.isGrabbing ? 0.01 : 0.04, 0, 0.16]}
                   >
                     <boxGeometry args={[0.01, 0.02, 0.02]} />
@@ -414,19 +414,19 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           <torusGeometry args={[0.06, 0.008, 16, 32]} />
           <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
         </mesh>
-        
+
         {/* Camera housing */}
         <mesh castShadow>
           <boxGeometry args={[0.06, 0.04, 0.08]} />
           <meshStandardMaterial color="#000000" metalness={1} roughness={0} />
         </mesh>
-        
+
         {/* Camera lens */}
         <mesh castShadow position={[0, 0, 0.04]}>
           <cylinderGeometry args={[0.02, 0.02, 0.02, 32]} />
-          <meshStandardMaterial 
-            color="#1a1a1a" 
-            metalness={1} 
+          <meshStandardMaterial
+            color="#1a1a1a"
+            metalness={1}
             roughness={0}
             transparent
             opacity={0.9}
@@ -436,11 +436,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         {/* Lens reflection */}
         <mesh castShadow position={[0, 0, 0.045]}>
           <cylinderGeometry args={[0.018, 0.018, 0.001, 32]} />
-          <meshStandardMaterial 
-            color="#3b82f6" 
+          <meshStandardMaterial
+            color="#3b82f6"
             emissive="#3b82f6"
             emissiveIntensity={0.2}
-            metalness={1} 
+            metalness={1}
             roughness={0}
           />
         </mesh>
@@ -470,9 +470,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           {[...Array(8)].map((_, i) => {
             const angle = (i * Math.PI * 2) / 8;
             return (
-              <mesh 
-                key={i} 
-                castShadow 
+              <mesh
+                key={i}
+                castShadow
                 position={[
                   Math.cos(angle) * 0.032,
                   0.025,
@@ -487,8 +487,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           })}
 
           {/* Enhanced propeller system */}
-          <group 
-            ref={(el) => { 
+          <group
+            ref={(el) => {
               if (el && !propellersRef.current.includes(el)) {
                 propellersRef.current[index] = el;
               }
@@ -506,15 +506,15 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
               <group key={i} rotation={[0, rotation, 0]}>
                 <mesh castShadow position={[0, 0, 0.08]}>
                   <boxGeometry args={[0.004, 0.002, 0.12]} />
-                  <meshStandardMaterial 
-                    color="#1f2937" 
-                    metalness={0.6} 
+                  <meshStandardMaterial
+                    color="#1f2937"
+                    metalness={0.6}
                     roughness={0.3}
                     opacity={robotState?.isMoving ? 0.2 : 0.9}
                     transparent
                   />
                 </mesh>
-                
+
                 {/* Blade tip */}
                 <mesh castShadow position={[0, 0, 0.13]}>
                   <boxGeometry args={[0.008, 0.003, 0.02]} />
@@ -535,7 +535,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           {/* LED housing */}
           <mesh castShadow position={[0, 0.02, 0]}>
             <cylinderGeometry args={[0.005, 0.005, 0.002, 16]} />
-            <meshStandardMaterial 
+            <meshStandardMaterial
               color={color}
               emissive={color}
               emissiveIntensity={robotState?.isMoving ? 0.5 : 0.3}
@@ -561,8 +561,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       {/* Status indicator panel */}
       <mesh castShadow position={[0, 0.03, -0.12]}>
         <boxGeometry args={[0.08, 0.01, 0.02]} />
-        <meshStandardMaterial 
-          color="#000000" 
+        <meshStandardMaterial
+          color="#000000"
           emissive="#3b82f6"
           emissiveIntensity={robotState?.isMoving ? 0.4 : 0.2}
         />
@@ -570,17 +570,177 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     </>
   );
 
+  // Enhanced Humanoid Robot with realistic anatomy and movement
+  const HumanoidGeometry = () => (
+    <>
+      {/* Head with detailed features */}
+      <group position={[0, 1.6, 0]}>
+        {/* Main head */}
+        <mesh castShadow>
+          <sphereGeometry args={[0.12, 32, 32]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.1} roughness={0.8} />
+        </mesh>
+
+        {/* Facial features */}
+        <mesh castShadow position={[0, 0, 0.12]}>
+          <boxGeometry args={[0.08, 0.05, 0.02]} />
+          <meshStandardMaterial color="#1f293b" />
+        </mesh>
+
+        {/* Eyes */}
+        {[-0.05, 0.05].map((x, i) => (
+          <mesh key={i} castShadow position={[x, 0.03, 0.13]}>
+            <sphereGeometry args={[0.015, 16, 16]} />
+            <meshStandardMaterial color="#3b82f6" emissive="#3b82f6" emissiveIntensity={0.5} />
+          </mesh>
+        ))}
+
+        {/* Mouth */}
+        <mesh castShadow position={[0, -0.05, 0.12]}>
+          <boxGeometry args={[0.06, 0.01, 0.02]} />
+          <meshStandardMaterial color="#1f293b" />
+        </mesh>
+      </group>
+
+      {/* Torso with detailed segments */}
+      <group position={[0, 1.2, 0]}>
+        {/* Upper torso */}
+        <mesh castShadow>
+          <boxGeometry args={[0.3, 0.2, 0.15]} />
+          <meshStandardMaterial color="#475569" metalness={0.3} roughness={0.7} />
+        </mesh>
+
+        {/* Lower torso */}
+        <mesh castShadow position={[0, -0.15, 0]}>
+          <boxGeometry args={[0.3, 0.2, 0.15]} />
+          <meshStandardMaterial color="#64748b" metalness={0.3} roughness={0.7} />
+        </mesh>
+
+        {/* Spine details */}
+        {[0.05, 0, -0.05].map((y, i) => (
+          <mesh key={i} castShadow position={[0, y, 0.08]}>
+            <boxGeometry args={[0.02, 0.05, 0.02]} />
+            <meshStandardMaterial color="#1f293b" metalness={0.5} roughness={0.5} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Arms with realistic joints */}
+      {['left', 'right'].map((side, i) => {
+        const x = side === 'left' ? -0.35 : 0.35;
+        return (
+          <group key={side}>
+            {/* Shoulder */}
+            <mesh castShadow position={[x, 1.2, 0]}>
+              <sphereGeometry args={[0.06, 16, 16]} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+            </mesh>
+
+            {/* Upper arm */}
+            <mesh castShadow position={[x, 1.2, 0]}>
+              <cylinderGeometry args={[0.05, 0.05, 0.3, 32]} rotation={[Math.PI / 2, 0, 0]} />
+              <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+            </mesh>
+
+            {/* Elbow */}
+            <mesh castShadow position={[x, 0.9, 0]}>
+              <sphereGeometry args={[0.05, 16, 16]} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+            </mesh>
+
+            {/* Lower arm */}
+            <mesh castShadow position={[x, 0.9, 0]}>
+              <cylinderGeometry args={[0.04, 0.04, 0.3, 32]} rotation={[Math.PI / 2, 0, 0]} />
+              <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+            </mesh>
+
+            {/* Wrist */}
+            <mesh castShadow position={[x, 0.6, 0]}>
+              <sphereGeometry args={[0.04, 16, 16]} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+            </mesh>
+
+            {/* Hand */}
+            <mesh castShadow position={[x, 0.6, 0]}>
+              <boxGeometry args={[0.08, 0.03, 0.1]} />
+              <meshStandardMaterial color="#cbd5e1" metalness={0.2} roughness={0.8} />
+            </mesh>
+
+            {/* Fingers */}
+            {[...Array(5)].map((_, j) => {
+              const fingerX = -0.03 + j * 0.015;
+              return (
+                <group key={j} position={[x + fingerX, 0.6, 0.05]}>
+                  {[0.05, 0.1].map((z, k) => (
+                    <mesh key={k} castShadow position={[0, 0, z]}>
+                      <boxGeometry args={[0.01, 0.01, 0.03]} />
+                      <meshStandardMaterial color="#cbd5e1" metalness={0.2} roughness={0.8} />
+                    </mesh>
+                  ))}
+                </group>
+              );
+            })}
+          </group>
+        );
+      })}
+
+      {/* Legs with realistic joints */}
+      {['left', 'right'].map((side, i) => {
+        const x = side === 'left' ? -0.15 : 0.15;
+        return (
+          <group key={side}>
+            {/* Hip */}
+            <mesh castShadow position={[x, 0.8, 0]}>
+              <sphereGeometry args={[0.07, 16, 16]} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+            </mesh>
+
+            {/* Upper leg */}
+            <mesh castShadow position={[x, 0.8, 0]}>
+              <cylinderGeometry args={[0.06, 0.06, 0.4, 32]} rotation={[Math.PI / 2, 0, 0]} />
+              <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+            </mesh>
+
+            {/* Knee */}
+            <mesh castShadow position={[x, 0.4, 0]}>
+              <sphereGeometry args={[0.06, 16, 16]} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+            </mesh>
+
+            {/* Lower leg */}
+            <mesh castShadow position={[x, 0.4, 0]}>
+              <cylinderGeometry args={[0.05, 0.05, 0.4, 32]} rotation={[Math.PI / 2, 0, 0]} />
+              <meshStandardMaterial color="#e2e8f0" metalness={0.2} roughness={0.8} />
+            </mesh>
+
+            {/* Ankle */}
+            <mesh castShadow position={[x, 0.05, 0]}>
+              <sphereGeometry args={[0.05, 16, 16]} />
+              <meshStandardMaterial color="#94a3b8" metalness={0.4} roughness={0.6} />
+            </mesh>
+
+            {/* Foot */}
+            <mesh castShadow position={[x, 0, 0.05]}>
+              <boxGeometry args={[0.15, 0.03, 0.2]} />
+              <meshStandardMaterial color="#1f293b" metalness={0.3} roughness={0.7} />
+            </mesh>
+          </group>
+        );
+      })}
+    </>
+  );
+
   // Realistic physics and movement simulation
   useFrame((state, delta) => {
     if (!group.current || !robotState) return;
-    
+
     // Enhanced position interpolation with momentum
     const targetPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
-    
+
     // Apply momentum and smooth movement
     if (robotState.isMoving) {
       velocity.current.lerp(
@@ -591,14 +751,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     } else {
       velocity.current.multiplyScalar(PHYSICS.deceleration);
     }
-    
+
     group.current.position.add(velocity.current);
-    
+
     // Smooth rotation with angular momentum
     const targetRot = robotState.rotation.y;
     const currentRot = group.current.rotation.y;
     const rotDiff = targetRot - currentRot;
-    
+
     if (Math.abs(rotDiff) > 0.01) {
       angularVelocity.current += rotDiff * 0.05;
       angularVelocity.current *= 0.95; // Angular damping
@@ -624,10 +784,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         // Realistic robotic arm joint control with constraints
         if (moveCommands) {
           const jointStep = delta * PHYSICS.armSpeed;
-          
+
           // Base rotation - smooth and controlled
           if (armBaseRef.current) {
-            const baseTarget = moveCommands.joint === 'base' ? 
+            const baseTarget = moveCommands.joint === 'base' ?
               (moveCommands.direction === 'left' ? -0.5 : 0.5) : 0;
             armAngles.base = THREE.MathUtils.clamp(
               THREE.MathUtils.lerp(armAngles.base, baseTarget, jointStep),
@@ -636,7 +796,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             );
             armBaseRef.current.rotation.y = armAngles.base;
           }
-          
+
           // Shoulder joint
           if (armSegment1Ref.current) {
             const shoulderTarget = moveCommands.joint === 'shoulder' ?
@@ -648,7 +808,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             );
             armSegment1Ref.current.rotation.x = armAngles.shoulder;
           }
-          
+
           // Elbow joint
           if (armSegment2Ref.current) {
             const elbowTarget = moveCommands.joint === 'elbow' ?
@@ -660,7 +820,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             );
             armSegment2Ref.current.rotation.x = armAngles.elbow;
           }
-          
+
           // Wrist rotation
           if (armWristRef.current) {
             const wristTarget = moveCommands.joint === 'wrist' ?
@@ -678,38 +838,38 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       case 'drone':
         // Enhanced drone physics with realistic flight dynamics
         const time = state.clock.elapsedTime;
-        
+
         // Apply altitude changes
         if (moveCommands?.joint === 'altitude') {
-          const altitudeChange = moveCommands.direction === 'up' 
-            ? PHYSICS.droneLiftAcceleration 
-            : -PHYSICS.droneLiftAcceleration;
+          const altitudeChange = moveCommands.direction === 'up' ?
+            PHYSICS.droneLiftAcceleration :
+            -PHYSICS.droneLiftAcceleration;
           droneAltitude.current = THREE.MathUtils.clamp(
             droneAltitude.current + altitudeChange,
             PHYSICS.droneMinAltitude,
             PHYSICS.droneMaxAltitude
           );
         }
-        
+
         // Smooth hovering motion with multiple oscillations for realism
         const hoverY = Math.sin(time * PHYSICS.droneHoverSpeed) * PHYSICS.droneHoverAmplitude;
         const microHover = Math.sin(time * 8) * 0.003; // Micro oscillations
         group.current.position.y += (hoverY + microHover) * 0.5;
-        
+
         // Advanced propeller physics with realistic counter-rotation
         propellersRef.current.forEach((propeller, index) => {
           if (propeller) {
-            const baseSpeed = robotState.isMoving 
-              ? PHYSICS.propellerSpeedActive 
-              : PHYSICS.propellerSpeedIdle;
-            
+            const baseSpeed = robotState.isMoving ?
+              PHYSICS.propellerSpeedActive :
+              PHYSICS.propellerSpeedIdle;
+
             // Counter-rotating pairs for stability (front-left & back-right CW, front-right & back-left CCW)
             const isClockwise = (index === 0 || index === 3); // Front-left and back-right
             const direction = isClockwise ? 1 : -1;
             const rotationSpeed = baseSpeed + Math.sin(time * 2 + index) * 2; // Slight variation per motor
-            
+
             propeller.rotation.y += rotationSpeed * delta * direction;
-            
+
             // Individual motor vibrations
             if (robotState.isMoving) {
               propeller.position.y = Math.sin(time * 25 + index * 1.5) * 0.001;
@@ -721,7 +881,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             }
           }
         });
-        
+
         // Realistic flight dynamics with proper banking and pitching
         if (robotState.isMoving) {
           // Calculate movement direction
@@ -730,7 +890,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             0,
             Math.sin(robotState.rotation.y)
           );
-          
+
           // Forward pitch when moving forward (nose down for acceleration)
           const forwardTilt = -0.12;
           group.current.rotation.x = THREE.MathUtils.lerp(
@@ -738,7 +898,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             forwardTilt,
             delta * 3
           );
-          
+
           // Banking during turns (lean into turns)
           const turnRate = angularVelocity.current;
           const bankAngle = THREE.MathUtils.clamp(turnRate * 4, -0.25, 0.25);
@@ -747,11 +907,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             bankAngle,
             delta * 4
           );
-          
+
           // Slight yaw oscillation during flight for realism
           const yawOscillation = Math.sin(time * 3) * 0.02;
           group.current.rotation.y += yawOscillation * delta;
-          
+
         } else {
           // Smooth return to level flight with slight overshoot
           group.current.rotation.x = THREE.MathUtils.lerp(
@@ -765,24 +925,24 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             delta * 5
           );
         }
-        
+
         // Apply target altitude smoothly
         group.current.position.y = THREE.MathUtils.lerp(
           group.current.position.y,
           droneAltitude.current,
           delta * 2
         );
-        
+
         // Wind effect simulation - subtle random movements
         if (Math.random() < 0.01) { // Occasional wind gusts
           const windStrength = 0.002;
           group.current.position.x += (Math.random() - 0.5) * windStrength;
           group.current.position.z += (Math.random() - 0.5) * windStrength;
-          
+
           // Compensate with slight tilt
           group.current.rotation.z += (Math.random() - 0.5) * 0.01;
         }
-        
+
         // Emergency landing detection
         if (droneAltitude.current <= 0.2 && !robotState.isMoving) {
           // Gradual propeller slowdown for landing
@@ -792,12 +952,35 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
               propeller.rotation.y += landingSpeed * delta * (index % 2 === 0 ? 1 : -1);
             }
           });
-          
+
           // Settle into landing position
           group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0, delta * 8);
           group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, 0, delta * 8);
         }
-        
+
+        break;
+
+      case 'humanoid':
+        // Realistic humanoid movement
+        const time = state.clock.elapsedTime;
+
+        // Head movement
+        if (group.current.children[0]) {
+          group.current.children[0].rotation.y = Math.sin(time * 0.5) * 0.1;
+        }
+
+        // Arm movement
+        if (group.current.children[1] && group.current.children[2]) {
+          group.current.children[1].rotation.x = Math.sin(time * 0.7) * 0.3;
+          group.current.children[2].rotation.x = Math.sin(time * 0.7 + Math.PI) * 0.3;
+        }
+
+        // Leg movement
+        if (group.current.children[3] && group.current.children[4]) {
+          group.current.children[3].rotation.x = Math.sin(time * 1) * 0.4;
+          group.current.children[4].rotation.x = Math.sin(time * 1 + Math.PI) * 0.4;
+        }
+
         break;
     }
   });
@@ -807,6 +990,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
       {robotConfig.type === 'arm' && <RoboticArmGeometry />}
       {robotConfig.type === 'drone' && <DroneGeometry />}
+      {robotConfig.type === 'humanoid' && <HumanoidGeometry />}
     </group>
   );
 };
