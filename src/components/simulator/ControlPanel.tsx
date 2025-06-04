@@ -24,6 +24,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const [speed, setSpeed] = useState(50);
   const [activeSensorTab, setActiveSensorTab] = useState('camera');
   const [isPressed, setIsPressed] = useState<string | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isBoosting, setIsBoosting] = useState(false);
   
   // Enhanced robot models with better descriptions
   const availableRobots = [
@@ -91,6 +93,40 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     }
   };
 
+  const handleDroneHover = () => {
+    if (!selectedRobot || selectedRobot.type !== 'drone') return;
+    setIsHovering(!isHovering);
+    
+    if (!isHovering) {
+      // Start hover mode
+      moveRobot({ 
+        direction: 'forward',
+        speed: 0.3,
+        joint: 'altitude'
+      });
+    } else {
+      // Stop hover mode
+      stopRobot();
+    }
+  };
+
+  const handleDroneBoost = () => {
+    if (!selectedRobot || selectedRobot.type !== 'drone') return;
+    setIsBoosting(!isBoosting);
+    
+    if (!isBoosting) {
+      // Activate boost mode
+      moveRobot({ 
+        direction: 'forward',
+        speed: 1.0,
+        joint: 'boost'
+      });
+    } else {
+      // Deactivate boost mode
+      stopRobot();
+    }
+  };
+
   // Special action handlers for different robot types
   const handleSpecialAction1 = () => {
     if (!selectedRobot) return;
@@ -108,7 +144,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
         console.log('Tank special weapon action');
         break;
       case 'drone':
-        console.log('Drone boost action');
+        handleDroneBoost();
         break;
       default:
         console.log('Special action 1');
@@ -131,7 +167,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
         console.log('Tank defensive action');
         break;
       case 'drone':
-        console.log('Drone hover action');
+        handleDroneHover();
         break;
       default:
         console.log('Special action 2');
@@ -239,8 +275,122 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
           </div>
         );
 
+      case 'drone':
+        return (
+          <div>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div></div>
+              <button 
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'forward' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleMoveStart('forward')}
+                onMouseUp={handleMoveEnd}
+                onMouseLeave={handleMoveEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleMoveStart('forward');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleMoveEnd();
+                }}
+                disabled={!selectedRobot}
+              >
+                <ArrowUp size={20} />
+              </button>
+              <div></div>
+              
+              <button 
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'left' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleRotateStart('left')}
+                onMouseUp={handleRotateEnd}
+                onMouseLeave={handleRotateEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleRotateStart('left');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleRotateEnd();
+                }}
+                disabled={!selectedRobot}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <button 
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'backward' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleMoveStart('backward')}
+                onMouseUp={handleMoveEnd}
+                onMouseLeave={handleMoveEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleMoveStart('backward');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleMoveEnd();
+                }}
+                disabled={!selectedRobot}
+              >
+                <ArrowDown size={20} />
+              </button>
+              <button 
+                className={`btn text-white py-3 flex items-center justify-center transition-colors ${
+                  isPressed === 'right' ? 'bg-primary-600' : 'bg-dark-700 hover:bg-dark-600'
+                }`}
+                onMouseDown={() => handleRotateStart('right')}
+                onMouseUp={handleRotateEnd}
+                onMouseLeave={handleRotateEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleRotateStart('right');
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleRotateEnd();
+                }}
+                disabled={!selectedRobot}
+              >
+                <ArrowRight size={20} />
+              </button>
+            </div>
+
+            {/* Drone-specific controls */}
+            <div className="flex space-x-2 mb-4">
+              <button 
+                className={`btn flex-1 flex items-center justify-center transition-colors ${
+                  isHovering 
+                    ? 'bg-accent-600 hover:bg-accent-700' 
+                    : 'bg-dark-700 hover:bg-dark-600'
+                } text-white py-2`}
+                onClick={handleDroneHover}
+                disabled={!selectedRobot}
+              >
+                <Target size={18} className="mr-2" />
+                <span>Hover {isHovering ? 'Off' : 'On'}</span>
+              </button>
+              <button 
+                className={`btn flex-1 flex items-center justify-center transition-colors ${
+                  isBoosting 
+                    ? 'bg-secondary-600 hover:bg-secondary-700' 
+                    : 'bg-dark-700 hover:bg-dark-600'
+                } text-white py-2`}
+                onClick={handleDroneBoost}
+                disabled={!selectedRobot}
+              >
+                <Zap size={18} className="mr-2" />
+                <span>Boost {isBoosting ? 'Off' : 'On'}</span>
+              </button>
+            </div>
+          </div>
+        );
+
       default:
-        // Standard movement controls for mobile, drone, spider, tank, humanoid
         return (
           <div>
             <div className="grid grid-cols-3 gap-2 mb-4">
