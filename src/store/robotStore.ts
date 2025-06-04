@@ -23,6 +23,13 @@ interface PerformanceMetrics {
   batteryUsed: number;
 }
 
+const INITIAL_ROBOT_STATE = {
+  position: { x: 0, y: 0, z: 0 },
+  rotation: { x: 0, y: 0, z: 0 },
+  isMoving: false,
+  isGrabbing: false,
+};
+
 interface RobotStoreState {
   selectedRobot: RobotConfig | null;
   robotState: RobotState | null;
@@ -40,6 +47,8 @@ interface RobotStoreState {
   updateRobotPosition: (position: Vector3) => void;
   updateRobotRotation: (rotation: Quaternion) => void;
   updateJointPosition: (joint: keyof JointState, value: number) => void;
+  resetRobotState: () => void;
+  resetRobotStateByType: () => void;
 }
 
 export const useRobotStore = create<RobotStoreState>((set, get) => ({
@@ -50,7 +59,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     base: 0,
     shoulder: 0,
     elbow: 0,
-    wrist: 0
+    wrist: 0,
   },
   environment: {
     id: 'warehouse',
@@ -66,8 +75,50 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     batteryUsed: 0,
   },
 
+  resetRobotState: () => {
+    set((state) => ({
+      ...state,
+      robotState: {
+        ...INITIAL_ROBOT_STATE,
+        type: state.robotState?.type || 'mobile',
+      },
+      isMoving: false,
+    }));
+  },
+
+  resetRobotStateByType: () => {
+    set((state) => {
+      const { selectedRobot } = state;
+      let initialPosition = { x: 0, y: 0, z: 0 };
+
+      switch (selectedRobot?.type) {
+        case 'mobile':
+          initialPosition = { x: 0, y: 0, z: 0 };
+          break;
+        case 'arm':
+          initialPosition = { x: 0, y: 0, z: 0 };
+          break;
+        case 'drone':
+          initialPosition = { x: 0, y: 1.5, z: 0 };
+          break;
+        default:
+          initialPosition = { x: 0, y: 0, z: 0 };
+      }
+
+      return {
+        ...state,
+        robotState: {
+          ...INITIAL_ROBOT_STATE,
+          position: initialPosition,
+          type: selectedRobot?.type || 'mobile',
+        },
+        isMoving: false,
+      };
+    });
+  },
+
   selectRobot: (config) => {
-    set({ 
+    set({
       selectedRobot: config,
       robotState: {
         robotId: config.id,
@@ -86,14 +137,14 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         base: 0,
         shoulder: 0,
         elbow: 0,
-        wrist: 0
+        wrist: 0,
       },
       performance: {
         distanceTraveled: 0,
         rotations: 0,
         tasksCompleted: 0,
         batteryUsed: 0,
-      }
+      },
     });
   },
 
@@ -125,7 +176,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         jointPositions: {
           ...state.jointPositions,
           [joint]: clampedPos,
-        }
+        },
       }));
       return;
     }
@@ -145,9 +196,9 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         }
 
         const newPosition = {
-          x: currentState.robotState.position.x + (deltaX * multiplier),
+          x: currentState.robotState.position.x + deltaX * multiplier,
           y: currentState.robotState.position.y,
-          z: currentState.robotState.position.z + (deltaZ * multiplier),
+          z: currentState.robotState.position.z + deltaZ * multiplier,
         };
 
         const distance = Math.sqrt(deltaX ** 2 + deltaZ ** 2);
@@ -163,7 +214,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
             ...currentState.performance,
             distanceTraveled: currentState.performance.distanceTraveled + distance,
             batteryUsed: currentState.performance.batteryUsed + 0.01,
-          }
+          },
         });
       }, 16);
 
@@ -205,7 +256,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           ...currentState.performance,
           rotations: currentState.performance.rotations + 1,
           batteryUsed: currentState.performance.batteryUsed + 0.005,
-        }
+        },
       });
     }, 16);
 
@@ -219,7 +270,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       robotState: {
         ...state.robotState,
         isGrabbing: true,
-      }
+      },
     });
   },
 
@@ -230,7 +281,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       robotState: {
         ...state.robotState,
         isGrabbing: false,
-      }
+      },
     });
   },
 
@@ -254,7 +305,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         ...state.robotState,
         isMoving: false,
         currentJointCommand: null,
-      }
+      },
     });
   },
 
