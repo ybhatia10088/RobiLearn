@@ -1,68 +1,26 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { Environment, Grid, ContactShadows, BakeShadows, SoftShadows } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
+import { OrbitControls, Environment, Grid, ContactShadows, BakeShadows, SoftShadows } from '@react-three/drei';
 import { useRobotStore } from '@/store/robotStore';
 import RobotModel from './RobotModel';
-import * as THREE from 'three';
 
-// Simple robot position tracker
-const robotState = {
-  position: new THREE.Vector3(0, 0, 0),
-  initialized: false
-};
-
-// Robot wrapper that tracks position without affecting the model
-const RobotWrapper: React.FC<{ robotConfig: any }> = ({ robotConfig }) => {
-  const groupRef = useRef<THREE.Group>(null);
-  
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.getWorldPosition(robotState.position);
-      robotState.initialized = true;
-    }
-  });
-  
-  return (
-    <group ref={groupRef}>
-      <RobotModel robotConfig={robotConfig} />
-    </group>
-  );
-};
-
-// Simple camera follower
-const CameraFollower: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) => {
-  const { camera } = useThree();
-  const targetRef = useRef(new THREE.Vector3(0, 0, 0));
-  const cameraPositionRef = useRef(new THREE.Vector3(5, 4, 5));
-  
-  useEffect(() => {
-    // Initial camera setup
-    camera.position.set(5, 4, 5);
-    camera.lookAt(0, 0, 0);
-  }, [camera]);
+// Component to handle camera reset from inside the canvas
+const CameraController: React.FC<{ resetTrigger: number }> = ({ resetTrigger }) => {
+  const { camera, controls } = useThree();
   
   useEffect(() => {
     if (resetTrigger > 0) {
-      camera.position.set(5, 4, 5);
-      camera.lookAt(robotState.position);
-    }
-  }, [resetTrigger, camera]);
-  
-  useFrame(() => {
-    if (robotState.initialized) {
-      // Simple following logic
-      const robotPos = robotState.position;
-      const offset = new THREE.Vector3(5, 4, 5);
-      const desiredPos = robotPos.clone().add(offset);
+      camera.position.set(5, 5, 5);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
       
-      // Smooth camera movement
-      camera.position.lerp(desiredPos, 0.05);
-      
-      // Smooth target following
-      targetRef.current.lerp(robotPos, 0.05);
-      camera.lookAt(targetRef.current);
+      // If using OrbitControls, reset the target and update
+      if (controls) {
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
     }
-  });
+  }, [resetTrigger, camera, controls]);
   
   return null;
 };
@@ -88,21 +46,21 @@ const SceneContainer: React.FC = () => {
       <Canvas
         ref={canvasRef}
         shadows
-        camera={{ position: [5, 4, 5], fov: 50 }}
+        camera={{ position: [5, 5, 5], fov: 50 }}
         className="w-full h-full bg-dark-900 rounded-lg"
         style={{ minHeight: '400px' }}
       >
-        <CameraFollower resetTrigger={resetTrigger} />
+        <CameraController resetTrigger={resetTrigger} />
         
         <SoftShadows size={25} samples={16} />
         <color attach="background" args={['#111827']} />
         
-        <ambientLight intensity={0.4} />
+        <ambientLight intensity={0.5} />
         <directionalLight 
           position={[10, 10, 5]} 
-          intensity={0.8} 
+          intensity={1} 
           castShadow 
-          shadow-mapSize={[1024, 1024]}
+          shadow-mapSize={[2048, 2048]}
         />
         
         <Environment preset="warehouse" background blur={0.8} />
@@ -118,15 +76,14 @@ const SceneContainer: React.FC = () => {
             sectionColor="#888"
             fadeDistance={30}
             fadeStrength={1}
+            followCamera={false}
           />
         )}
         
-        {selectedRobot && (
-          <RobotWrapper robotConfig={selectedRobot} />
-        )}
+        {selectedRobot && <RobotModel robotConfig={selectedRobot} />}
         
         <ContactShadows
-          opacity={0.3}
+          opacity={0.4}
           scale={10}
           blur={2}
           far={10}
@@ -135,6 +92,14 @@ const SceneContainer: React.FC = () => {
         />
         
         <BakeShadows />
+        
+        <OrbitControls 
+          makeDefault 
+          enableDamping
+          dampingFactor={0.1}
+          minDistance={2}
+          maxDistance={20}
+        />
       </Canvas>
       
       <div className="absolute top-4 left-4 bg-dark-800/80 backdrop-blur-sm px-3 py-2 rounded-md text-sm text-white border border-dark-600">
