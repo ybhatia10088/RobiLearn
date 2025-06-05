@@ -20,7 +20,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     
   const { scene } = useGLTF(modelPath);
 
-  // Load textures for spider model - removed missing aoMap texture
+  // Load available textures for spider model
   const spiderTextures = useTexture({
     map: '/models/spider-model/textures/spidey_Baked_albedo.jpg',
     normalMap: '/models/spider-model/textures/spidey_Baked_normal.png',
@@ -58,7 +58,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
                 child.name.toLowerCase().includes('leg')) {
               child.material.map = spiderTextures.map;
               child.material.normalMap = spiderTextures.normalMap;
-              // Removed aoMap assignment since the texture is missing
               child.material.needsUpdate = true;
             }
             // Apply weapon textures
