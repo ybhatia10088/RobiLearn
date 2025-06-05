@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -14,36 +14,47 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const modelRef = useRef<THREE.Group>(null);
   const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const { robotState, isMoving } = useRobotStore();
+  const [currentAction, setCurrentAction] = useState<string | null>(null);
 
-  // Load model and animations
   const gltf = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const clonedScene = useMemo(() => SkeletonUtils.clone(gltf.scene) as THREE.Group, [gltf.scene]);
-  const { actions, names, mixer } = useAnimations(gltf.animations, clonedScene);
+  const scene = useMemo(() => SkeletonUtils.clone(gltf.scene) as THREE.Group, [gltf.scene]);
+  const { actions, names, mixer } = useAnimations(gltf.animations, scene);
 
-  // Play or stop all animations based on movement
+  // Identify idle/walk animation clips heuristically
+  const idleName = names.find((n) => /idle/i.test(n)) || names[0];
+  const walkName = names.find((n) => /walk|move|run/i.test(n)) || names[1];
+
+  // Handle animation switching with fade
+  const switchAnimation = (name: string) => {
+    if (!actions || !name || currentAction === name) return;
+
+    const newAction = actions[name];
+    const oldAction = currentAction ? actions[currentAction] : null;
+
+    if (oldAction && newAction && oldAction !== newAction) {
+      oldAction.fadeOut(0.3);
+      newAction.reset().fadeIn(0.3).play();
+    } else if (newAction && !oldAction) {
+      newAction.reset().fadeIn(0.3).play();
+    }
+
+    setCurrentAction(name);
+  };
+
+  // Trigger animation based on movement state
   useEffect(() => {
-    if (!actions || names.length === 0) return;
+    if (!actions) return;
+    if (isMoving) {
+      switchAnimation(walkName);
+    } else {
+      switchAnimation(idleName);
+    }
+  }, [isMoving, walkName, idleName, actions]);
 
-    names.forEach((name) => {
-      const action = actions[name];
-      if (!action) return;
-
-      if (isMoving) {
-        action.reset().fadeIn(0.3).play();
-      } else {
-        action.fadeOut(0.3);
-      }
-    });
-
-    return () => {
-      names.forEach((name) => actions[name]?.stop());
-    };
-  }, [isMoving, actions, names]);
-
-  // Clean up on unmount
+  // Clean up model
   useEffect(() => {
     return () => {
-      clonedScene.traverse((child) => {
+      scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.geometry.dispose();
           if (child.material instanceof THREE.Material) {
@@ -52,16 +63,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         }
       });
     };
-  }, [clonedScene]);
+  }, [scene]);
 
-  // Smooth movement & animate mixer
+  // Animate position and mixer
   useFrame((state, delta) => {
     if (!robotState || !modelRef.current) return;
 
-    // Animate mixer
     mixer?.update(delta);
 
-    // Position
     const targetPosition = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
@@ -70,17 +79,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     prevPositionRef.current.lerp(targetPosition, 0.2);
     modelRef.current.position.copy(prevPositionRef.current);
 
-    // Rotation
     const targetRotation = Math.PI + robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.1;
   });
 
-  if (!clonedScene) return null;
-
   return (
     <primitive
       ref={modelRef}
-      object={clonedScene}
+      object={scene}
       position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
       castShadow
