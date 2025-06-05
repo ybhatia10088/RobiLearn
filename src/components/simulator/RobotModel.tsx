@@ -13,8 +13,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const modelRef = useRef<THREE.Group>(null);
   const { robotState, isMoving } = useRobotStore();
   
-  // Load the spider robot model
-  const { scene } = useGLTF('/models/Robot_model.glb');
+  // Load the spider robot model from the correct path
+  const { scene } = useGLTF('/models/spider-model/source/spider_robot.glb');
   
   useEffect(() => {
     if (modelRef.current && robotState) {
@@ -31,10 +31,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         Math.PI + robotState.rotation.y,
         0
       );
+      
+      // Prepare model for shadows
+      scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
     }
-  }, [robotState]);
+  }, [robotState, scene]);
   
-  useFrame(() => {
+  useFrame((state) => {
     if (!robotState || !modelRef.current) return;
     
     // Update position
@@ -49,12 +57,26 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     
     // Add walking animation when moving
     if (isMoving) {
-      const time = Date.now() * 0.001;
+      const time = state.clock.getElapsedTime();
       
-      // Animate legs
+      // Animate legs with more natural movement
       scene.traverse((child) => {
-        if (child.name.includes('leg')) {
-          child.rotation.x = Math.sin(time * 5) * 0.2;
+        if (child instanceof THREE.Mesh && child.name.toLowerCase().includes('leg')) {
+          // Create alternating leg movements
+          const isLeftLeg = child.name.toLowerCase().includes('left');
+          const phase = isLeftLeg ? 0 : Math.PI;
+          
+          // Apply walking motion
+          child.rotation.x = Math.sin(time * 8 + phase) * 0.3;
+          child.rotation.z = Math.cos(time * 8 + phase) * 0.15;
+        }
+      });
+    } else {
+      // Reset leg positions when not moving
+      scene.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.name.toLowerCase().includes('leg')) {
+          child.rotation.x = 0;
+          child.rotation.z = 0;
         }
       });
     }
@@ -70,5 +92,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     />
   );
 };
+
+// Preload the model
+useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 
 export default RobotModel;
