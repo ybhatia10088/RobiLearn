@@ -28,10 +28,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         robotState.position.z
       );
       
+      // Rotate the model 180 degrees to face forward
       modelRef.current.rotation.set(
-        robotState.rotation.x,
-        robotState.rotation.y,
-        robotState.rotation.z
+        0,
+        Math.PI + robotState.rotation.y, // Add PI to face forward
+        0
       );
     }
   }, [robotState]);
@@ -46,22 +47,39 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       robotState.position.z
     );
     
-    // Update rotation
-    modelRef.current.rotation.y = robotState.rotation.y;
+    // Update rotation (add PI to face forward)
+    modelRef.current.rotation.y = Math.PI + robotState.rotation.y;
     
     // Add movement animations based on robot type
     if (isMoving) {
       switch (robotConfig.type) {
         case 'spider': {
-          // Add leg movement animation
-          const time = Date.now() * 0.001;
-          const legs = modelRef.current.children.filter(child => 
-            child.name.toLowerCase().includes('leg')
+          // Find all leg joints
+          const leftLegs = modelRef.current.children.filter(child => 
+            child.name.toLowerCase().includes('leg') && 
+            child.name.toLowerCase().includes('left')
           );
           
-          legs.forEach((leg, index) => {
-            const offset = index * (Math.PI / 4);
-            leg.rotation.x = Math.sin(time * 5 + offset) * 0.2;
+          const rightLegs = modelRef.current.children.filter(child => 
+            child.name.toLowerCase().includes('leg') && 
+            child.name.toLowerCase().includes('right')
+          );
+          
+          const time = Date.now() * 0.002; // Slower animation
+          
+          // Animate legs in alternating patterns
+          leftLegs.forEach((leg, index) => {
+            const offset = index * (Math.PI / 3); // Distribute timing for tripod gait
+            const amplitude = 0.3; // Reduced movement range
+            leg.rotation.x = Math.sin(time + offset) * amplitude;
+            leg.rotation.z = Math.cos(time + offset) * (amplitude / 2);
+          });
+          
+          rightLegs.forEach((leg, index) => {
+            const offset = index * (Math.PI / 3) + Math.PI; // Opposite phase to left legs
+            const amplitude = 0.3;
+            leg.rotation.x = Math.sin(time + offset) * amplitude;
+            leg.rotation.z = Math.cos(time + offset) * (amplitude / 2);
           });
           break;
         }
