@@ -78,142 +78,15 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     batteryUsed: 0,
   },
 
-  resetRobotState: () => {
-    set((state) => ({
-      ...state,
-      robotState: {
-        ...INITIAL_ROBOT_STATE,
-        type: state.robotState?.type || 'mobile',
-        robotId: state.robotState?.robotId || '',
-        jointPositions: {},
-        sensorReadings: [],
-        errors: [],
-        currentJointCommand: null,
-      },
-      isMoving: false,
-    }));
-  },
-
-  resetRobotStateByType: () => {
-    set((state) => {
-      const { selectedRobot } = state;
-      return {
-        ...state,
-        robotState: {
-          ...INITIAL_ROBOT_STATE,
-          position: { x: 0, y: 0, z: 0 }, // Always start at ground level
-          type: selectedRobot?.type || 'mobile',
-          robotId: state.robotState?.robotId || '',
-          jointPositions: {},
-          sensorReadings: [],
-          errors: [],
-          currentJointCommand: null,
-        },
-        isMoving: false,
-      };
-    });
-  },
-
-  startHover: () => {
-    const state = get();
-    if (!state.robotState || state.selectedRobot?.type !== 'drone') return;
-
-    // Start hover sequence
-    const hoverInterval = setInterval(() => {
-      const currentState = get();
-      if (!currentState.robotState) {
-        clearInterval(hoverInterval);
-        return;
-      }
-
-      const currentHeight = currentState.robotState.position.y;
-      const targetHeight = 1.5; // Target hover height
-
-      if (currentHeight >= targetHeight) {
-        // Reached hover height
-        set((state) => ({
-          robotState: {
-            ...state.robotState!,
-            position: {
-              ...state.robotState!.position,
-              y: targetHeight
-            },
-            isMoving: true
-          },
-          isMoving: true
-        }));
-        clearInterval(hoverInterval);
-      } else {
-        // Continue ascending
-        set((state) => ({
-          robotState: {
-            ...state.robotState!,
-            position: {
-              ...state.robotState!.position,
-              y: Math.min(targetHeight, currentHeight + 0.05)
-            },
-            isMoving: true
-          },
-          isMoving: true
-        }));
-      }
-    }, 16);
-  },
-
-  landDrone: () => {
-    const state = get();
-    if (!state.robotState || state.selectedRobot?.type !== 'drone') return;
-
-    // Start landing sequence
-    const landingInterval = setInterval(() => {
-      const currentState = get();
-      if (!currentState.robotState) {
-        clearInterval(landingInterval);
-        return;
-      }
-
-      const currentHeight = currentState.robotState.position.y;
-      if (currentHeight <= 0.1) {
-        // Drone has landed
-        set((state) => ({
-          robotState: {
-            ...state.robotState!,
-            position: {
-              ...state.robotState!.position,
-              y: 0
-            },
-            isMoving: false
-          },
-          isMoving: false
-        }));
-        clearInterval(landingInterval);
-      } else {
-        // Continue descent
-        set((state) => ({
-          robotState: {
-            ...state.robotState!,
-            position: {
-              ...state.robotState!.position,
-              y: Math.max(0, currentHeight - 0.05)
-            },
-            isMoving: true
-          },
-          isMoving: true
-        }));
-      }
-    }, 16);
-  },
-
   selectRobot: (config) => {
-    // Always start robots at ground level
     const initialPosition = { x: 0, y: 0, z: 0 };
-
     set({
       selectedRobot: config,
       robotState: {
         robotId: config.id,
+        type: config.type,
         position: initialPosition,
-        rotation: { ...config.baseRotation },
+        rotation: { x: 0, y: 0, z: 0 },
         jointPositions: {},
         sensorReadings: [],
         isMoving: false,
@@ -223,18 +96,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         currentJointCommand: null,
       },
       isMoving: false,
-      jointPositions: {
-        base: 0,
-        shoulder: 0,
-        elbow: 0,
-        wrist: 0,
-      },
-      performance: {
-        distanceTraveled: 0,
-        rotations: 0,
-        tasksCompleted: 0,
-        batteryUsed: 0,
-      },
     });
   },
 
@@ -242,6 +103,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     const state = get();
     if (!state.robotState) return;
 
+    // Clear any existing intervals
     if ((window as any).robotMoveInterval) {
       clearInterval((window as any).robotMoveInterval);
     }
@@ -249,10 +111,10 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     set({ isMoving: true });
 
     if (state.selectedRobot?.type === 'arm' && joint) {
+      // Handle arm movement
       const currentPos = state.jointPositions[joint];
       const step = (direction === 'left' || direction === 'backward') ? -0.05 : 0.05;
-
-      const limits: Record<keyof JointState, { min: number, max: number }> = {
+      const limits = {
         base: { min: -Math.PI, max: Math.PI },
         shoulder: { min: -Math.PI / 2, max: Math.PI / 4 },
         elbow: { min: -Math.PI / 2, max: Math.PI / 2 },
@@ -271,57 +133,49 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       return;
     }
 
-    if (state.selectedRobot?.type !== 'arm') {
-      const moveStep = 0.05 * speed;
-      const angle = state.robotState.rotation.y;
-      const deltaX = Math.sin(angle) * moveStep;
-      const deltaZ = Math.cos(angle) * moveStep;
-      const multiplier = direction === 'forward' ? 1 : -1;
+    // Handle movement for other robot types
+    const moveStep = 0.1 * speed; // Increased step size for more noticeable movement
+    const angle = state.robotState.rotation.y;
+    const deltaX = Math.sin(angle) * moveStep;
+    const deltaZ = Math.cos(angle) * moveStep;
+    const multiplier = direction === 'forward' ? 1 : -1;
 
-      const moveInterval = setInterval(() => {
-        const currentState = get();
-        if (!currentState.robotState || !currentState.isMoving) {
-          clearInterval(moveInterval);
-          return;
-        }
+    const moveInterval = setInterval(() => {
+      const currentState = get();
+      if (!currentState.robotState || !currentState.isMoving) {
+        clearInterval(moveInterval);
+        return;
+      }
 
-        const newPosition = {
-          x: currentState.robotState.position.x + deltaX * multiplier,
-          y: currentState.robotState.position.y,
-          z: currentState.robotState.position.z + deltaZ * multiplier,
-        };
+      const newPosition = {
+        x: currentState.robotState.position.x + deltaX * multiplier,
+        y: currentState.robotState.position.y,
+        z: currentState.robotState.position.z + deltaZ * multiplier,
+      };
 
-        const distance = Math.sqrt(deltaX ** 2 + deltaZ ** 2);
+      set({
+        robotState: {
+          ...currentState.robotState,
+          position: newPosition,
+          isMoving: true,
+        },
+      });
+    }, 16);
 
-        set({
-          robotState: {
-            ...currentState.robotState,
-            isMoving: true,
-            position: newPosition,
-            batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.01),
-          },
-          performance: {
-            ...currentState.performance,
-            distanceTraveled: currentState.performance.distanceTraveled + distance,
-            batteryUsed: currentState.performance.batteryUsed + 0.01,
-          },
-        });
-      }, 16);
-
-      (window as any).robotMoveInterval = moveInterval;
-    }
+    (window as any).robotMoveInterval = moveInterval;
   },
 
   rotateRobot: ({ direction, speed }) => {
     const state = get();
-    if (!state.robotState || state.selectedRobot?.type === 'arm') return;
+    if (!state.robotState) return;
 
     if ((window as any).robotRotateInterval) {
       clearInterval((window as any).robotRotateInterval);
     }
 
     set({ isMoving: true });
-    const delta = direction === 'left' ? 0.02 * speed : -0.02 * speed;
+    const rotateStep = 0.05 * speed; // Increased step size for more noticeable rotation
+    const delta = direction === 'left' ? rotateStep : -rotateStep;
 
     const rotateInterval = setInterval(() => {
       const currentState = get();
@@ -330,49 +184,21 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         return;
       }
 
-      const newY = (currentState.robotState.rotation.y + delta) % (Math.PI * 2);
+      const newRotation = {
+        ...currentState.robotState.rotation,
+        y: (currentState.robotState.rotation.y + delta) % (Math.PI * 2),
+      };
 
       set({
         robotState: {
           ...currentState.robotState,
+          rotation: newRotation,
           isMoving: true,
-          rotation: {
-            ...currentState.robotState.rotation,
-            y: newY,
-          },
-          batteryLevel: Math.max(0, currentState.robotState.batteryLevel - 0.005),
-        },
-        performance: {
-          ...currentState.performance,
-          rotations: currentState.performance.rotations + 1,
-          batteryUsed: currentState.performance.batteryUsed + 0.005,
         },
       });
     }, 16);
 
     (window as any).robotRotateInterval = rotateInterval;
-  },
-
-  grabObject: () => {
-    const state = get();
-    if (!state.robotState) return;
-    set({
-      robotState: {
-        ...state.robotState,
-        isGrabbing: true,
-      },
-    });
-  },
-
-  releaseObject: () => {
-    const state = get();
-    if (!state.robotState) return;
-    set({
-      robotState: {
-        ...state.robotState,
-        isGrabbing: false,
-      },
-    });
   },
 
   stopRobot: () => {
@@ -386,39 +212,85 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       (window as any).robotRotateInterval = null;
     }
 
-    const state = get();
-    if (!state.robotState) return;
-
-    set({
+    set((state) => ({
       isMoving: false,
-      robotState: {
+      robotState: state.robotState ? {
         ...state.robotState,
         isMoving: false,
-        currentJointCommand: null,
-      },
-    });
+      } : null,
+    }));
+  },
+
+  grabObject: () => {
+    set((state) => ({
+      robotState: state.robotState ? {
+        ...state.robotState,
+        isGrabbing: true,
+      } : null,
+    }));
+  },
+
+  releaseObject: () => {
+    set((state) => ({
+      robotState: state.robotState ? {
+        ...state.robotState,
+        isGrabbing: false,
+      } : null,
+    }));
   },
 
   setEnvironment: (config) => set({ environment: config }),
+  updateRobotPosition: (position) => set((state) => ({
+    robotState: state.robotState ? { ...state.robotState, position } : null,
+  })),
+  updateRobotRotation: (rotation) => set((state) => ({
+    robotState: state.robotState ? { ...state.robotState, rotation } : null,
+  })),
+  updateJointPosition: (joint, value) => set((state) => ({
+    jointPositions: { ...state.jointPositions, [joint]: value },
+  })),
 
-  updateRobotPosition: (position) => {
+  resetRobotState: () => set((state) => ({
+    robotState: state.robotState ? {
+      ...state.robotState,
+      ...INITIAL_ROBOT_STATE,
+    } : null,
+    isMoving: false,
+  })),
+
+  resetRobotStateByType: () => set((state) => ({
+    robotState: state.robotState ? {
+      ...state.robotState,
+      ...INITIAL_ROBOT_STATE,
+    } : null,
+    isMoving: false,
+  })),
+
+  startHover: () => {
     const state = get();
-    if (!state.robotState) return;
-    set({ robotState: { ...state.robotState, position } });
-  },
-
-  updateRobotRotation: (rotation) => {
-    const state = get();
-    if (!state.robotState) return;
-    set({ robotState: { ...state.robotState, rotation } });
-  },
-
-  updateJointPosition: (joint, value) => {
+    if (!state.robotState || state.selectedRobot?.type !== 'drone') return;
+    
     set((state) => ({
-      jointPositions: {
-        ...state.jointPositions,
-        [joint]: value,
-      },
+      robotState: state.robotState ? {
+        ...state.robotState,
+        position: { ...state.robotState.position, y: 1.5 },
+        isMoving: true,
+      } : null,
+      isMoving: true,
+    }));
+  },
+
+  landDrone: () => {
+    const state = get();
+    if (!state.robotState || state.selectedRobot?.type !== 'drone') return;
+    
+    set((state) => ({
+      robotState: state.robotState ? {
+        ...state.robotState,
+        position: { ...state.robotState.position, y: 0 },
+        isMoving: false,
+      } : null,
+      isMoving: false,
     }));
   },
 }));
