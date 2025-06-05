@@ -1332,12 +1332,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             torsoRef.current.position.y = 1.2 + torsoVerticalBob;
           }
           
-          // Head stabilization - keep completely stable
+          // Neck and head stabilization - keep completely stable
+          if (neckRef.current) {
+            // Neck follows torso position but counters some sway
+            neckRef.current.position.y = 1.55; // Fixed neck position
+            neckRef.current.rotation.z = -torsoSway * 0.15; // Slight counter-rotation
+          }
+          
           if (headRef.current) {
-            // Counter torso sway to keep head level
-            headRef.current.rotation.z = -torsoSway * 0.3;
+            // Head sits on top of neck and counters remaining sway
+            headRef.current.rotation.z = -torsoSway * 0.15;
             
-            // Keep head at fixed height
+            // Keep head at fixed height relative to neck
             headRef.current.position.y = 1.65;
             
             // Keep head centered front-back
@@ -1358,7 +1364,15 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             torsoRef.current.rotation.z = THREE.MathUtils.lerp(torsoRef.current.rotation.z, 0, delta * 2);
           }
           
-          // Head remains completely stable during idle
+          // Neck and head remain completely stable during idle
+          if (neckRef.current) {
+            // Keep neck at fixed position and orientation
+            neckRef.current.position.y = 1.55;
+            neckRef.current.rotation.x = 0;
+            neckRef.current.rotation.y = 0;
+            neckRef.current.rotation.z = 0;
+          }
+          
           if (headRef.current) {
             // Keep head at fixed position and orientation
             headRef.current.position.y = 1.65;
@@ -1368,15 +1382,23 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             headRef.current.rotation.z = 0;
           }
           
-          // Return limbs to neutral position
-          [leftLegRef, rightLegRef, leftArmRef, rightArmRef].forEach(ref => {
+          // Return limbs and neck to neutral position
+          [leftLegRef, rightLegRef, leftArmRef, rightArmRef, neckRef].forEach(ref => {
             if (ref.current) {
               ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, 0, delta * 3);
-              ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 
-                ref === leftLegRef || ref === rightLegRef ? 0.7 : 
-                ref === leftArmRef || ref === rightArmRef ? 1.48 : ref.current.position.y, 
-                delta * 4);
-              // Reset z positions for limbs
+              
+              if (ref === neckRef) {
+                // Neck specific positioning
+                ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 1.55, delta * 4);
+              } else {
+                // Limb positioning
+                ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 
+                  ref === leftLegRef || ref === rightLegRef ? 0.7 : 
+                  ref === leftArmRef || ref === rightArmRef ? 1.48 : ref.current.position.y, 
+                  delta * 4);
+              }
+              
+              // Reset z positions for limbs and neck
               if (ref.current.position.z !== undefined) {
                 ref.current.position.z = THREE.MathUtils.lerp(ref.current.position.z, 0, delta * 4);
               }
