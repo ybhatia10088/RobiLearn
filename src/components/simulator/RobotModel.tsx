@@ -1332,20 +1332,20 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             torsoRef.current.position.y = 1.2 + torsoVerticalBob;
           }
           
-          // Improved head stabilization
+          // Head stabilization - keep completely stable
           if (headRef.current) {
-            // Counter torso sway more naturally (less aggressive)
+            // Counter torso sway to keep head level
             headRef.current.rotation.z = -torsoSway * 0.3;
             
-            // Natural head bob - slower frequency than torso, smaller amplitude
-            const headBobPhase = Math.sin(walkPhase) * HUMANOID_PHYSICS.headBob;
-            headRef.current.position.y = 1.65 + headBobPhase;
+            // Keep head at fixed height
+            headRef.current.position.y = 1.65;
             
-            // Slight forward-backward head motion during walk
-            headRef.current.position.z = Math.sin(walkPhase * 2) * 0.01;
+            // Keep head centered front-back
+            headRef.current.position.z = 0;
             
-            // Optional: slight left-right head movement following the walk rhythm
-            headRef.current.rotation.y = Math.sin(walkPhase) * 0.05;
+            // Keep head facing forward
+            headRef.current.rotation.y = 0;
+            headRef.current.rotation.x = 0;
           }
           
         } else {
@@ -1358,28 +1358,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             torsoRef.current.rotation.z = THREE.MathUtils.lerp(torsoRef.current.rotation.z, 0, delta * 2);
           }
           
-          // Improved idle head movements
+          // Head remains completely stable during idle
           if (headRef.current) {
-            // Smooth breathing-based head movement
-            headRef.current.position.y = THREE.MathUtils.lerp(headRef.current.position.y, 1.65 + breathingPhase * 0.5, delta * 2);
-            
-            // Occasional natural head movements (look around)
-            if (Math.random() < 0.003) { // Reduced frequency
-              const targetRotationY = (Math.random() - 0.5) * 0.4;
-              const targetRotationX = (Math.random() - 0.5) * 0.15;
-              
-              // Smooth transition to new head position
-              headRef.current.rotation.y = THREE.MathUtils.lerp(headRef.current.rotation.y, targetRotationY, delta);
-              headRef.current.rotation.x = THREE.MathUtils.lerp(headRef.current.rotation.x, targetRotationX, delta);
-            } else {
-              // Gradually return to neutral position
-              headRef.current.rotation.y = THREE.MathUtils.lerp(headRef.current.rotation.y, 0, delta * 0.5);
-              headRef.current.rotation.x = THREE.MathUtils.lerp(headRef.current.rotation.x, 0, delta * 0.5);
-              headRef.current.rotation.z = THREE.MathUtils.lerp(headRef.current.rotation.z, 0, delta * 2);
-            }
-            
-            // Reset head position.z during idle
-            headRef.current.position.z = THREE.MathUtils.lerp(headRef.current.position.z, 0, delta * 3);
+            // Keep head at fixed position and orientation
+            headRef.current.position.y = 1.65;
+            headRef.current.position.z = 0;
+            headRef.current.rotation.x = 0;
+            headRef.current.rotation.y = 0;
+            headRef.current.rotation.z = 0;
           }
           
           // Return limbs to neutral position
