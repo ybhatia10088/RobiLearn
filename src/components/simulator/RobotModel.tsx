@@ -52,7 +52,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     // Add movement animations based on robot type
     if (isMoving) {
       switch (robotConfig.type) {
-        case 'spider':
+        case 'spider': {
           // Add leg movement animation
           const time = Date.now() * 0.001;
           const legs = modelRef.current.children.filter(child => 
@@ -64,8 +64,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             leg.rotation.x = Math.sin(time * 5 + offset) * 0.2;
           });
           break;
+        }
           
-        case 'tank':
+        case 'tank': {
           // Add track rotation animation
           const tracks = modelRef.current.children.filter(child =>
             child.name.toLowerCase().includes('track')
@@ -75,8 +76,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             track.rotation.x += 0.1;
           });
           break;
+        }
           
-        case 'humanoid':
+        case 'humanoid': {
           // Add walking animation
           const arms = modelRef.current.children.filter(child =>
             child.name.toLowerCase().includes('arm')
@@ -96,6 +98,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             leg.rotation.x = Math.sin(time * 5 + (index * Math.PI)) * 0.5;
           });
           break;
+        }
       }
     }
   });
