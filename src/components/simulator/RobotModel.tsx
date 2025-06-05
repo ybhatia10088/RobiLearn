@@ -17,7 +17,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const { robotState, isMoving } = useRobotStore();
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
-  // Load model and animations
+  // Load GLB model and animations
   const gltf = useGLTF('/models/spider-model/source/spider_robot.glb');
   const clonedScene = useMemo(() => SkeletonUtils.clone(gltf.scene) as THREE.Group, [gltf.scene]);
   const { actions, names, mixer } = useAnimations(gltf.animations, clonedScene);
@@ -63,10 +63,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   useFrame((state, delta) => {
     if (!robotState || !modelRef.current) return;
 
-    // Animate mixer
+    // Update animation mixer
     mixer?.update(delta);
 
-    // Movement smoothing
+    // Smooth position interpolation
     const targetPosition = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
@@ -75,15 +75,17 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     prevPositionRef.current.lerp(targetPosition, 0.15);
     modelRef.current.position.copy(prevPositionRef.current);
 
-    // Rotation smoothing
+    // Smooth rotation
     const targetRotation = Math.PI + robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.12;
 
-    // Subtle breathing motion while idle
+    // Subtle idle breathing effect
     if (!isMoving) {
       breathingOffsetRef.current += delta;
-      const offset = Math.sin(breathingOffsetRef.current * 1.5) * 0.015; // subtle vertical motion
+      const offset = Math.sin(breathingOffsetRef.current * 1.0) * 0.005; // refined breathing
       modelRef.current.position.y = prevPositionRef.current.y + offset;
+    } else {
+      modelRef.current.position.y = prevPositionRef.current.y;
     }
   });
 
