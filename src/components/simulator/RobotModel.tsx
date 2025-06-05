@@ -20,22 +20,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     
   const { scene } = useGLTF(modelPath);
 
-  // Load textures for spider model
+  // Load textures for spider model - removed missing texture references
   const spiderTextures = useTexture({
     map: '/models/spider-model/textures/spidey_Baked_albedo.jpg',
     normalMap: '/models/spider-model/textures/spidey_Baked_normal.png',
-    roughnessMap: '/models/spider-model/textures/spidey_Baked_roughness.jpg',
-    metalnessMap: '/models/spider-model/textures/spidey_Baked_metallic.jpg',
     aoMap: '/models/spider-model/textures/spidey_Baked_AO.jpg',
   });
 
   const weaponTextures = useTexture({
     map: '/models/spider-model/textures/weapon_Baked_Baked_albedo.jpg',
     normalMap: '/models/spider-model/textures/weapon_Baked_Baked_normal.png',
-    roughnessMap: '/models/spider-model/textures/weapon_Baked_Baked_roughness.jpg',
-    metalnessMap: '/models/spider-model/textures/weapon_Baked_Baked_metallic.jpg',
     aoMap: '/models/spider-model/textures/weapon_Baked_Baked_AO.jpg',
-    emissiveMap: '/models/spider-model/textures/weapon_Baked_Baked_emissive.jpg',
+    metalnessMap: '/models/spider-model/textures/weapon_Baked_Baked_metallic.jpg',
   });
   
   useEffect(() => {
@@ -63,8 +59,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
                 child.name.toLowerCase().includes('leg')) {
               child.material.map = spiderTextures.map;
               child.material.normalMap = spiderTextures.normalMap;
-              child.material.roughnessMap = spiderTextures.roughnessMap;
-              child.material.metalnessMap = spiderTextures.metalnessMap;
               child.material.aoMap = spiderTextures.aoMap;
               child.material.needsUpdate = true;
             }
@@ -72,11 +66,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
             else if (child.name.toLowerCase().includes('weapon')) {
               child.material.map = weaponTextures.map;
               child.material.normalMap = weaponTextures.normalMap;
-              child.material.roughnessMap = weaponTextures.roughnessMap;
-              child.material.metalnessMap = weaponTextures.metalnessMap;
               child.material.aoMap = weaponTextures.aoMap;
-              child.material.emissiveMap = weaponTextures.emissiveMap;
-              child.material.emissiveIntensity = 1;
+              child.material.metalnessMap = weaponTextures.metalnessMap;
               child.material.needsUpdate = true;
             }
           }
