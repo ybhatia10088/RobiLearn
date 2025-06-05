@@ -29,14 +29,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isBoosting, setIsBoosting] = useState(false);
   
-  // Enhanced robot models with better descriptions
+  // Enhanced robot models with better descriptions and using the available spider model
   const availableRobots = [
-    { id: 'mobile1', name: 'Explorer Bot', type: 'mobile', description: 'All-terrain mobile robot for exploration and navigation' },
-    { id: 'arm1', name: 'Precision Arm', type: 'arm', description: 'Industrial robot arm for precise manipulation tasks' },
-    { id: 'drone1', name: 'Sky Scanner', type: 'drone', description: 'Aerial drone for surveillance and mapping' },
-    { id: 'spider1', name: 'Spider Walker', type: 'spider', description: 'Six-legged robot for rough terrain navigation' },
-    { id: 'tank1', name: 'Heavy Mover', type: 'tank', description: 'Tracked robot for heavy-duty operations' },
-    { id: 'humanoid1', name: 'Assistant Bot', type: 'humanoid', description: 'Bipedal humanoid robot for human interaction' },
+    { id: 'mobile1', name: 'Explorer Bot', type: 'mobile', description: 'All-terrain mobile robot for exploration and navigation', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
+    { id: 'arm1', name: 'Precision Arm', type: 'arm', description: 'Industrial robot arm for precise manipulation tasks', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
+    { id: 'drone1', name: 'Sky Scanner', type: 'drone', description: 'Aerial drone for surveillance and mapping', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
+    { id: 'spider1', name: 'Spider Walker', type: 'spider', description: 'Six-legged robot for rough terrain navigation', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
+    { id: 'tank1', name: 'Heavy Mover', type: 'tank', description: 'Tracked robot for heavy-duty operations', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
+    { id: 'humanoid1', name: 'Assistant Bot', type: 'humanoid', description: 'Bipedal humanoid robot for human interaction', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
   ];
   
   // Fixed movement handlers with proper event handling
@@ -87,7 +87,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
         name: robot.name,
         type: robot.type as any,
         description: robot.description,
-        model: `/models/${robot.type}.glb`,
+        model: robot.model,
         basePosition: { x: 0, y: 0, z: 0 },
         baseRotation: { x: 0, y: 0, z: 0, w: 1 },
         sensors: []
