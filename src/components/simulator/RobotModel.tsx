@@ -600,31 +600,54 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     <>
       {/* Main torso assembly */}
       <group ref={torsoRef} position={[0, 1.2, 0]}>
-        {/* Upper torso - chest */}
-        <mesh castShadow receiveShadow position={[0, 0.15, 0]}>
-          <boxGeometry args={[0.35, 0.4, 0.2]} />
-          <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
+        {/* Upper torso - more anatomical chest */}
+        <mesh castShadow receiveShadow position={[0, 0.18, 0]}>
+          <boxGeometry args={[0.42, 0.45, 0.24]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.5} roughness={0.5} />
         </mesh>
 
-        {/* Chest panel details */}
-        <mesh castShadow position={[0, 0.15, 0.11]}>
-          <boxGeometry args={[0.25, 0.3, 0.02]} />
-          <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
+        {/* Chest armor plating */}
+        <mesh castShadow position={[0, 0.2, 0.13]}>
+          <boxGeometry args={[0.32, 0.35, 0.03]} />
+          <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
         </mesh>
 
-        {/* Shoulder assemblies */}
-        {[-0.22, 0.22].map((x, i) => (
-          <mesh key={i} castShadow position={[x, 0.28, 0]}>
-            <cylinderGeometry args={[0.06, 0.06, 0.12, 32]} />
-            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        {/* Pectoral definition */}
+        {[-0.08, 0.08].map((x, i) => (
+          <mesh key={i} castShadow position={[x, 0.25, 0.11]}>
+            <boxGeometry args={[0.12, 0.15, 0.04]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.4} />
           </mesh>
         ))}
 
-        {/* Lower torso - abdomen */}
-        <mesh castShadow position={[0, -0.15, 0]}>
-          <boxGeometry args={[0.28, 0.25, 0.18]} />
-          <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
+        {/* Enhanced shoulder assemblies */}
+        {[-0.24, 0.24].map((x, i) => (
+          <group key={i} position={[x, 0.32, 0]}>
+            <mesh castShadow>
+              <sphereGeometry args={[0.08, 32, 32]} />
+              <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+            </mesh>
+            {/* Shoulder armor */}
+            <mesh castShadow position={[x > 0 ? 0.05 : -0.05, 0, 0]}>
+              <boxGeometry args={[0.1, 0.12, 0.08]} />
+              <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
+            </mesh>
+          </group>
+        ))}
+
+        {/* Abdominal section - more defined */}
+        <mesh castShadow position={[0, -0.12, 0]}>
+          <boxGeometry args={[0.32, 0.28, 0.2]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.4} roughness={0.6} />
         </mesh>
+
+        {/* Ab definition panels */}
+        {[0.08, -0.08].map((y, i) => (
+          <mesh key={i} castShadow position={[0, y, 0.11]}>
+            <boxGeometry args={[0.24, 0.08, 0.02]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.4} />
+          </mesh>
+        ))}
 
         {/* Waist joint mechanism */}
         <mesh castShadow position={[0, -0.3, 0]}>
@@ -633,7 +656,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         </mesh>
 
         {/* Status display panel */}
-        <mesh castShadow position={[0, 0.05, 0.11]}>
+        <mesh castShadow position={[0, 0.05, 0.14]}>
           <boxGeometry args={[0.15, 0.08, 0.01]} />
           <meshStandardMaterial 
             color="#000000"
@@ -644,7 +667,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
         {/* Cooling vents */}
         {[-0.12, -0.04, 0.04, 0.12].map((x, i) => (
-          <mesh key={i} castShadow position={[x, -0.05, 0.11]}>
+          <mesh key={i} castShadow position={[x, -0.05, 0.12]}>
             <boxGeometry args={[0.02, 0.15, 0.005]} />
             <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
           </mesh>
@@ -652,57 +675,81 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       </group>
 
       {/* Advanced head assembly */}
-      <group ref={headRef} position={[0, 1.65, 0]}>
-        {/* Main head unit */}
+      <group ref={headRef} position={[0, 1.75, 0]}>
+        {/* Main head unit - more proportional */}
         <mesh castShadow receiveShadow>
-          <boxGeometry args={[0.2, 0.25, 0.22]} />
-          <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.6} />
+          <boxGeometry args={[0.24, 0.28, 0.26]} />
+          <meshStandardMaterial color="#f8fafc" metalness={0.3} roughness={0.7} />
         </mesh>
 
-        {/* Face panel */}
-        <mesh castShadow position={[0, 0.02, 0.12]}>
-          <boxGeometry args={[0.18, 0.2, 0.02]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.1} />
+        {/* Face mask - more detailed */}
+        <mesh castShadow position={[0, 0.02, 0.14]}>
+          <boxGeometry args={[0.22, 0.24, 0.03]} />
+          <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.1} />
         </mesh>
 
-        {/* Eyes - camera sensors */}
-        {[-0.05, 0.05].map((x, i) => (
-          <group key={i} position={[x, 0.04, 0.13]}>
+        {/* Forehead sensor array */}
+        <mesh castShadow position={[0, 0.08, 0.15]}>
+          <boxGeometry args={[0.16, 0.04, 0.01]} />
+          <meshStandardMaterial color="#1e40af" emissive="#1e40af" emissiveIntensity={0.2} />
+        </mesh>
+
+        {/* Eyes - larger, more expressive */}
+        {[-0.06, 0.06].map((x, i) => (
+          <group key={i} position={[x, 0.03, 0.16]}>
             <mesh castShadow>
-              <cylinderGeometry args={[0.02, 0.02, 0.01, 32]} />
+              <sphereGeometry args={[0.025, 32, 32]} />
               <meshStandardMaterial 
-                color="#3b82f6"
-                emissive="#3b82f6"
-                emissiveIntensity={0.3}
-                metalness={1}
-                roughness={0}
+                color="#ffffff"
+                emissive="#60a5fa"
+                emissiveIntensity={0.4}
+                metalness={0.1}
+                roughness={0.1}
               />
             </mesh>
-            {/* Eye glow */}
-            <pointLight color="#3b82f6" intensity={0.5} distance={0.3} />
+            {/* Pupil */}
+            <mesh castShadow position={[0, 0, 0.02]}>
+              <cylinderGeometry args={[0.008, 0.008, 0.005, 16]} />
+              <meshStandardMaterial color="#1e40af" emissive="#1e40af" emissiveIntensity={0.6} />
+            </mesh>
+            <pointLight color="#60a5fa" intensity={0.3} distance={0.5} />
           </group>
+        ))}
+
+        {/* Jaw/mouth area */}
+        <mesh castShadow position={[0, -0.08, 0.14]}>
+          <boxGeometry args={[0.12, 0.06, 0.02]} />
+          <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.3} />
+        </mesh>
+
+        {/* Side panels */}
+        {[-0.13, 0.13].map((x, i) => (
+          <mesh key={i} castShadow position={[x, 0, 0.08]}>
+            <boxGeometry args={[0.04, 0.2, 0.1]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.4} />
+          </mesh>
         ))}
 
         {/* Antenna array */}
         {[-0.08, 0.08].map((x, i) => (
-          <mesh key={i} castShadow position={[x, 0.15, -0.05]}>
+          <mesh key={i} castShadow position={[x, 0.16, -0.05]}>
             <cylinderGeometry args={[0.003, 0.003, 0.08, 16]} />
             <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
           </mesh>
         ))}
 
-        {/* Head rotation mechanism */}
-        <mesh castShadow position={[0, -0.15, 0]}>
-          <cylinderGeometry args={[0.06, 0.06, 0.05, 32]} />
+        {/* Enhanced neck connection */}
+        <mesh castShadow position={[0, -0.18, 0]}>
+          <cylinderGeometry args={[0.08, 0.06, 0.08, 32]} />
           <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
         </mesh>
       </group>
 
       {/* Left arm assembly */}
-      <group ref={leftArmRef} position={[-0.22, 1.48, 0]}>
+      <group ref={leftArmRef} position={[-0.24, 1.52, 0]}>
         {/* Shoulder joint */}
         <mesh castShadow>
-          <sphereGeometry args={[0.06, 32, 32]} />
+          <sphereGeometry args={[0.08, 32, 32]} />
           <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
         </mesh>
 
@@ -724,33 +771,57 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
         </mesh>
 
-        {/* Hand assembly */}
+        {/* Enhanced hand assembly */}
         <group position={[0, -0.68, 0]}>
-          <mesh castShadow position={[0, -0.05, 0]}>
-            <boxGeometry args={[0.08, 0.1, 0.04]} />
-            <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
+          {/* Palm - more anatomical */}
+          <mesh castShadow position={[0, -0.06, 0]}>
+            <boxGeometry args={[0.09, 0.12, 0.05]} />
+            <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
           </mesh>
 
-          {/* Fingers */}
-          {[-0.025, -0.008, 0.008, 0.025].map((x, i) => (
-            <mesh key={i} castShadow position={[x, -0.12, 0.01]}>
-              <boxGeometry args={[0.01, 0.06, 0.02]} />
-              <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-            </mesh>
+          {/* Fingers - more realistic proportions */}
+          {[-0.03, -0.01, 0.01, 0.03].map((x, i) => (
+            <group key={i} position={[x, -0.12, 0.01]}>
+              {/* Finger segments */}
+              <mesh castShadow position={[0, -0.02, 0]}>
+                <boxGeometry args={[0.012, 0.04, 0.025]} />
+                <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              </mesh>
+              <mesh castShadow position={[0, -0.06, 0]}>
+                <boxGeometry args={[0.01, 0.03, 0.022]} />
+                <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              </mesh>
+              <mesh castShadow position={[0, -0.085, 0]}>
+                <boxGeometry args={[0.008, 0.02, 0.02]} />
+                <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              </mesh>
+            </group>
           ))}
 
-          {/* Thumb */}
-          <mesh castShadow position={[0.04, -0.08, 0]} rotation={[0, 0, -0.5]}>
-            <boxGeometry args={[0.01, 0.04, 0.02]} />
+          {/* Articulated thumb */}
+          <group position={[0.045, -0.08, 0]} rotation={[0, 0, -0.3]}>
+            <mesh castShadow position={[0, -0.015, 0]}>
+              <boxGeometry args={[0.012, 0.03, 0.025]} />
+              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+            </mesh>
+            <mesh castShadow position={[0, -0.035, 0]}>
+              <boxGeometry args={[0.01, 0.02, 0.022]} />
+              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+            </mesh>
+          </group>
+
+          {/* Wrist actuators */}
+          <mesh castShadow position={[0, 0.02, 0]}>
+            <cylinderGeometry args={[0.04, 0.045, 0.06, 32]} />
             <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
           </mesh>
         </group>
       </group>
 
       {/* Right arm assembly (mirrored) */}
-      <group ref={rightArmRef} position={[0.22, 1.48, 0]}>
+      <group ref={rightArmRef} position={[0.24, 1.52, 0]}>
         <mesh castShadow>
-          <sphereGeometry args={[0.06, 32, 32]} />
+          <sphereGeometry args={[0.08, 32, 32]} />
           <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
         </mesh>
 
@@ -770,20 +841,41 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         </mesh>
 
         <group position={[0, -0.68, 0]}>
-          <mesh castShadow position={[0, -0.05, 0]}>
-            <boxGeometry args={[0.08, 0.1, 0.04]} />
-            <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
+          <mesh castShadow position={[0, -0.06, 0]}>
+            <boxGeometry args={[0.09, 0.12, 0.05]} />
+            <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
           </mesh>
 
-          {[-0.025, -0.008, 0.008, 0.025].map((x, i) => (
-            <mesh key={i} castShadow position={[x, -0.12, 0.01]}>
-              <boxGeometry args={[0.01, 0.06, 0.02]} />
-              <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-            </mesh>
+          {[-0.03, -0.01, 0.01, 0.03].map((x, i) => (
+            <group key={i} position={[x, -0.12, 0.01]}>
+              <mesh castShadow position={[0, -0.02, 0]}>
+                <boxGeometry args={[0.012, 0.04, 0.025]} />
+                <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              </mesh>
+              <mesh castShadow position={[0, -0.06, 0]}>
+                <boxGeometry args={[0.01, 0.03, 0.022]} />
+                <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              </mesh>
+              <mesh castShadow position={[0, -0.085, 0]}>
+                <boxGeometry args={[0.008, 0.02, 0.02]} />
+                <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+              </mesh>
+            </group>
           ))}
 
-          <mesh castShadow position={[-0.04, -0.08, 0]} rotation={[0, 0, 0.5]}>
-            <boxGeometry args={[0.01, 0.04, 0.02]} />
+          <group position={[-0.045, -0.08, 0]} rotation={[0, 0, 0.3]}>
+            <mesh castShadow position={[0, -0.015, 0]}>
+              <boxGeometry args={[0.012, 0.03, 0.025]} />
+              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+            </mesh>
+            <mesh castShadow position={[0, -0.035, 0]}>
+              <boxGeometry args={[0.01, 0.02, 0.022]} />
+              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+            </mesh>
+          </group>
+
+          <mesh castShadow position={[0, 0.02, 0]}>
+            <cylinderGeometry args={[0.04, 0.045, 0.06, 32]} />
             <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
           </mesh>
         </group>
@@ -797,47 +889,80 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
         </mesh>
 
-        {/* Upper leg (thigh) */}
-        <mesh castShadow position={[0, -0.05, 0]}>
-          <cylinderGeometry args={[0.06, 0.08, 0.35, 32]} />
+        {/* Upper leg (thigh) - better proportions */}
+        <mesh castShadow position={[0, -0.08, 0]}>
+          <cylinderGeometry args={[0.07, 0.09, 0.4, 32]} />
           <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
         </mesh>
 
-        {/* Knee joint */}
-        <mesh castShadow position={[0, -0.25, 0]}>
-          <sphereGeometry args={[0.06, 32, 32]} />
-          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        {/* Thigh armor plating */}
+        <mesh castShadow position={[0, -0.05, 0.08]}>
+          <boxGeometry args={[0.12, 0.25, 0.04]} />
+          <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.4} />
         </mesh>
 
+        {/* Enhanced knee joint */}
+        <group position={[0, -0.3, 0]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.07, 32, 32]} />
+            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Knee cap protection */}
+          <mesh castShadow position={[0, 0, 0.07]}>
+            <sphereGeometry args={[0.05, 32, 16]} />
+            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
+          </mesh>
+        </group>
+
         {/* Lower leg (shin) */}
-        <mesh castShadow position={[0, -0.42, 0]}>
-          <cylinderGeometry args={[0.05, 0.06, 0.3, 32]} />
+        <mesh castShadow position={[0, -0.48, 0]}>
+          <cylinderGeometry args={[0.05, 0.06, 0.32, 32]} />
           <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
         </mesh>
 
         {/* Ankle joint */}
-        <mesh castShadow position={[0, -0.6, 0]}>
+        <mesh castShadow position={[0, -0.66, 0]}>
           <sphereGeometry args={[0.05, 32, 32]} />
           <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
         </mesh>
 
-        {/* Foot */}
-        <mesh castShadow position={[0, -0.68, 0.08]} rotation={[0, 0, 0]}>
-          <boxGeometry args={[0.12, 0.06, 0.25]} />
-          <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
-        </mesh>
-
-        {/* Foot sensors */}
-        {[-0.04, 0.04].map((x, i) => (
-          <mesh key={i} castShadow position={[x, -0.71, 0.15]}>
-            <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
-            <meshStandardMaterial 
-              color="#22c55e"
-              emissive="#22c55e"
-              emissiveIntensity={0.3}
-            />
+        {/* Enhanced foot assembly */}
+        <group position={[0, -0.72, 0.08]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.14, 0.08, 0.28]} />
+            <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
           </mesh>
-        ))}
+          
+          {/* Toe section */}
+          <mesh castShadow position={[0, -0.02, 0.16]}>
+            <boxGeometry args={[0.12, 0.04, 0.08]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+          </mesh>
+          
+          {/* Heel stabilizer */}
+          <mesh castShadow position={[0, 0, -0.12]}>
+            <boxGeometry args={[0.1, 0.06, 0.06]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+          </mesh>
+          
+          {/* Arch support */}
+          <mesh castShadow position={[0, -0.06, 0.02]}>
+            <boxGeometry args={[0.08, 0.02, 0.15]} />
+            <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.2} />
+          </mesh>
+
+          {/* Foot sensors */}
+          {[-0.04, 0.04].map((x, i) => (
+            <mesh key={i} castShadow position={[x, -0.05, 0.15]}>
+              <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
+              <meshStandardMaterial 
+                color="#22c55e"
+                emissive="#22c55e"
+                emissiveIntensity={0.3}
+              />
+            </mesh>
+          ))}
+        </group>
       </group>
 
       {/* Right leg assembly (mirrored) */}
@@ -847,49 +972,77 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
         </mesh>
 
-        <mesh castShadow position={[0, -0.05, 0]}>
-          <cylinderGeometry args={[0.06, 0.08, 0.35, 32]} />
+        <mesh castShadow position={[0, -0.08, 0]}>
+          <cylinderGeometry args={[0.07, 0.09, 0.4, 32]} />
           <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
         </mesh>
 
-        <mesh castShadow position={[0, -0.25, 0]}>
-          <sphereGeometry args={[0.06, 32, 32]} />
-          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        <mesh castShadow position={[0, -0.05, 0.08]}>
+          <boxGeometry args={[0.12, 0.25, 0.04]} />
+          <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.4} />
         </mesh>
 
-        <mesh castShadow position={[0, -0.42, 0]}>
-          <cylinderGeometry args={[0.05, 0.06, 0.3, 32]} />
+        <group position={[0, -0.3, 0]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.07, 32, 32]} />
+            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+          </mesh>
+          <mesh castShadow position={[0, 0, 0.07]}>
+            <sphereGeometry args={[0.05, 32, 16]} />
+            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
+          </mesh>
+        </group>
+
+        <mesh castShadow position={[0, -0.48, 0]}>
+          <cylinderGeometry args={[0.05, 0.06, 0.32, 32]} />
           <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
         </mesh>
 
-        <mesh castShadow position={[0, -0.6, 0]}>
+        <mesh castShadow position={[0, -0.66, 0]}>
           <sphereGeometry args={[0.05, 32, 32]} />
           <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
         </mesh>
 
-        <mesh castShadow position={[0, -0.68, 0.08]} rotation={[0, 0, 0]}>
-          <boxGeometry args={[0.12, 0.06, 0.25]} />
-          <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
-        </mesh>
-
-        {[-0.04, 0.04].map((x, i) => (
-          <mesh key={i} castShadow position={[x, -0.71, 0.15]}>
-            <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
-            <meshStandardMaterial 
-              color="#22c55e"
-              emissive="#22c55e"
-              emissiveIntensity={0.3}
-            />
+        <group position={[0, -0.72, 0.08]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.14, 0.08, 0.28]} />
+            <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
           </mesh>
-        ))}
+          
+          <mesh castShadow position={[0, -0.02, 0.16]}>
+            <boxGeometry args={[0.12, 0.04, 0.08]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+          </mesh>
+          
+          <mesh castShadow position={[0, 0, -0.12]}>
+            <boxGeometry args={[0.1, 0.06, 0.06]} />
+            <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+          </mesh>
+          
+          <mesh castShadow position={[0, -0.06, 0.02]}>
+            <boxGeometry args={[0.08, 0.02, 0.15]} />
+            <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.2} />
+          </mesh>
+
+          {[-0.04, 0.04].map((x, i) => (
+            <mesh key={i} castShadow position={[x, -0.05, 0.15]}>
+              <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
+              <meshStandardMaterial 
+                color="#22c55e"
+                emissive="#22c55e"
+                emissiveIntensity={0.3}
+              />
+            </mesh>
+          ))}
+        </group>
       </group>
 
       {/* Power cables and hydraulic lines */}
       {[
         { start: [0, 1.2, -0.1], end: [-0.1, 0.85, 0], color: "#ef4444" },
         { start: [0, 1.2, -0.1], end: [0.1, 0.85, 0], color: "#3b82f6" },
-        { start: [-0.22, 1.3, 0], end: [-0.22, 1.15, 0], color: "#22c55e" },
-        { start: [0.22, 1.3, 0], end: [0.22, 1.15, 0], color: "#22c55e" }
+        { start: [-0.24, 1.35, 0], end: [-0.24, 1.2, 0], color: "#22c55e" },
+        { start: [0.24, 1.35, 0], end: [0.24, 1.2, 0], color: "#22c55e" }
       ].map(({ start, end, color }, i) => (
         <mesh key={i} castShadow position={[
           (start[0] + end[0]) / 2,
