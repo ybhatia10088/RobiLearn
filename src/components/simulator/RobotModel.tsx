@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { RobotConfig } from '@/types/robot.types';
 import { useRobotStore } from '@/store/robotStore';
-import * as THREE from 'three';
+import { SkeletonUtils } from 'three-stdlib';
 
 interface RobotModelProps {
   robotConfig: RobotConfig;
@@ -11,19 +12,21 @@ interface RobotModelProps {
 
 const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const modelRef = useRef<THREE.Group>(null);
+  const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const { robotState, isMoving } = useRobotStore();
-  
-  // Load and memoize the spider robot model
+
+  // Load and clone the GLB model safely
   const { scene } = useGLTF('/models/spider-model/source/spider_robot.glb');
   const model = useMemo(() => {
-    const clonedScene = scene.clone();
-    
-    // Set up model properties
-    clonedScene.traverse((child) => {
+    const cloned = SkeletonUtils.clone(scene) as THREE.Group;
+
+    cloned.name = 'SpiderRoot';
+
+    cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        
+
         if (child.material) {
           child.material = new THREE.MeshStandardMaterial({
             color: child.material.color,
@@ -33,12 +36,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         }
       }
     });
-    
-    clonedScene.scale.set(0.5, 0.5, 0.5);
-    return clonedScene;
+
+    cloned.scale.set(0.5, 0.5, 0.5);
+    return cloned;
   }, [scene]);
-  
-  // Clean up
+
+  // Clean up model resources
   useEffect(() => {
     return () => {
       if (model) {
@@ -53,24 +56,26 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       }
     };
   }, [model]);
-  
+
+  // Animate position, rotation, and legs
   useFrame((state) => {
-    if (!robotState || !modelRef.current || !model) return;
-    
-    // Update position with lerp for smooth movement
-    const targetPosition = new THREE.Vector3(
+    if (!robotState || !modelRef.current) return;
+
+    // Smooth position update
+    const targetPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
-    
-    modelRef.current.position.lerp(targetPosition, 0.1);
-    
-    // Update rotation with lerp for smooth rotation
+
+    prevPositionRef.current.lerp(targetPos, 0.2);
+    modelRef.current.position.copy(prevPositionRef.current);
+
+    // Smooth rotation update
     const targetRotation = Math.PI + robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.1;
-    
-    // Animate legs when moving
+
+    // Leg animation
     if (isMoving) {
       const time = state.clock.getElapsedTime();
       model.traverse((child) => {
@@ -83,9 +88,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       });
     }
   });
-  
+
   if (!model) return null;
-  
+
   return (
     <primitive
       ref={modelRef}
@@ -98,6 +103,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
+// Preload spider robot GLB
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 
 export default RobotModel;
