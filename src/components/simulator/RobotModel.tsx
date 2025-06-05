@@ -17,49 +17,51 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   // Load model and animations
   const gltf = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const scene = useMemo(() => SkeletonUtils.clone(gltf.scene) as THREE.Group, [gltf.scene]);
-  const { actions, mixer, names } = useAnimations(gltf.animations, scene);
+  const clonedScene = useMemo(() => SkeletonUtils.clone(gltf.scene) as THREE.Group, [gltf.scene]);
+  const { actions, names, mixer } = useAnimations(gltf.animations, clonedScene);
 
-  // Play animation when isMoving === true
+  // Play or stop all animations based on movement
   useEffect(() => {
-    if (!actions || !names.length) return;
+    if (!actions || names.length === 0) return;
 
-    const idleAction = actions[names[0]];
+    names.forEach((name) => {
+      const action = actions[name];
+      if (!action) return;
 
-    if (isMoving && idleAction) {
-      idleAction.reset().fadeIn(0.3).play();
-    } else {
-      idleAction?.fadeOut(0.3);
-    }
+      if (isMoving) {
+        action.reset().fadeIn(0.3).play();
+      } else {
+        action.fadeOut(0.3);
+      }
+    });
 
     return () => {
-      idleAction?.stop();
+      names.forEach((name) => actions[name]?.stop());
     };
   }, [isMoving, actions, names]);
 
-  // Cleanup geometry/material
+  // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (scene) {
-        scene.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.geometry.dispose();
-            if (child.material instanceof THREE.Material) {
-              child.material.dispose();
-            }
+      clonedScene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose();
+          if (child.material instanceof THREE.Material) {
+            child.material.dispose();
           }
-        });
-      }
+        }
+      });
     };
-  }, [scene]);
+  }, [clonedScene]);
 
-  // Apply smooth movement/rotation
+  // Smooth movement & animate mixer
   useFrame((state, delta) => {
     if (!robotState || !modelRef.current) return;
 
-    // Animate GLTF mixer
+    // Animate mixer
     mixer?.update(delta);
 
+    // Position
     const targetPosition = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
@@ -68,16 +70,17 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     prevPositionRef.current.lerp(targetPosition, 0.2);
     modelRef.current.position.copy(prevPositionRef.current);
 
+    // Rotation
     const targetRotation = Math.PI + robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.1;
   });
 
-  if (!scene) return null;
+  if (!clonedScene) return null;
 
   return (
     <primitive
       ref={modelRef}
-      object={scene}
+      object={clonedScene}
       position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
       castShadow
