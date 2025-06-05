@@ -79,10 +79,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const targetRotation = Math.PI + robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.12;
 
-    // Subtle breathing motion (~3s per cycle)
+    // Subtle breathing motion (~3s per cycle) - reduced intensity
     if (!isMoving) {
       breathingOffsetRef.current += delta;
-      const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.005;
+      const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002; // Reduced from 0.005 to 0.002
       modelRef.current.position.y = prevPositionRef.current.y + offset;
     } else {
       modelRef.current.position.y = prevPositionRef.current.y;
