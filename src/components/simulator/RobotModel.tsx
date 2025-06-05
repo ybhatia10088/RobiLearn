@@ -15,11 +15,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const { robotState, isMoving } = useRobotStore();
 
-  // Load and clone the GLB model safely
+  // Load and clone the GLB model
   const { scene } = useGLTF('/models/spider-model/source/spider_robot.glb');
   const model = useMemo(() => {
     const cloned = SkeletonUtils.clone(scene) as THREE.Group;
-
     cloned.name = 'SpiderRoot';
 
     cloned.traverse((child) => {
@@ -27,6 +26,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         child.castShadow = true;
         child.receiveShadow = true;
 
+        // Optional: Re-style material for consistency
         if (child.material) {
           child.material = new THREE.MeshStandardMaterial({
             color: child.material.color,
@@ -41,7 +41,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     return cloned;
   }, [scene]);
 
-  // Clean up model resources
+  // Clean up resources
   useEffect(() => {
     return () => {
       if (model) {
@@ -57,21 +57,20 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     };
   }, [model]);
 
-  // Animate position, rotation, and legs
+  // Animate movement and legs
   useFrame((state) => {
     if (!robotState || !modelRef.current) return;
 
-    // Smooth position update
+    // Smooth movement
     const targetPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
-
     prevPositionRef.current.lerp(targetPos, 0.2);
     modelRef.current.position.copy(prevPositionRef.current);
 
-    // Smooth rotation update
+    // Smooth rotation
     const targetRotation = Math.PI + robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.1;
 
@@ -79,8 +78,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     if (isMoving) {
       const time = state.clock.getElapsedTime();
       model.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.name.toLowerCase().includes('leg')) {
-          const isLeftLeg = child.name.toLowerCase().includes('left');
+        if (
+          child instanceof THREE.Mesh &&
+          /leg/i.test(child.name) // match names containing 'leg' (case-insensitive)
+        ) {
+          const isLeftLeg = /left|_l\d*/i.test(child.name); // names like 'Leg_L1', 'leftLeg'
           const phase = isLeftLeg ? 0 : Math.PI;
           child.rotation.x = Math.sin(time * 8 + phase) * 0.3;
           child.position.y = Math.abs(Math.sin(time * 8 + phase)) * 0.1;
@@ -92,18 +94,21 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   if (!model) return null;
 
   return (
-    <primitive
-      ref={modelRef}
-      object={model}
-      position={[0, 0, 0]}
-      rotation={[0, Math.PI, 0]}
-      castShadow
-      receiveShadow
-    />
+    <>
+      <primitive
+        ref={modelRef}
+        object={model}
+        position={[0, 0, 0]}
+        rotation={[0, Math.PI, 0]}
+        castShadow
+        receiveShadow
+      />
+      {/* Optional: Debug axes */}
+      {/* <axesHelper args={[1]} /> */}
+    </>
   );
 };
 
-// Preload spider robot GLB
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 
 export default RobotModel;
