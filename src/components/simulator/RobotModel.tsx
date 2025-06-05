@@ -1216,8 +1216,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     <group ref={group}>
       {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
       {robotConfig.type === 'arm' && <RoboticArmGeometry />}
-      {robotConfig.type === 'drone' && <Drone
-Geometry />}
+      {robotConfig.type === 'drone' && <DroneGeometry />}
       {robotConfig.type === 'humanoid' && <HumanoidRobotGeometry />}
     </group>
   );
