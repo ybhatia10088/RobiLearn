@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { RobotConfig } from '@/types/robot.types';
@@ -13,70 +13,89 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const modelRef = useRef<THREE.Group>(null);
   const { robotState, isMoving } = useRobotStore();
   
-  // Load the spider robot model from the correct path
+  // Load and memoize the spider robot model
   const { scene } = useGLTF('/models/spider-model/source/spider_robot.glb');
+  const model = useMemo(() => scene.clone(), [scene]);
   
+  // Initialize model properties
+  useEffect(() => {
+    if (!model) return;
+    
+    // Set up shadows and materials
+    model.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        
+        // Enhance material properties
+        if (child.material) {
+          child.material.metalness = 0.8;
+          child.material.roughness = 0.2;
+        }
+      }
+    });
+    
+    // Set initial scale
+    model.scale.set(0.5, 0.5, 0.5);
+  }, [model]);
+  
+  // Handle position and rotation updates
   useEffect(() => {
     if (modelRef.current && robotState) {
-      // Set initial position and rotation
       modelRef.current.position.set(
         robotState.position.x,
         robotState.position.y,
         robotState.position.z
       );
       
-      // Rotate the model 180 degrees to face forward
       modelRef.current.rotation.set(
         0,
         Math.PI + robotState.rotation.y,
         0
       );
-      
-      // Prepare model for shadows
-      scene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-        }
-      });
     }
-  }, [robotState, scene]);
+  }, [robotState]);
   
+  // Animation frame updates
   useFrame((state) => {
     if (!robotState || !modelRef.current) return;
     
-    // Update position
-    modelRef.current.position.set(
-      robotState.position.x,
-      robotState.position.y,
-      robotState.position.z
+    // Smooth position updates
+    modelRef.current.position.lerp(
+      new THREE.Vector3(
+        robotState.position.x,
+        robotState.position.y,
+        robotState.position.z
+      ),
+      0.1
     );
     
-    // Update rotation (add PI to face forward)
-    modelRef.current.rotation.y = Math.PI + robotState.rotation.y;
+    // Smooth rotation updates
+    const targetRotation = Math.PI + robotState.rotation.y;
+    modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.1;
     
-    // Add walking animation when moving
+    // Animate legs when moving
     if (isMoving) {
       const time = state.clock.getElapsedTime();
       
-      // Animate legs with more natural movement
-      scene.traverse((child) => {
+      model.traverse((child) => {
         if (child instanceof THREE.Mesh && child.name.toLowerCase().includes('leg')) {
-          // Create alternating leg movements
           const isLeftLeg = child.name.toLowerCase().includes('left');
           const phase = isLeftLeg ? 0 : Math.PI;
           
-          // Apply walking motion
+          // More natural walking animation
           child.rotation.x = Math.sin(time * 8 + phase) * 0.3;
           child.rotation.z = Math.cos(time * 8 + phase) * 0.15;
+          child.position.y = Math.abs(Math.sin(time * 8 + phase)) * 0.1;
         }
       });
     } else {
-      // Reset leg positions when not moving
-      scene.traverse((child) => {
+      // Reset leg positions when stationary
+      model.traverse((child) => {
         if (child instanceof THREE.Mesh && child.name.toLowerCase().includes('leg')) {
           child.rotation.x = 0;
           child.rotation.z = 0;
+          child.position.y = 0;
         }
       });
     }
@@ -85,8 +104,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   return (
     <primitive 
       ref={modelRef}
-      object={scene.clone()} 
-      scale={[0.5, 0.5, 0.5]}
+      object={model}
       castShadow
       receiveShadow
     />
