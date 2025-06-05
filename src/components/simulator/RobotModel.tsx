@@ -36,12 +36,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   });
 
   const [humanoidState, setHumanoidState] = useState({
-  leftLeg: { hip: 0, knee: 0, ankle: 0 },
-  rightLeg: { hip: 0, knee: 0, ankle: 0 },
-  leftArm: { shoulder: 0, elbow: 0 },
-  rightArm: { shoulder: 0, elbow: 0 },
-  walkCycle: 0,
-  isWalking: false
+    leftLeg: { hip: 0, knee: 0, ankle: 0 },
+    rightLeg: { hip: 0, knee: 0, ankle: 0 },
+    leftArm: { shoulder: 0, elbow: 0 },
+    rightArm: { shoulder: 0, elbow: 0 },
+    walkCycle: 0,
+    isWalking: false
   });
   
   const wheelRotation = useRef(0);
@@ -67,14 +67,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   };
 
   const HUMANOID_PHYSICS = {
-  walkSpeed: 0.02,
-  stepHeight: 0.08,
-  armSwing: 0.4,
-  torsoSway: 0.02,
-  headBob: 0.01,
-  walkCycleSpeed: 3.5,
-  jointDamping: 0.95,
-  balanceCorrection: 0.1
+    walkSpeed: 0.02,
+    stepHeight: 0.08,
+    armSwing: 0.4,
+    torsoSway: 0.02,
+    headBob: 0.01,
+    walkCycleSpeed: 3.5,
+    jointDamping: 0.95,
+    balanceCorrection: 0.1
   };
 
   // Arm joint limits for realistic movement
@@ -597,318 +597,318 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 
   const HumanoidRobotGeometry = () => (
-  <>
-    {/* Main torso assembly */}
-    <group ref={torsoRef} position={[0, 1.2, 0]}>
-      {/* Upper torso - chest */}
-      <mesh castShadow receiveShadow position={[0, 0.15, 0]}>
-        <boxGeometry args={[0.35, 0.4, 0.2]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
-      </mesh>
+    <>
+      {/* Main torso assembly */}
+      <group ref={torsoRef} position={[0, 1.2, 0]}>
+        {/* Upper torso - chest */}
+        <mesh castShadow receiveShadow position={[0, 0.15, 0]}>
+          <boxGeometry args={[0.35, 0.4, 0.2]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
+        </mesh>
 
-      {/* Chest panel details */}
-      <mesh castShadow position={[0, 0.15, 0.11]}>
-        <boxGeometry args={[0.25, 0.3, 0.02]} />
-        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
-      </mesh>
+        {/* Chest panel details */}
+        <mesh castShadow position={[0, 0.15, 0.11]}>
+          <boxGeometry args={[0.25, 0.3, 0.02]} />
+          <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
+        </mesh>
 
-      {/* Shoulder assemblies */}
-      {[-0.22, 0.22].map((x, i) => (
-        <mesh key={i} castShadow position={[x, 0.28, 0]}>
-          <cylinderGeometry args={[0.06, 0.06, 0.12, 32]} />
+        {/* Shoulder assemblies */}
+        {[-0.22, 0.22].map((x, i) => (
+          <mesh key={i} castShadow position={[x, 0.28, 0]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.12, 32]} />
+            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+          </mesh>
+        ))}
+
+        {/* Lower torso - abdomen */}
+        <mesh castShadow position={[0, -0.15, 0]}>
+          <boxGeometry args={[0.28, 0.25, 0.18]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
+        </mesh>
+
+        {/* Waist joint mechanism */}
+        <mesh castShadow position={[0, -0.3, 0]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.08, 32]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        {/* Status display panel */}
+        <mesh castShadow position={[0, 0.05, 0.11]}>
+          <boxGeometry args={[0.15, 0.08, 0.01]} />
+          <meshStandardMaterial 
+            color="#000000"
+            emissive="#3b82f6"
+            emissiveIntensity={robotState?.isMoving ? 0.4 : 0.2}
+          />
+        </mesh>
+
+        {/* Cooling vents */}
+        {[-0.12, -0.04, 0.04, 0.12].map((x, i) => (
+          <mesh key={i} castShadow position={[x, -0.05, 0.11]}>
+            <boxGeometry args={[0.02, 0.15, 0.005]} />
+            <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Advanced head assembly */}
+      <group ref={headRef} position={[0, 1.65, 0]}>
+        {/* Main head unit */}
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[0.2, 0.25, 0.22]} />
+          <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.6} />
+        </mesh>
+
+        {/* Face panel */}
+        <mesh castShadow position={[0, 0.02, 0.12]}>
+          <boxGeometry args={[0.18, 0.2, 0.02]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.1} />
+        </mesh>
+
+        {/* Eyes - camera sensors */}
+        {[-0.05, 0.05].map((x, i) => (
+          <group key={i} position={[x, 0.04, 0.13]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.02, 0.02, 0.01, 32]} />
+              <meshStandardMaterial 
+                color="#3b82f6"
+                emissive="#3b82f6"
+                emissiveIntensity={0.3}
+                metalness={1}
+                roughness={0}
+              />
+            </mesh>
+            {/* Eye glow */}
+            <pointLight color="#3b82f6" intensity={0.5} distance={0.3} />
+          </group>
+        ))}
+
+        {/* Antenna array */}
+        {[-0.08, 0.08].map((x, i) => (
+          <mesh key={i} castShadow position={[x, 0.15, -0.05]}>
+            <cylinderGeometry args={[0.003, 0.003, 0.08, 16]} />
+            <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
+          </mesh>
+        ))}
+
+        {/* Head rotation mechanism */}
+        <mesh castShadow position={[0, -0.15, 0]}>
+          <cylinderGeometry args={[0.06, 0.06, 0.05, 32]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+        </mesh>
+      </group>
+
+      {/* Left arm assembly */}
+      <group ref={leftArmRef} position={[-0.22, 1.48, 0]}>
+        {/* Shoulder joint */}
+        <mesh castShadow>
+          <sphereGeometry args={[0.06, 32, 32]} />
           <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
         </mesh>
-      ))}
 
-      {/* Lower torso - abdomen */}
-      <mesh castShadow position={[0, -0.15, 0]}>
-        <boxGeometry args={[0.28, 0.25, 0.18]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
-      </mesh>
-
-      {/* Waist joint mechanism */}
-      <mesh castShadow position={[0, -0.3, 0]}>
-        <cylinderGeometry args={[0.08, 0.1, 0.08, 32]} />
-        <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Status display panel */}
-      <mesh castShadow position={[0, 0.05, 0.11]}>
-        <boxGeometry args={[0.15, 0.08, 0.01]} />
-        <meshStandardMaterial 
-          color="#000000"
-          emissive="#3b82f6"
-          emissiveIntensity={robotState?.isMoving ? 0.4 : 0.2}
-        />
-      </mesh>
-
-      {/* Cooling vents */}
-      {[-0.12, -0.04, 0.04, 0.12].map((x, i) => (
-        <mesh key={i} castShadow position={[x, -0.05, 0.11]}>
-          <boxGeometry args={[0.02, 0.15, 0.005]} />
-          <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.1} />
+        {/* Upper arm */}
+        <mesh castShadow position={[0, -0.18, 0]}>
+          <cylinderGeometry args={[0.04, 0.05, 0.3, 32]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
         </mesh>
-      ))}
-    </group>
 
-    {/* Advanced head assembly */}
-    <group ref={headRef} position={[0, 1.65, 0]}>
-      {/* Main head unit */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[0.2, 0.25, 0.22]} />
-        <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.6} />
-      </mesh>
+        {/* Elbow joint */}
+        <mesh castShadow position={[0, -0.35, 0]}>
+          <sphereGeometry args={[0.05, 32, 32]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+        </mesh>
 
-      {/* Face panel */}
-      <mesh castShadow position={[0, 0.02, 0.12]}>
-        <boxGeometry args={[0.18, 0.2, 0.02]} />
-        <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.1} />
-      </mesh>
+        {/* Forearm */}
+        <mesh castShadow position={[0, -0.52, 0]}>
+          <cylinderGeometry args={[0.035, 0.04, 0.28, 32]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
+        </mesh>
 
-      {/* Eyes - camera sensors */}
-      {[-0.05, 0.05].map((x, i) => (
-        <group key={i} position={[x, 0.04, 0.13]}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.02, 0.02, 0.01, 32]} />
+        {/* Hand assembly */}
+        <group position={[0, -0.68, 0]}>
+          <mesh castShadow position={[0, -0.05, 0]}>
+            <boxGeometry args={[0.08, 0.1, 0.04]} />
+            <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
+          </mesh>
+
+          {/* Fingers */}
+          {[-0.025, -0.008, 0.008, 0.025].map((x, i) => (
+            <mesh key={i} castShadow position={[x, -0.12, 0.01]}>
+              <boxGeometry args={[0.01, 0.06, 0.02]} />
+              <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+            </mesh>
+          ))}
+
+          {/* Thumb */}
+          <mesh castShadow position={[0.04, -0.08, 0]} rotation={[0, 0, -0.5]}>
+            <boxGeometry args={[0.01, 0.04, 0.02]} />
+            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Right arm assembly (mirrored) */}
+      <group ref={rightArmRef} position={[0.22, 1.48, 0]}>
+        <mesh castShadow>
+          <sphereGeometry args={[0.06, 32, 32]} />
+          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        <mesh castShadow position={[0, -0.18, 0]}>
+          <cylinderGeometry args={[0.04, 0.05, 0.3, 32]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
+        </mesh>
+
+        <mesh castShadow position={[0, -0.35, 0]}>
+          <sphereGeometry args={[0.05, 32, 32]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        <mesh castShadow position={[0, -0.52, 0]}>
+          <cylinderGeometry args={[0.035, 0.04, 0.28, 32]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
+        </mesh>
+
+        <group position={[0, -0.68, 0]}>
+          <mesh castShadow position={[0, -0.05, 0]}>
+            <boxGeometry args={[0.08, 0.1, 0.04]} />
+            <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
+          </mesh>
+
+          {[-0.025, -0.008, 0.008, 0.025].map((x, i) => (
+            <mesh key={i} castShadow position={[x, -0.12, 0.01]}>
+              <boxGeometry args={[0.01, 0.06, 0.02]} />
+              <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+            </mesh>
+          ))}
+
+          <mesh castShadow position={[-0.04, -0.08, 0]} rotation={[0, 0, 0.5]}>
+            <boxGeometry args={[0.01, 0.04, 0.02]} />
+            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Left leg assembly */}
+      <group ref={leftLegRef} position={[-0.1, 0.7, 0]}>
+        {/* Hip joint */}
+        <mesh castShadow position={[0, 0.15, 0]}>
+          <sphereGeometry args={[0.08, 32, 32]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        {/* Upper leg (thigh) */}
+        <mesh castShadow position={[0, -0.05, 0]}>
+          <cylinderGeometry args={[0.06, 0.08, 0.35, 32]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
+        </mesh>
+
+        {/* Knee joint */}
+        <mesh castShadow position={[0, -0.25, 0]}>
+          <sphereGeometry args={[0.06, 32, 32]} />
+          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        {/* Lower leg (shin) */}
+        <mesh castShadow position={[0, -0.42, 0]}>
+          <cylinderGeometry args={[0.05, 0.06, 0.3, 32]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
+        </mesh>
+
+        {/* Ankle joint */}
+        <mesh castShadow position={[0, -0.6, 0]}>
+          <sphereGeometry args={[0.05, 32, 32]} />
+          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        {/* Foot */}
+        <mesh castShadow position={[0, -0.68, 0.08]} rotation={[0, 0, 0]}>
+          <boxGeometry args={[0.12, 0.06, 0.25]} />
+          <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
+        </mesh>
+
+        {/* Foot sensors */}
+        {[-0.04, 0.04].map((x, i) => (
+          <mesh key={i} castShadow position={[x, -0.71, 0.15]}>
+            <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
             <meshStandardMaterial 
-              color="#3b82f6"
-              emissive="#3b82f6"
+              color="#22c55e"
+              emissive="#22c55e"
               emissiveIntensity={0.3}
-              metalness={1}
-              roughness={0}
             />
           </mesh>
-          {/* Eye glow */}
-          <pointLight color="#3b82f6" intensity={0.5} distance={0.3} />
-        </group>
-      ))}
+        ))}
+      </group>
 
-      {/* Antenna array */}
-      {[-0.08, 0.08].map((x, i) => (
-        <mesh key={i} castShadow position={[x, 0.15, -0.05]}>
-          <cylinderGeometry args={[0.003, 0.003, 0.08, 16]} />
-          <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.1} />
+      {/* Right leg assembly (mirrored) */}
+      <group ref={rightLegRef} position={[0.1, 0.7, 0]}>
+        <mesh castShadow position={[0, 0.15, 0]}>
+          <sphereGeometry args={[0.08, 32, 32]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
         </mesh>
-      ))}
 
-      {/* Head rotation mechanism */}
-      <mesh castShadow position={[0, -0.15, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 0.05, 32]} />
-        <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
-      </mesh>
-    </group>
-
-    {/* Left arm assembly */}
-    <group ref={leftArmRef} position={[-0.22, 1.48, 0]}>
-      {/* Shoulder joint */}
-      <mesh castShadow>
-        <sphereGeometry args={[0.06, 32, 32]} />
-        <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Upper arm */}
-      <mesh castShadow position={[0, -0.18, 0]}>
-        <cylinderGeometry args={[0.04, 0.05, 0.3, 32]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
-      </mesh>
-
-      {/* Elbow joint */}
-      <mesh castShadow position={[0, -0.35, 0]}>
-        <sphereGeometry args={[0.05, 32, 32]} />
-        <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Forearm */}
-      <mesh castShadow position={[0, -0.52, 0]}>
-        <cylinderGeometry args={[0.035, 0.04, 0.28, 32]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
-      </mesh>
-
-      {/* Hand assembly */}
-      <group position={[0, -0.68, 0]}>
         <mesh castShadow position={[0, -0.05, 0]}>
-          <boxGeometry args={[0.08, 0.1, 0.04]} />
+          <cylinderGeometry args={[0.06, 0.08, 0.35, 32]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
+        </mesh>
+
+        <mesh castShadow position={[0, -0.25, 0]}>
+          <sphereGeometry args={[0.06, 32, 32]} />
+          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        <mesh castShadow position={[0, -0.42, 0]}>
+          <cylinderGeometry args={[0.05, 0.06, 0.3, 32]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
+        </mesh>
+
+        <mesh castShadow position={[0, -0.6, 0]}>
+          <sphereGeometry args={[0.05, 32, 32]} />
+          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        </mesh>
+
+        <mesh castShadow position={[0, -0.68, 0.08]} rotation={[0, 0, 0]}>
+          <boxGeometry args={[0.12, 0.06, 0.25]} />
           <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
         </mesh>
 
-        {/* Fingers */}
-        {[-0.025, -0.008, 0.008, 0.025].map((x, i) => (
-          <mesh key={i} castShadow position={[x, -0.12, 0.01]}>
-            <boxGeometry args={[0.01, 0.06, 0.02]} />
-            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
+        {[-0.04, 0.04].map((x, i) => (
+          <mesh key={i} castShadow position={[x, -0.71, 0.15]}>
+            <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
+            <meshStandardMaterial 
+              color="#22c55e"
+              emissive="#22c55e"
+              emissiveIntensity={0.3}
+            />
           </mesh>
         ))}
-
-        {/* Thumb */}
-        <mesh castShadow position={[0.04, -0.08, 0]} rotation={[0, 0, -0.5]}>
-          <boxGeometry args={[0.01, 0.04, 0.02]} />
-          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-        </mesh>
       </group>
-    </group>
 
-    {/* Right arm assembly (mirrored) */}
-    <group ref={rightArmRef} position={[0.22, 1.48, 0]}>
-      <mesh castShadow>
-        <sphereGeometry args={[0.06, 32, 32]} />
-        <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.18, 0]}>
-        <cylinderGeometry args={[0.04, 0.05, 0.3, 32]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.35, 0]}>
-        <sphereGeometry args={[0.05, 32, 32]} />
-        <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.52, 0]}>
-        <cylinderGeometry args={[0.035, 0.04, 0.28, 32]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
-      </mesh>
-
-      <group position={[0, -0.68, 0]}>
-        <mesh castShadow position={[0, -0.05, 0]}>
-          <boxGeometry args={[0.08, 0.1, 0.04]} />
-          <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
-        </mesh>
-
-        {[-0.025, -0.008, 0.008, 0.025].map((x, i) => (
-          <mesh key={i} castShadow position={[x, -0.12, 0.01]}>
-            <boxGeometry args={[0.01, 0.06, 0.02]} />
-            <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-          </mesh>
-        ))}
-
-        <mesh castShadow position={[-0.04, -0.08, 0]} rotation={[0, 0, 0.5]}>
-          <boxGeometry args={[0.01, 0.04, 0.02]} />
-          <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-        </mesh>
-      </group>
-    </group>
-
-    {/* Left leg assembly */}
-    <group ref={leftLegRef} position={[-0.1, 0.7, 0]}>
-      {/* Hip joint */}
-      <mesh castShadow position={[0, 0.15, 0]}>
-        <sphereGeometry args={[0.08, 32, 32]} />
-        <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Upper leg (thigh) */}
-      <mesh castShadow position={[0, -0.05, 0]}>
-        <cylinderGeometry args={[0.06, 0.08, 0.35, 32]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
-      </mesh>
-
-      {/* Knee joint */}
-      <mesh castShadow position={[0, -0.25, 0]}>
-        <sphereGeometry args={[0.06, 32, 32]} />
-        <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Lower leg (shin) */}
-      <mesh castShadow position={[0, -0.42, 0]}>
-        <cylinderGeometry args={[0.05, 0.06, 0.3, 32]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
-      </mesh>
-
-      {/* Ankle joint */}
-      <mesh castShadow position={[0, -0.6, 0]}>
-        <sphereGeometry args={[0.05, 32, 32]} />
-        <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Foot */}
-      <mesh castShadow position={[0, -0.68, 0.08]} rotation={[0, 0, 0]}>
-        <boxGeometry args={[0.12, 0.06, 0.25]} />
-        <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
-      </mesh>
-
-      {/* Foot sensors */}
-      {[-0.04, 0.04].map((x, i) => (
-        <mesh key={i} castShadow position={[x, -0.71, 0.15]}>
-          <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
-          <meshStandardMaterial 
-            color="#22c55e"
-            emissive="#22c55e"
-            emissiveIntensity={0.3}
-          />
+      {/* Power cables and hydraulic lines */}
+      {[
+        { start: [0, 1.2, -0.1], end: [-0.1, 0.85, 0], color: "#ef4444" },
+        { start: [0, 1.2, -0.1], end: [0.1, 0.85, 0], color: "#3b82f6" },
+        { start: [-0.22, 1.3, 0], end: [-0.22, 1.15, 0], color: "#22c55e" },
+        { start: [0.22, 1.3, 0], end: [0.22, 1.15, 0], color: "#22c55e" }
+      ].map(({ start, end, color }, i) => (
+        <mesh key={i} castShadow position={[
+          (start[0] + end[0]) / 2,
+          (start[1] + end[1]) / 2,
+          (start[2] + end[2]) / 2
+        ]}>
+          <cylinderGeometry args={[0.005, 0.005, 
+            Math.sqrt(
+              Math.pow(end[0] - start[0], 2) + 
+              Math.pow(end[1] - start[1], 2) + 
+              Math.pow(end[2] - start[2], 2)
+            ), 
+            16
+          ]} />
+          <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
         </mesh>
       ))}
-    </group>
-
-    {/* Right leg assembly (mirrored) */}
-    <group ref={rightLegRef} position={[0.1, 0.7, 0]}>
-      <mesh castShadow position={[0, 0.15, 0]}>
-        <sphereGeometry args={[0.08, 32, 32]} />
-        <meshStandardMaterial color="#94a3b8" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.05, 0]}>
-        <cylinderGeometry args={[0.06, 0.08, 0.35, 32]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.4} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.25, 0]}>
-        <sphereGeometry args={[0.06, 32, 32]} />
-        <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.42, 0]}>
-        <cylinderGeometry args={[0.05, 0.06, 0.3, 32]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.5} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.6, 0]}>
-        <sphereGeometry args={[0.05, 32, 32]} />
-        <meshStandardMaterial color="#64748b" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      <mesh castShadow position={[0, -0.68, 0.08]} rotation={[0, 0, 0]}>
-        <boxGeometry args={[0.12, 0.06, 0.25]} />
-        <meshStandardMaterial color="#475569" metalness={0.7} roughness={0.3} />
-      </mesh>
-
-      {[-0.04, 0.04].map((x, i) => (
-        <mesh key={i} castShadow position={[x, -0.71, 0.15]}>
-          <cylinderGeometry args={[0.01, 0.01, 0.005, 16]} />
-          <meshStandardMaterial 
-            color="#22c55e"
-            emissive="#22c55e"
-            emissiveIntensity={0.3}
-          />
-        </mesh>
-      ))}
-    </group>
-
-    {/* Power cables and hydraulic lines */}
-    {[
-      { start: [0, 1.2, -0.1], end: [-0.1, 0.85, 0], color: "#ef4444" },
-      { start: [0, 1.2, -0.1], end: [0.1, 0.85, 0], color: "#3b82f6" },
-      { start: [-0.22, 1.3, 0], end: [-0.22, 1.15, 0], color: "#22c55e" },
-      { start: [0.22, 1.3, 0], end: [0.22, 1.15, 0], color: "#22c55e" }
-    ].map(({ start, end, color }, i) => (
-      <mesh key={i} castShadow position={[
-        (start[0] + end[0]) / 2,
-        (start[1] + end[1]) / 2,
-        (start[2] + end[2]) / 2
-      ]}>
-        <cylinderGeometry args={[0.005, 0.005, 
-          Math.sqrt(
-            Math.pow(end[0] - start[0], 2) + 
-            Math.pow(end[1] - start[1], 2) + 
-            Math.pow(end[2] - start[2], 2)
-          ), 
-          16
-        ]} />
-        <meshStandardMaterial color={color} metalness={0.8} roughness={0.2} />
-      </mesh>
-    ))}
-  </>
-);
+    </>
+  );
 
   // Realistic physics and movement simulation
   useFrame((state, delta) => {
@@ -1137,89 +1137,90 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, 0, delta * 8);
           group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, 0, delta * 8);
         }
+        break;
+
+      case 'humanoid':
+        const humanoidTime = state.clock.elapsedTime;
         
+        if (robotState.isMoving) {
+          // Walking animation cycle
+          const walkPhase = humanoidTime * HUMANOID_PHYSICS.walkCycleSpeed;
+          
+          // Leg animation - alternating step cycle
+          if (leftLegRef.current && rightLegRef.current) {
+            const leftPhase = Math.sin(walkPhase);
+            const rightPhase = Math.sin(walkPhase + Math.PI);
+            
+            // Hip rotation for forward step
+            leftLegRef.current.rotation.x = leftPhase * 0.3;
+            rightLegRef.current.rotation.x = rightPhase * 0.3;
+            
+            // Vertical step motion
+            leftLegRef.current.position.y = 0.7 + Math.max(0, leftPhase) * HUMANOID_PHYSICS.stepHeight;
+            rightLegRef.current.position.y = 0.7 + Math.max(0, rightPhase) * HUMANOID_PHYSICS.stepHeight;
+            
+            // Forward step displacement
+            leftLegRef.current.position.z = leftPhase * 0.05;
+            rightLegRef.current.position.z = rightPhase * 0.05;
+          }
+          
+          // Arm swing - opposite to legs
+          if (leftArmRef.current && rightArmRef.current) {
+            leftArmRef.current.rotation.x = Math.sin(walkPhase + Math.PI) * HUMANOID_PHYSICS.armSwing;
+            rightArmRef.current.rotation.x = Math.sin(walkPhase) * HUMANOID_PHYSICS.armSwing;
+          }
+          
+          // Torso sway for balance
+          if (torsoRef.current) {
+            torsoRef.current.rotation.z = Math.sin(walkPhase * 2) * HUMANOID_PHYSICS.torsoSway;
+            torsoRef.current.position.y = 1.2 + Math.abs(Math.sin(walkPhase * 2)) * 0.02;
+          }
+          
+          // Head stabilization with slight bob
+          if (headRef.current) {
+            headRef.current.rotation.z = -torsoRef.current.rotation.z * 0.5; // Counter torso sway
+            headRef.current.position.y = 1.65 + Math.sin(walkPhase * 4) * HUMANOID_PHYSICS.headBob;
+          }
+          
+        } else {
+          // Idle animations - subtle breathing and micro movements
+          const breathingPhase = Math.sin(humanoidTime * 0.5) * 0.008;
+          
+          if (torsoRef.current) {
+            torsoRef.current.position.y = 1.2 + breathingPhase;
+            torsoRef.current.rotation.y = Math.sin(humanoidTime * 0.3) * 0.02; // Slight turning
+          }
+          
+          // Occasional head movements
+          if (headRef.current && Math.random() < 0.005) {
+            headRef.current.rotation.y = (Math.random() - 0.5) * 0.3;
+            headRef.current.rotation.x = (Math.random() - 0.5) * 0.1;
+          }
+          
+          // Return limbs to neutral position
+          [leftLegRef, rightLegRef, leftArmRef, rightArmRef].forEach(ref => {
+            if (ref.current) {
+              ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, 0, delta * 3);
+              ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 
+                ref === leftLegRef || ref === rightLegRef ? 0.7 : 
+                ref === leftArmRef || ref === rightArmRef ? 1.48 : ref.current.position.y, 
+                delta * 4);
+            }
+          });
+        }
         break;
     }
   });
 
-  case 'humanoid':
-  const time = state.clock.elapsedTime;
-  
-  if (robotState.isMoving) {
-    // Walking animation cycle
-    const walkPhase = time * HUMANOID_PHYSICS.walkCycleSpeed;
-    
-    // Leg animation - alternating step cycle
-    if (leftLegRef.current && rightLegRef.current) {
-      const leftPhase = Math.sin(walkPhase);
-      const rightPhase = Math.sin(walkPhase + Math.PI);
-      
-      // Hip rotation for forward step
-      leftLegRef.current.rotation.x = leftPhase * 0.3;
-      rightLegRef.current.rotation.x = rightPhase * 0.3;
-      
-      // Vertical step motion
-      leftLegRef.current.position.y = 0.7 + Math.max(0, leftPhase) * HUMANOID_PHYSICS.stepHeight;
-      rightLegRef.current.position.y = 0.7 + Math.max(0, rightPhase) * HUMANOID_PHYSICS.stepHeight;
-      
-      // Forward step displacement
-      leftLegRef.current.position.z = leftPhase * 0.05;
-      rightLegRef.current.position.z = rightPhase * 0.05;
-    }
-    
-    // Arm swing - opposite to legs
-    if (leftArmRef.current && rightArmRef.current) {
-      leftArmRef.current.rotation.x = Math.sin(walkPhase + Math.PI) * HUMANOID_PHYSICS.armSwing;
-      rightArmRef.current.rotation.x = Math.sin(walkPhase) * HUMANOID_PHYSICS.armSwing;
-    }
-    
-    // Torso sway for balance
-    if (torsoRef.current) {
-      torsoRef.current.rotation.z = Math.sin(walkPhase * 2) * HUMANOID_PHYSICS.torsoSway;
-      torsoRef.current.position.y = 1.2 + Math.abs(Math.sin(walkPhase * 2)) * 0.02;
-    }
-    
-    // Head stabilization with slight bob
-    if (headRef.current) {
-      headRef.current.rotation.z = -torsoRef.current.rotation.z * 0.5; // Counter torso sway
-      headRef.current.position.y = 1.65 + Math.sin(walkPhase * 4) * HUMANOID_PHYSICS.headBob;
-    }
-    
-  } else {
-    // Idle animations - subtle breathing and micro movements
-    const breathingPhase = Math.sin(time * 0.5) * 0.008;
-    
-    if (torsoRef.current) {
-      torsoRef.current.position.y = 1.2 + breathingPhase;
-      torsoRef.current.rotation.y = Math.sin(time * 0.3) * 0.02; // Slight turning
-    }
-    
-    // Occasional head movements
-    if (headRef.current && Math.random() < 0.005) {
-      headRef.current.rotation.y = (Math.random() - 0.5) * 0.3;
-      headRef.current.rotation.x = (Math.random() - 0.5) * 0.1;
-    }
-    
-    // Return limbs to neutral position
-    [leftLegRef, rightLegRef, leftArmRef, rightArmRef].forEach(ref => {
-      if (ref.current) {
-        ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, 0, delta * 3);
-        ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 
-          ref === leftLegRef || ref === rightLegRef ? 0.7 : 
-          ref === leftArmRef || ref === rightArmRef ? 1.48 : ref.current.position.y, 
-          delta * 4);
-      }
-    });
-  }
-  break;
-
   return (
-  <group ref={group}>
-    {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
-    {robotConfig.type === 'arm' && <RoboticArmGeometry />}
-    {robotConfig.type === 'drone' && <DroneGeometry />}
-    {robotConfig.type === 'humanoid' && <HumanoidRobotGeometry />}
-  </group>
-);
+    <group ref={group}>
+      {robotConfig.type === 'mobile' && <MobileRobotGeometry />}
+      {robotConfig.type === 'arm' && <RoboticArmGeometry />}
+      {robotConfig.type === 'drone' && <Drone
+Geometry />}
+      {robotConfig.type === 'humanoid' && <HumanoidRobotGeometry />}
+    </group>
+  );
+};
 
 export default RobotModel;
