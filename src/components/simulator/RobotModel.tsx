@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { useGLTF, useTexture } from '@react-three/drei';
+import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { RobotConfig } from '@/types/robot.types';
 import { useRobotStore } from '@/store/robotStore';
@@ -19,19 +19,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     : robotConfig.model;
     
   const { scene } = useGLTF(modelPath);
-
-  // Load available textures for spider model
-  const spiderTextures = useTexture({
-    map: '/models/spider-model/textures/spidey_Baked_albedo.jpg',
-    normalMap: '/models/spider-model/textures/spidey_Baked_normal.png',
-  });
-
-  const weaponTextures = useTexture({
-    map: '/models/spider-model/textures/weapon_Baked_Baked_albedo.jpg',
-    normalMap: '/models/spider-model/textures/weapon_Baked_Baked_normal.png',
-    aoMap: '/models/spider-model/textures/weapon_Baked_Baked_AO.jpg',
-    metalnessMap: '/models/spider-model/textures/weapon_Baked_Baked_metallic.jpg',
-  });
   
   useEffect(() => {
     if (modelRef.current && robotState) {
@@ -48,31 +35,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         Math.PI + robotState.rotation.y, // Add PI to face forward
         0
       );
-
-      // Apply textures to the model if it's a spider
-      if (robotConfig.type === 'spider') {
-        modelRef.current.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            // Apply spider body textures
-            if (child.name.toLowerCase().includes('body') || 
-                child.name.toLowerCase().includes('leg')) {
-              child.material.map = spiderTextures.map;
-              child.material.normalMap = spiderTextures.normalMap;
-              child.material.needsUpdate = true;
-            }
-            // Apply weapon textures
-            else if (child.name.toLowerCase().includes('weapon')) {
-              child.material.map = weaponTextures.map;
-              child.material.normalMap = weaponTextures.normalMap;
-              child.material.aoMap = weaponTextures.aoMap;
-              child.material.metalnessMap = weaponTextures.metalnessMap;
-              child.material.needsUpdate = true;
-            }
-          }
-        });
-      }
     }
-  }, [robotState, robotConfig.type, spiderTextures, weaponTextures]);
+  }, [robotState]);
   
   useFrame(() => {
     if (!modelRef.current || !robotState) return;
