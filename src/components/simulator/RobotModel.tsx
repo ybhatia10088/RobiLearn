@@ -75,8 +75,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     prevPositionRef.current.lerp(targetPosition, 0.15);
     modelRef.current.position.copy(prevPositionRef.current);
 
-    // Smooth rotation
-    const targetRotation = Math.PI + robotState.rotation.y;
+    // Smooth rotation - fixed direction
+    const targetRotation = robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.12;
 
     // Subtle breathing motion (~3s per cycle) - reduced intensity
