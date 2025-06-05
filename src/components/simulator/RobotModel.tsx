@@ -24,6 +24,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const rightArmRef = useRef<THREE.Group>(null);
   const torsoRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
+  const neckRef = useRef<THREE.Group>(null);
   
   const { robotState, moveCommands } = useRobotStore();
   
@@ -621,7 +622,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         ))}
 
         {/* Enhanced shoulder assemblies */}
-        {[-0.24, 0.24].map((x, i) => (
+        {[-0.24, 0.24].map((x, i) =>
           <group key={i} position={[x, 0.32, 0]}>
             <mesh castShadow>
               <sphereGeometry args={[0.08, 32, 32]} />
@@ -633,7 +634,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
               <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
             </mesh>
           </group>
-        ))}
+        )}
 
         {/* Abdominal section - more defined */}
         <mesh castShadow position={[0, -0.12, 0]}>
