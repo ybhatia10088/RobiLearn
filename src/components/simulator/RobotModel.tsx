@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useTexture } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { RobotConfig } from '@/types/robot.types';
 import { useRobotStore } from '@/store/robotStore';
+import * as THREE from 'three';
 
 interface RobotModelProps {
   robotConfig: RobotConfig;
@@ -18,6 +19,24 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     : robotConfig.model;
     
   const { scene } = useGLTF(modelPath);
+
+  // Load textures for spider model
+  const spiderTextures = useTexture({
+    map: '/models/spider-model/textures/spidey_Baked_albedo.jpg',
+    normalMap: '/models/spider-model/textures/spidey_Baked_normal.png',
+    roughnessMap: '/models/spider-model/textures/spidey_Baked_roughness.jpg',
+    metalnessMap: '/models/spider-model/textures/spidey_Baked_metallic.jpg',
+    aoMap: '/models/spider-model/textures/spidey_Baked_AO.jpg',
+  });
+
+  const weaponTextures = useTexture({
+    map: '/models/spider-model/textures/weapon_Baked_Baked_albedo.jpg',
+    normalMap: '/models/spider-model/textures/weapon_Baked_Baked_normal.png',
+    roughnessMap: '/models/spider-model/textures/weapon_Baked_Baked_roughness.jpg',
+    metalnessMap: '/models/spider-model/textures/weapon_Baked_Baked_metallic.jpg',
+    aoMap: '/models/spider-model/textures/weapon_Baked_Baked_AO.jpg',
+    emissiveMap: '/models/spider-model/textures/weapon_Baked_Baked_emissive.jpg',
+  });
   
   useEffect(() => {
     if (modelRef.current && robotState) {
@@ -34,8 +53,37 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         Math.PI + robotState.rotation.y, // Add PI to face forward
         0
       );
+
+      // Apply textures to the model if it's a spider
+      if (robotConfig.type === 'spider') {
+        modelRef.current.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            // Apply spider body textures
+            if (child.name.toLowerCase().includes('body') || 
+                child.name.toLowerCase().includes('leg')) {
+              child.material.map = spiderTextures.map;
+              child.material.normalMap = spiderTextures.normalMap;
+              child.material.roughnessMap = spiderTextures.roughnessMap;
+              child.material.metalnessMap = spiderTextures.metalnessMap;
+              child.material.aoMap = spiderTextures.aoMap;
+              child.material.needsUpdate = true;
+            }
+            // Apply weapon textures
+            else if (child.name.toLowerCase().includes('weapon')) {
+              child.material.map = weaponTextures.map;
+              child.material.normalMap = weaponTextures.normalMap;
+              child.material.roughnessMap = weaponTextures.roughnessMap;
+              child.material.metalnessMap = weaponTextures.metalnessMap;
+              child.material.aoMap = weaponTextures.aoMap;
+              child.material.emissiveMap = weaponTextures.emissiveMap;
+              child.material.emissiveIntensity = 1;
+              child.material.needsUpdate = true;
+            }
+          }
+        });
+      }
     }
-  }, [robotState]);
+  }, [robotState, robotConfig.type, spiderTextures, weaponTextures]);
   
   useFrame(() => {
     if (!modelRef.current || !robotState) return;
