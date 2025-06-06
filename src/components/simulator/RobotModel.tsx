@@ -68,10 +68,17 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     if (!actions) return;
 
     if (isDrone) {
-      names.forEach((name) => {
-        const action = actions[name];
-        if (action) action.reset().fadeIn(0.3).play();
-      });
+      // For drone, only play idle/hover animations, avoid takeoff/landing
+      const droneIdleAnimation = names.find((name) => 
+        /idle|hover|float|stationary/i.test(name) && 
+        !/takeoff|landing|land|take_off/i.test(name)
+      );
+      
+      if (droneIdleAnimation && actions[droneIdleAnimation]) {
+        actions[droneIdleAnimation].reset().fadeIn(0.3).play();
+        setCurrentAction(droneIdleAnimation);
+      }
+      // If no specific idle animation found, don't play any animation
     } else {
       isMoving ? switchAnimation(walkName) : switchAnimation(idleName);
     }
