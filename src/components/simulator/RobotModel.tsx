@@ -68,12 +68,22 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     if (!actions) return;
 
     if (isDrone) {
-      // For drone, play rotor/propeller animations but avoid takeoff/landing
+      // For drone, play only animations that don't affect position
+      // Typically rotor/propeller animations only affect rotation, not position
       names.forEach((name) => {
         const action = actions[name];
         if (action) {
-          // Skip takeoff and landing animations that cause vertical movement
-          if (!/takeoff|landing|land|take_off/i.test(name)) {
+          // Play animations that are likely safe (rotors, propellers, etc.)
+          // but skip any that might contain position keyframes
+          const safeName = name.toLowerCase();
+          const isRotorAnimation = /rotor|propeller|prop|spin|blade/i.test(safeName);
+          const isPositionAnimation = /takeoff|landing|land|take_off|hover|float|fly|move|up|down|vertical/i.test(safeName);
+          
+          if (isRotorAnimation && !isPositionAnimation) {
+            action.reset().fadeIn(0.3).play();
+          } else if (!isPositionAnimation && !/(idle|default|main|primary)/i.test(safeName)) {
+            // Skip animations that might be general movement animations
+            // but allow other mechanical animations
             action.reset().fadeIn(0.3).play();
           }
         }
