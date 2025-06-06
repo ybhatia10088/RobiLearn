@@ -1,41 +1,29 @@
 import React, { useEffect, useRef } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useRobotStore } from '@/store/robotStore';
 import * as THREE from 'three';
 
-import spiderModel from '/models/spider-model/scene.glb';
-import droneModel from '/models/drone.glb'; // Replace with correct path if different
-
-interface ArmAngles {
-  base: number;
-  shoulder: number;
-  elbow: number;
-  wrist: number;
-}
-
 const RobotModel = () => {
   const group = useRef<THREE.Group>(null);
-  const spider = useGLTF(spiderModel);
-  const drone = useGLTF(droneModel);
 
+  // Load models
+  const spider = useGLTF('/models/spider-model/scene.glb');
+  const drone = useGLTF('/models/drone.glb');
+
+  // Global robot config/state from Zustand
   const robotState = useRobotStore((state) => state.robotState);
   const robotConfig = useRobotStore((state) => state.robotConfig);
+  const setArmAngles = useRobotStore((state) => state.setArmAngles);
 
-  // State to track internal movement (physics)
+  // Physics/motion refs
   const velocity = useRef(new THREE.Vector3(0, 0, 0));
   const angularVelocity = useRef(0);
   const prevPosition = useRef(new THREE.Vector3(0, 0, 0));
+  const wheelRotation = useRef(0); // For spider
+  const droneAltitude = useRef(1.5); // Drone hover height
 
-  // Spider-specific wheel rotation
-  const wheelRotation = useRef(0);
-
-  // Drone-specific altitude
-  const droneAltitude = useRef(1.5); // Default hover height
-
-  // Arm (for robotic arms, future use)
-  const setArmAngles = useRobotStore((state) => state.setArmAngles);
-
+  // Reset logic
   useEffect(() => {
     if (
       robotState &&
@@ -44,7 +32,6 @@ const RobotModel = () => {
       robotState.position.z === 0 &&
       !robotState.isMoving
     ) {
-      // Reset internal state
       velocity.current.set(0, 0, 0);
       angularVelocity.current = 0;
       wheelRotation.current = 0;
@@ -60,8 +47,9 @@ const RobotModel = () => {
         group.current.rotation.set(0, 0, 0);
       }
     }
-  }, [robotState, robotConfig]);
+  }, [robotState, robotConfig, setArmAngles]);
 
+  // Animation & transform updates
   useFrame((state, delta) => {
     if (!group.current || !robotState || !robotConfig) return;
 
@@ -83,7 +71,7 @@ const RobotModel = () => {
       0.1
     );
 
-    // Movement/physics simulation (can expand if needed)
+    // Calculate velocity and angular velocity
     const currentPosition = group.current.position.clone();
     const displacement = new THREE.Vector3().subVectors(
       currentPosition,
@@ -94,13 +82,9 @@ const RobotModel = () => {
     prevPosition.current.copy(currentPosition);
   });
 
-  const renderSpider = () => (
-    <primitive object={spider.scene} scale={0.015} />
-  );
-
-  const renderDrone = () => (
-    <primitive object={drone.scene} scale={2.5} />
-  );
+  // Render logic
+  const renderSpider = () => <primitive object={spider.scene} scale={0.015} />;
+  const renderDrone = () => <primitive object={drone.scene} scale={2.5} />;
 
   return (
     <group ref={group}>
