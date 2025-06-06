@@ -60,8 +60,13 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   };
 
   useEffect(() => {
-    if (!actions) return;
-    isMoving ? switchAnimation(walkName) : switchAnimation(idleName);
+    if (!actions || !names.length) return;
+
+    const selectedName = isMoving ? walkName : idleName;
+
+    if (selectedName) {
+      switchAnimation(selectedName);
+    }
   }, [actions, names, isMoving]);
 
   useEffect(() => {
