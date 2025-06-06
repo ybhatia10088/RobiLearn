@@ -1,106 +1,113 @@
-import React, { useRef, useEffect, useMemo, useState } from 'react';
-import { useGLTF, useAnimations } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-import { RobotConfig } from '@/types/robot.types';
+import React, { useEffect, useRef } from 'react';
+import { useFrame, useLoader } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import { useRobotStore } from '@/store/robotStore';
-import { SkeletonUtils } from 'three-stdlib';
+import * as THREE from 'three';
 
-interface RobotModelProps {
-  robotConfig: RobotConfig;
+import spiderModel from '/models/spider-model/scene.glb';
+import droneModel from '/models/drone.glb'; // Replace with correct path if different
+
+interface ArmAngles {
+  base: number;
+  shoulder: number;
+  elbow: number;
+  wrist: number;
 }
 
-const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
-  const modelRef = useRef<THREE.Group>(null);
-  const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
-  const breathingOffsetRef = useRef(0);
-  const { robotState, isMoving } = useRobotStore();
-  const [currentAction, setCurrentAction] = useState<string | null>(null);
+const RobotModel = () => {
+  const group = useRef<THREE.Group>(null);
+  const spider = useGLTF(spiderModel);
+  const drone = useGLTF(droneModel);
 
-  // Load model and animations
-  const gltf = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const clonedScene = useMemo(() => SkeletonUtils.clone(gltf.scene) as THREE.Group, [gltf.scene]);
-  const { actions, names, mixer } = useAnimations(gltf.animations, clonedScene);
+  const robotState = useRobotStore((state) => state.robotState);
+  const robotConfig = useRobotStore((state) => state.robotConfig);
 
-  // Detect idle and walk animations
-  const idleName = names.find((n) => /idle/i.test(n)) || names[0];
-  const walkName = names.find((n) => /walk|move|run/i.test(n)) || names[1];
+  // State to track internal movement (physics)
+  const velocity = useRef(new THREE.Vector3(0, 0, 0));
+  const angularVelocity = useRef(0);
+  const prevPosition = useRef(new THREE.Vector3(0, 0, 0));
 
-  const switchAnimation = (name: string) => {
-    if (!actions || currentAction === name) return;
+  // Spider-specific wheel rotation
+  const wheelRotation = useRef(0);
 
-    const newAction = actions[name];
-    const oldAction = currentAction ? actions[currentAction] : null;
+  // Drone-specific altitude
+  const droneAltitude = useRef(1.5); // Default hover height
 
-    if (oldAction && newAction && oldAction !== newAction) {
-      oldAction.fadeOut(0.4);
-      newAction.reset().fadeIn(0.4).play();
-    } else if (newAction && !oldAction) {
-      newAction.reset().fadeIn(0.4).play();
+  // Arm (for robotic arms, future use)
+  const setArmAngles = useRobotStore((state) => state.setArmAngles);
+
+  useEffect(() => {
+    if (
+      robotState &&
+      robotState.position.x === 0 &&
+      robotState.position.y === 0 &&
+      robotState.position.z === 0 &&
+      !robotState.isMoving
+    ) {
+      // Reset internal state
+      velocity.current.set(0, 0, 0);
+      angularVelocity.current = 0;
+      wheelRotation.current = 0;
+      prevPosition.current.set(0, 0, 0);
+      setArmAngles({ base: 0, shoulder: 0, elbow: 0, wrist: 0 });
+
+      if (robotConfig.type === 'drone') {
+        droneAltitude.current = 1.5;
+      }
+
+      if (group.current) {
+        group.current.position.set(0, 0, 0);
+        group.current.rotation.set(0, 0, 0);
+      }
     }
-
-    setCurrentAction(name);
-  };
-
-  useEffect(() => {
-    if (!actions) return;
-    isMoving ? switchAnimation(walkName) : switchAnimation(idleName);
-  }, [isMoving, actions, idleName, walkName]);
-
-  useEffect(() => {
-    return () => {
-      clonedScene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry.dispose();
-          if (child.material instanceof THREE.Material) {
-            child.material.dispose();
-          }
-        }
-      });
-    };
-  }, [clonedScene]);
+  }, [robotState, robotConfig]);
 
   useFrame((state, delta) => {
-    if (!robotState || !modelRef.current) return;
+    if (!group.current || !robotState || !robotConfig) return;
 
-    // Update animation mixer
-    mixer?.update(delta);
-
-    // Smooth position interpolation
-    const targetPosition = new THREE.Vector3(
-      robotState.position.x,
-      robotState.position.y,
-      robotState.position.z
+    // Position interpolation
+    group.current.position.lerp(
+      new THREE.Vector3(
+        robotState.position.x,
+        robotConfig.type === 'drone' ? droneAltitude.current : 0,
+        robotState.position.z
+      ),
+      0.1
     );
-    prevPositionRef.current.lerp(targetPosition, 0.15);
-    modelRef.current.position.copy(prevPositionRef.current);
 
-    // Smooth rotation - fixed direction
-    const targetRotation = robotState.rotation.y;
-    modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.12;
+    // Rotation interpolation
+    const targetYRotation = robotState.rotation;
+    group.current.rotation.y = THREE.MathUtils.lerp(
+      group.current.rotation.y,
+      targetYRotation,
+      0.1
+    );
 
-    // Subtle breathing motion (~3s per cycle) - reduced intensity
-    if (!isMoving) {
-      breathingOffsetRef.current += delta;
-      const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002; // Reduced from 0.005 to 0.002
-      modelRef.current.position.y = prevPositionRef.current.y + offset;
-    } else {
-      modelRef.current.position.y = prevPositionRef.current.y;
-    }
+    // Movement/physics simulation (can expand if needed)
+    const currentPosition = group.current.position.clone();
+    const displacement = new THREE.Vector3().subVectors(
+      currentPosition,
+      prevPosition.current
+    );
+    velocity.current.copy(displacement.divideScalar(delta));
+    angularVelocity.current = (targetYRotation - group.current.rotation.y) / delta;
+    prevPosition.current.copy(currentPosition);
   });
 
+  const renderSpider = () => (
+    <primitive object={spider.scene} scale={0.015} />
+  );
+
+  const renderDrone = () => (
+    <primitive object={drone.scene} scale={2.5} />
+  );
+
   return (
-    <primitive
-      ref={modelRef}
-      object={clonedScene}
-      position={[0, 0, 0]}
-      rotation={[0, Math.PI, 0]}
-      castShadow
-      receiveShadow
-    />
+    <group ref={group}>
+      {robotConfig.type === 'spider' && renderSpider()}
+      {robotConfig.type === 'drone' && renderDrone()}
+    </group>
   );
 };
-
-useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 
 export default RobotModel;
