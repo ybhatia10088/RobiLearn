@@ -107,20 +107,27 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       prevPositionRef.current.copy(targetPosition);
     }
 
-    modelRef.current.position.copy(prevPositionRef.current);
+    // Handle position updates differently for drone vs spider
+    if (isDrone) {
+      // For drone: Set position directly without any animations or offsets
+      modelRef.current.position.set(
+        prevPositionRef.current.x,
+        prevPositionRef.current.y,
+        prevPositionRef.current.z
+      );
+    } else {
+      // For spider: Use normal position copy, then apply breathing if idle
+      modelRef.current.position.copy(prevPositionRef.current);
+      
+      if (!isMoving) {
+        breathingOffsetRef.current += delta;
+        const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002;
+        modelRef.current.position.y = prevPositionRef.current.y + offset;
+      }
+    }
 
     const targetRotation = robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.12;
-
-    // Only apply breathing animation to spider, not drone
-    if (!isDrone && !isMoving) {
-      breathingOffsetRef.current += delta;
-      const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002;
-      modelRef.current.position.y = prevPositionRef.current.y + offset;
-    } else {
-      // Ensure drone always uses exact position without any offset
-      modelRef.current.position.y = prevPositionRef.current.y;
-    }
   });
 
   return (
