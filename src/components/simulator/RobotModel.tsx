@@ -22,8 +22,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   const isSpider = robotConfig.type === 'spider';
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
-  const { scene } = activeGLTF;
+  const { scene, animations } = activeGLTF;
 
+  // Clone the scene graph, set shadows, and scale
   const visualRoot = useMemo(() => {
     const clone = SkeletonUtils.clone(scene) as THREE.Group;
 
@@ -34,69 +35,95 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       }
     });
 
+    // Adjust scale for humanoid or spider as needed
     clone.scale.set(0.5, 0.5, 0.5);
     return clone;
   }, [scene]);
 
-  const { actions, names, mixer } = useAnimations(activeGLTF.animations, visualRoot);
+  // Hook into animations on the cloned root
+  const { actions, names, mixer } = useAnimations(animations, visualRoot);
 
-  const idleName = names.find((n) => /idle/i.test(n)) || names[0];
-  const walkName = names.find((n) => /walk|move|run/i.test(n)) || names[1];
+  // Identify idle and walk animation names (case-insensitive)
+  const idleName =
+    names.find((n) => /^idle$/i.test(n) || /idle/i.test(n)) ||
+    names[0] ||
+    '';
+  const walkName =
+    names.find((n) => /^walk$/i.test(n) || /walk/i.test(n) || /move/i.test(n)) ||
+    names[1] ||
+    '';
+
+  // Stop all actions helper
+  const stopAllActions = () => {
+    if (!actions) return;
+    names.forEach((name) => {
+      const action = actions[name];
+      if (action && action.isRunning()) action.stop();
+    });
+    setCurrentAction(null);
+  };
 
   const switchAnimation = (name: string) => {
     if (!actions || currentAction === name) return;
 
-    const newAction = actions[name];
-    const oldAction = currentAction ? actions[currentAction] : null;
-
-    if (oldAction && newAction && oldAction !== newAction) {
-      oldAction.fadeOut(0.4);
-      newAction.reset().fadeIn(0.4).play();
-    } else if (newAction && !oldAction) {
-      newAction.reset().fadeIn(0.4).play();
+    // Stop any previous action
+    if (currentAction && actions[currentAction]) {
+      actions[currentAction].fadeOut(0.2);
     }
 
-    setCurrentAction(name);
+    // Start the new action
+    const newAction = actions[name];
+    if (newAction) {
+      newAction.reset().fadeIn(0.2).play();
+      setCurrentAction(name);
+    }
   };
 
+  // On mount or when switching between spider and humanoid, stop all actions
+  useEffect(() => {
+    stopAllActions();
+  }, [isSpider]);
+
+  // Play idle or walk based on isMoving
   useEffect(() => {
     if (!actions || !names.length) return;
+    // Uncomment to debug animation names:
+    // console.log('Loaded animations for humanoid/spider:', names);
 
     const selectedName = isMoving ? walkName : idleName;
-
     if (selectedName) {
       switchAnimation(selectedName);
     }
   }, [actions, names, isMoving]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       visualRoot.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.geometry.dispose();
-          if (child.material instanceof THREE.Material) {
-            child.material.dispose();
-          }
+          if (child.material instanceof THREE.Material) child.material.dispose();
         }
       });
     };
   }, [visualRoot]);
 
-  useFrame((state, delta) => {
+  // Update position, rotation, and idle breathing
+  useFrame((_, delta) => {
     if (!robotState || !modelRef.current) return;
 
     mixer?.update(delta);
 
-    const targetPosition = new THREE.Vector3(
+    const targetPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
 
     if (isMoving) {
-      prevPositionRef.current.lerp(targetPosition, 0.15);
+      prevPositionRef.current.lerp(targetPos, 0.15);
     } else {
-      prevPositionRef.current.copy(targetPosition);
+      prevPositionRef.current.copy(targetPos);
     }
 
     modelRef.current.position.copy(prevPositionRef.current);
@@ -107,8 +134,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       modelRef.current.position.y = prevPositionRef.current.y + offset;
     }
 
-    const targetRotation = robotState.rotation.y;
-    modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.12;
+    const targetRot = robotState.rotation.y;
+    modelRef.current.rotation.y += (targetRot - modelRef.current.rotation.y) * 0.12;
   });
 
   return (
@@ -123,6 +150,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
+// Preload both models for performance
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 useGLTF.preload('/models/humanoid-robot/animated_humanoid_robot.glb');
 
