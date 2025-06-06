@@ -24,11 +24,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const activeGLTF = isDrone ? droneGLTF : spiderGLTF;
   const { scene } = activeGLTF;
 
-  // ✅ Clone the full scene to preserve hierarchy
   const visualRoot = useMemo(() => {
     const clone = SkeletonUtils.clone(scene) as THREE.Group;
 
-    // Enable shadows
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
@@ -36,7 +34,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       }
     });
 
-    // Apply scale
     if (isDrone) {
       clone.scale.set(4, 4, 4); // Adjust as needed
     } else {
@@ -71,13 +68,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     if (!actions) return;
 
     if (isDrone) {
-      // ✅ Play all drone animations (e.g. propellers)
       names.forEach((name) => {
         const action = actions[name];
         if (action) action.reset().fadeIn(0.3).play();
       });
     } else {
-      // 🕷 Use idle/walk logic for spider
       isMoving ? switchAnimation(walkName) : switchAnimation(idleName);
     }
   }, [actions, names, isDrone, isMoving]);
@@ -105,7 +100,13 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       robotState.position.y,
       robotState.position.z
     );
-    prevPositionRef.current.lerp(targetPosition, 0.15);
+
+    if (isMoving) {
+      prevPositionRef.current.lerp(targetPosition, 0.15);
+    } else {
+      prevPositionRef.current.copy(targetPosition);
+    }
+
     modelRef.current.position.copy(prevPositionRef.current);
 
     const targetRotation = robotState.rotation.y;
@@ -132,7 +133,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
-// ✅ Preload both models
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 useGLTF.preload('/models/drone-model/drone.glb');
 
