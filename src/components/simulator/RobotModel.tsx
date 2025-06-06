@@ -35,7 +35,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     });
 
     if (isDrone) {
-      clone.scale.set(4, 4, 4); // Adjust as needed
+      clone.scale.set(1.5, 1.5, 1.5); // Smaller scale for drone
     } else {
       clone.scale.set(0.5, 0.5, 0.5);
     }
@@ -117,8 +117,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       breathingOffsetRef.current += delta;
       const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002;
       modelRef.current.position.y = prevPositionRef.current.y + offset;
+    } else {
+      // Ensure drone always uses exact position without any offset
+      modelRef.current.position.y = prevPositionRef.current.y;
     }
-    // For drone, always use the exact target position without breathing offset
   });
 
   return (
