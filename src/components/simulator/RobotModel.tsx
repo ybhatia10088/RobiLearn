@@ -18,10 +18,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
   const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const droneGLTF = useGLTF('/models/drone-model/drone.glb');
+  const humanoidGLTF = useGLTF('/models/humanoid-robot/animated_humanoid_robot.glb');
 
-  const isDrone = robotConfig.type === 'drone';
-  const activeGLTF = isDrone ? droneGLTF : spiderGLTF;
+  const isSpider = robotConfig.type === 'spider';
+  const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
   const { scene } = activeGLTF;
 
   const visualRoot = useMemo(() => {
@@ -34,14 +34,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       }
     });
 
-    if (isDrone) {
-      clone.scale.set(1.5, 1.5, 1.5); // Smaller scale for drone
-    } else {
-      clone.scale.set(0.5, 0.5, 0.5);
-    }
-
+    clone.scale.set(0.5, 0.5, 0.5);
     return clone;
-  }, [scene, isDrone]);
+  }, [scene]);
 
   const { actions, names, mixer } = useAnimations(activeGLTF.animations, visualRoot);
 
@@ -66,35 +61,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   useEffect(() => {
     if (!actions) return;
-
-    if (isDrone) {
-      // For drone, be very conservative - only play animations with specific safe names
-      // Log animation names to help debug
-      console.log('Available drone animations:', names);
-      
-      names.forEach((name) => {
-        const action = actions[name];
-        if (action) {
-          const safeName = name.toLowerCase();
-          
-          // Only play animations that are explicitly safe
-          // Most drone models have rotor animations that only affect rotation
-          if (safeName.includes('rotor') || 
-              safeName.includes('propeller') || 
-              safeName.includes('prop') ||
-              (safeName.includes('spin') && !safeName.includes('body'))) {
-            console.log(`Playing safe drone animation: ${name}`);
-            action.reset().fadeIn(0.3).play();
-          } else {
-            console.log(`Skipping potentially unsafe animation: ${name}`);
-            action.stop();
-          }
-        }
-      });
-    } else {
-      isMoving ? switchAnimation(walkName) : switchAnimation(idleName);
-    }
-  }, [actions, names, isDrone, isMoving]);
+    isMoving ? switchAnimation(walkName) : switchAnimation(idleName);
+  }, [actions, names, isMoving]);
 
   useEffect(() => {
     return () => {
@@ -126,23 +94,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       prevPositionRef.current.copy(targetPosition);
     }
 
-    // Handle position updates differently for drone vs spider
-    if (isDrone) {
-      // For drone: Set position directly without any animations or offsets
-      modelRef.current.position.set(
-        prevPositionRef.current.x,
-        prevPositionRef.current.y,
-        prevPositionRef.current.z
-      );
-    } else {
-      // For spider: Use normal position copy, then apply breathing if idle
-      modelRef.current.position.copy(prevPositionRef.current);
-      
-      if (!isMoving) {
-        breathingOffsetRef.current += delta;
-        const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002;
-        modelRef.current.position.y = prevPositionRef.current.y + offset;
-      }
+    modelRef.current.position.copy(prevPositionRef.current);
+
+    if (!isMoving) {
+      breathingOffsetRef.current += delta;
+      const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002;
+      modelRef.current.position.y = prevPositionRef.current.y + offset;
     }
 
     const targetRotation = robotState.rotation.y;
@@ -154,7 +111,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       ref={modelRef}
       object={visualRoot}
       position={[0, 0, 0]}
-      rotation={isDrone ? [0, 0, 0] : [0, Math.PI, 0]} // No rotation for drone, keep spider rotation
+      rotation={[0, Math.PI, 0]}
       castShadow
       receiveShadow
     />
@@ -162,6 +119,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 };
 
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
-useGLTF.preload('/models/drone-model/drone.glb');
+useGLTF.preload('/models/humanoid-robot/animated_humanoid_robot.glb');
 
 export default RobotModel;
