@@ -1,4 +1,18 @@
-import React, { useRef, useEffect, useMemo, useState } from 'react';
+// Reset animations when switching models
+  useEffect(() => {
+    if (isSpider) return;
+    
+    stopAllActions();
+    setIsMoving(false);
+    movementThresholdRef.current = 0;
+    setCurrentAction(null);
+    
+    // Reset mixer
+    if (mixer) {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(visualRoot);
+    }
+  }, [isSpider, mixer, visualRoot]);import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -93,17 +107,28 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     console.log(`Switching animation to: ${name}`);
 
-    // Stop any previous action with fade out
-    if (currentAction && actions[currentAction]) {
-      actions[currentAction].fadeOut(0.3);
-    }
+    // Stop all actions first
+    Object.values(actions).forEach(action => {
+      if (action && action.isRunning()) {
+        action.stop();
+      }
+    });
 
-    // Start the new action
+    // Start the new action immediately
     const newAction = actions[name];
     if (newAction) {
-      newAction.reset().fadeIn(0.3).play();
+      newAction.reset();
       newAction.setLoop(THREE.LoopRepeat, Infinity);
+      newAction.clampWhenFinished = false;
+      newAction.enabled = true;
+      newAction.timeScale = 1;
+      newAction.play();
       setCurrentAction(name);
+      
+      // Force mixer update
+      if (mixer) {
+        mixer.update(0);
+      }
     }
   };
 
@@ -133,12 +158,29 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     lastPositionRef.current.copy(currentPos);
   }, [robotState?.position, isMoving]);
 
-  // On mount or when switching between spider and humanoid, stop all actions
+  // Initialize animations properly
   useEffect(() => {
-    stopAllActions();
-    setIsMoving(false);
-    movementThresholdRef.current = 0;
-  }, [isSpider]);
+    if (!actions || !names.length || isSpider) return;
+    
+    console.log('Initializing humanoid animations:', names);
+    
+    // Set up all actions with proper settings
+    names.forEach(name => {
+      const action = actions[name];
+      if (action) {
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.clampWhenFinished = false;
+        action.enabled = true;
+      }
+    });
+    
+    // Start with idle animation
+    if (idleName && actions[idleName]) {
+      console.log('Starting idle animation:', idleName);
+      actions[idleName].play();
+      setCurrentAction(idleName);
+    }
+  }, [actions, names, isSpider, idleName]);
 
   // Play idle or walk based on isMoving
   useEffect(() => {
@@ -174,7 +216,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   useFrame((_, delta) => {
     if (!robotState || !modelRef.current) return;
 
-    mixer?.update(delta);
+    // Always update mixer first and more frequently for smoother animations
+    if (mixer) {
+      mixer.update(delta);
+    }
 
     const targetPos = new THREE.Vector3(
       robotState.position.x,
