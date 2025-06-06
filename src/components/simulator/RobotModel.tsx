@@ -18,7 +18,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
   const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const droneGLTF = useGLTF('/models/drone-model/animated_drone.glb');
+  const droneGLTF = useGLTF('/models/drone-model/drone.glb');
 
   const isDrone = robotConfig.type === 'drone';
   const activeGLTF = isDrone ? droneGLTF : spiderGLTF;
@@ -134,6 +134,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
 // ✅ Preload both models
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
-useGLTF.preload('/models/drone-model/animated_drone.glb');
+useGLTF.preload('/models/drone-model/drone.glb');
 
 export default RobotModel;
