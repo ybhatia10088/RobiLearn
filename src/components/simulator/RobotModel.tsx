@@ -112,13 +112,13 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const targetRotation = robotState.rotation.y;
     modelRef.current.rotation.y += (targetRotation - modelRef.current.rotation.y) * 0.12;
 
+    // Only apply breathing animation to spider, not drone
     if (!isDrone && !isMoving) {
       breathingOffsetRef.current += delta;
       const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002;
       modelRef.current.position.y = prevPositionRef.current.y + offset;
-    } else {
-      modelRef.current.position.y = prevPositionRef.current.y;
     }
+    // For drone, always use the exact target position without breathing offset
   });
 
   return (
@@ -126,7 +126,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       ref={modelRef}
       object={visualRoot}
       position={[0, 0, 0]}
-      rotation={[0, Math.PI, 0]}
+      rotation={isDrone ? [0, 0, 0] : [0, Math.PI, 0]} // No rotation for drone, keep spider rotation
       castShadow
       receiveShadow
     />
