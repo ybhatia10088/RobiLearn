@@ -1,18 +1,4 @@
-// Reset animations when switching models
-  useEffect(() => {
-    if (isSpider) return;
-    
-    stopAllActions();
-    setIsMoving(false);
-    movementThresholdRef.current = 0;
-    setCurrentAction(null);
-    
-    // Reset mixer
-    if (mixer) {
-      mixer.stopAllAction();
-      mixer.uncacheRoot(visualRoot);
-    }
-  }, [isSpider, mixer, visualRoot]);import React, { useRef, useEffect, useMemo, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -132,6 +118,46 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     }
   };
 
+  // Reset animations when switching models
+  useEffect(() => {
+    if (isSpider) return;
+    
+    stopAllActions();
+    setIsMoving(false);
+    movementThresholdRef.current = 0;
+    setCurrentAction(null);
+    
+    // Reset mixer
+    if (mixer) {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(visualRoot);
+    }
+  }, [isSpider, mixer, visualRoot]);
+
+  // Initialize animations properly
+  useEffect(() => {
+    if (!actions || !names.length || isSpider) return;
+    
+    console.log('Initializing humanoid animations:', names);
+    
+    // Set up all actions with proper settings
+    names.forEach(name => {
+      const action = actions[name];
+      if (action) {
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.clampWhenFinished = false;
+        action.enabled = true;
+      }
+    });
+    
+    // Start with idle animation
+    if (idleName && actions[idleName]) {
+      console.log('Starting idle animation:', idleName);
+      actions[idleName].play();
+      setCurrentAction(idleName);
+    }
+  }, [actions, names, isSpider, idleName]);
+
   // Detect movement based on position changes
   useEffect(() => {
     if (!robotState) return;
@@ -157,30 +183,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     lastPositionRef.current.copy(currentPos);
   }, [robotState?.position, isMoving]);
-
-  // Initialize animations properly
-  useEffect(() => {
-    if (!actions || !names.length || isSpider) return;
-    
-    console.log('Initializing humanoid animations:', names);
-    
-    // Set up all actions with proper settings
-    names.forEach(name => {
-      const action = actions[name];
-      if (action) {
-        action.setLoop(THREE.LoopRepeat, Infinity);
-        action.clampWhenFinished = false;
-        action.enabled = true;
-      }
-    });
-    
-    // Start with idle animation
-    if (idleName && actions[idleName]) {
-      console.log('Starting idle animation:', idleName);
-      actions[idleName].play();
-      setCurrentAction(idleName);
-    }
-  }, [actions, names, isSpider, idleName]);
 
   // Play idle or walk based on isMoving
   useEffect(() => {
