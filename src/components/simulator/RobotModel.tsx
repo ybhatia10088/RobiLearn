@@ -78,8 +78,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   // Stop all actions helper
   const stopAllActions = () => {
-    if (!actions) return;
-    names.forEach((name) => {
+    if (!actions || !mixer) return;
+    
+    Object.keys(actions).forEach((name) => {
       const action = actions[name];
       if (action && action.isRunning()) {
         action.stop();
@@ -89,18 +90,19 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   };
 
   const switchAnimation = (name: string) => {
-    if (!actions || !name || currentAction === name) return;
+    if (!actions || !name || !mixer || currentAction === name) return;
 
     console.log(`Switching animation to: ${name}`);
 
-    // Stop all actions first
-    Object.values(actions).forEach(action => {
-      if (action && action.isRunning()) {
-        action.stop();
+    // Stop current action if it exists
+    if (currentAction && actions[currentAction]) {
+      const currentActionObj = actions[currentAction];
+      if (currentActionObj.isRunning()) {
+        currentActionObj.stop();
       }
-    });
+    }
 
-    // Start the new action immediately
+    // Start the new action
     const newAction = actions[name];
     if (newAction) {
       newAction.reset();
@@ -110,11 +112,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       newAction.timeScale = 1;
       newAction.play();
       setCurrentAction(name);
-      
-      // Force mixer update
-      if (mixer) {
-        mixer.update(0);
-      }
     }
   };
 
@@ -126,37 +123,25 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     setIsMoving(false);
     movementThresholdRef.current = 0;
     setCurrentAction(null);
-    
-    // Reset mixer
-    if (mixer) {
-      mixer.stopAllAction();
-      mixer.uncacheRoot(visualRoot);
-    }
-  }, [isSpider, mixer, visualRoot]);
+  }, [isSpider]);
 
   // Initialize animations properly
   useEffect(() => {
-    if (!actions || !names.length || isSpider) return;
+    if (!actions || !names.length || isSpider || !mixer) return;
     
     console.log('Initializing humanoid animations:', names);
-    
-    // Set up all actions with proper settings
-    names.forEach(name => {
-      const action = actions[name];
-      if (action) {
-        action.setLoop(THREE.LoopRepeat, Infinity);
-        action.clampWhenFinished = false;
-        action.enabled = true;
-      }
-    });
     
     // Start with idle animation
     if (idleName && actions[idleName]) {
       console.log('Starting idle animation:', idleName);
-      actions[idleName].play();
+      const idleAction = actions[idleName];
+      idleAction.setLoop(THREE.LoopRepeat, Infinity);
+      idleAction.clampWhenFinished = false;
+      idleAction.enabled = true;
+      idleAction.play();
       setCurrentAction(idleName);
     }
-  }, [actions, names, isSpider, idleName]);
+  }, [actions, names, isSpider, idleName, mixer]);
 
   // Detect movement based on position changes
   useEffect(() => {
@@ -202,17 +187,24 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (mixer) {
-        mixer.stopAllAction();
+      // Clean up actions first
+      if (actions) {
+        Object.values(actions).forEach(action => {
+          if (action && action.isRunning()) {
+            action.stop();
+          }
+        });
       }
+      
+      // Then clean up geometry and materials
       visualRoot.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          child.geometry.dispose();
+          if (child.geometry) child.geometry.dispose();
           if (child.material instanceof THREE.Material) child.material.dispose();
         }
       });
     };
-  }, [visualRoot, mixer]);
+  }, [visualRoot, actions]);
 
   // Update position, rotation, and idle breathing
   useFrame((_, delta) => {
