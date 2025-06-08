@@ -13,7 +13,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const modelRef = useRef<THREE.Group>(null);
   const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const lastPositionRef = useRef(new THREE.Vector3(0, 0, 0));
-  const movementThresholdRef = useRef(0);
 
   const { robotState, isMoving: storeIsMoving } = useRobotStore();
   const [isMoving, setIsMoving] = useState(false);
@@ -29,97 +28,163 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const visualRoot = scene;
   const { actions, mixer } = useAnimations(animations, visualRoot);
 
-  const getFallbackActionName = () => {
+  const getSpiderAnimationName = () => {
+    if (!isSpider) return null;
+    
     const allKeys = Object.keys(actions);
-    console.log('🎬 Available animation actions:', allKeys);
+    console.log('🕷️ Available spider animation actions:', allKeys);
+
+    // Common spider animation names
+    const spiderAnimNames = [
+      'Take 001',
+      'Armature|Take 001', 
+      'mixamo.com',
+      'Walking',
+      'Walk',
+      'Move',
+      'Action'
+    ];
+
+    for (const name of spiderAnimNames) {
+      if (allKeys.includes(name)) {
+        console.log('🎬 Found spider animation:', name);
+        return name;
+      }
+    }
+
+    // Fallback to first available animation
+    if (allKeys.length > 0) {
+      console.log('🎬 Using fallback spider animation:', allKeys[0]);
+      return allKeys[0];
+    }
+
+    return null;
+  };
+
+  const getHumanoidAnimationName = () => {
+    if (isSpider) return null;
+    
+    const allKeys = Object.keys(actions);
+    console.log('🤖 Available humanoid animation actions:', allKeys);
 
     if (allKeys.includes('mixamo.com')) return 'mixamo.com';
     if (allKeys.length > 0) return allKeys[0];
     return null;
   };
 
-  const animToPlay = getFallbackActionName();
+  const animToPlay = isSpider ? getSpiderAnimationName() : getHumanoidAnimationName();
 
-  // Updated effect to check both store flags AND position changes
+  // Simplified movement detection - only check store flags for spider
   useEffect(() => {
     if (!robotState) return;
 
-    const currentPos = new THREE.Vector3(
-      robotState.position.x,
-      robotState.position.y,
-      robotState.position.z
-    );
+    let shouldBeMoving = false;
 
-    const distance = currentPos.distanceTo(lastPositionRef.current);
-    movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
+    if (isSpider) {
+      // For spider, only use store movement flags - no position-based detection
+      shouldBeMoving = storeIsMoving || robotState.isMoving;
+      console.log('🕷️ Spider movement check:', { 
+        shouldBeMoving, 
+        storeIsMoving, 
+        robotStateIsMoving: robotState.isMoving 
+      });
+    } else {
+      // Keep original logic for humanoid
+      const currentPos = new THREE.Vector3(
+        robotState.position.x,
+        robotState.position.y,
+        robotState.position.z
+      );
 
-    // Check BOTH store movement flags AND position-based movement detection
-    const positionBasedMoving = movementThresholdRef.current > 2;
-    const shouldBeMoving = storeIsMoving || robotState.isMoving || positionBasedMoving;
-
-    console.log('🚶 Movement check:', { 
-      shouldBeMoving, 
-      storeIsMoving, 
-      robotStateIsMoving: robotState.isMoving, 
-      positionBasedMoving,
-      currentIsMoving: isMoving
-    });
-
-    if (shouldBeMoving !== isMoving) {
-      console.log('🚶 Movement state changed from', isMoving, 'to', shouldBeMoving);
-      setIsMoving(shouldBeMoving);
+      const distance = currentPos.distanceTo(lastPositionRef.current);
+      const positionBasedMoving = distance > 0.01;
+      shouldBeMoving = storeIsMoving || robotState.isMoving || positionBasedMoving;
+      
+      lastPositionRef.current.copy(currentPos);
+      
+      console.log('🤖 Humanoid movement check:', { 
+        shouldBeMoving, 
+        storeIsMoving, 
+        robotStateIsMoving: robotState.isMoving, 
+        positionBasedMoving 
+      });
     }
 
-    lastPositionRef.current.copy(currentPos);
-  }, [robotState?.position, robotState?.isMoving, storeIsMoving, isMoving]);
+    if (shouldBeMoving !== isMoving) {
+      console.log(`${isSpider ? '🕷️' : '🤖'} Movement state changed from`, isMoving, 'to', shouldBeMoving);
+      setIsMoving(shouldBeMoving);
+    }
+  }, [robotState?.position, robotState?.isMoving, storeIsMoving, isMoving, isSpider]);
 
   const stopAllActions = () => {
     if (!actions || !mixer) return;
     Object.values(actions).forEach((action) => {
-      if (action?.isRunning()) action.stop();
+      if (action?.isRunning()) {
+        action.stop();
+      }
     });
     setCurrentAction(null);
+    console.log(`${isSpider ? '🕷️' : '🤖'} All animations stopped`);
   };
 
   const switchAnimation = (name: string) => {
     if (!actions || !name || currentAction === name) return;
+    
     const next = actions[name];
     if (!next) {
       console.warn(`⚠️ Animation "${name}" not found in actions.`);
       return;
     }
 
+    console.log(`${isSpider ? '🕷️' : '🤖'} Switching to animation:`, name);
+
+    // Stop current animation with fade out
     if (currentAction && actions[currentAction]?.isRunning()) {
       actions[currentAction].fadeOut(0.2);
     }
 
+    // Start new animation with fade in
     next.reset().fadeIn(0.2).play();
     setCurrentAction(name);
   };
 
+  // Handle animation switching based on movement state
   useEffect(() => {
-    if (!actions || !animToPlay) return;
+    console.log(`${isSpider ? '🕷️' : '🤖'} Animation effect - isMoving:`, isMoving, 'animToPlay:', animToPlay);
+    
+    if (!actions || !animToPlay) {
+      console.log(`${isSpider ? '🕷️' : '🤖'} No actions or animToPlay available`);
+      return;
+    }
 
     if (isMoving) {
       if (currentAction !== animToPlay) {
-        console.log('▶️ Triggering animation:', animToPlay);
+        console.log(`${isSpider ? '🕷️' : '🤖'} Starting animation:`, animToPlay);
         switchAnimation(animToPlay);
       }
     } else {
       if (currentAction && actions[currentAction]?.isRunning()) {
-        console.log('⏹️ Stopping animation');
+        console.log(`${isSpider ? '🕷️' : '🤖'} Stopping animation:`, currentAction);
         stopAllActions();
       }
     }
-  }, [isMoving, actions, isSpider, animToPlay, currentAction]);
+  }, [isMoving, actions, animToPlay, currentAction, isSpider]);
 
+  // Cleanup on unmount
   useEffect(() => {
-    return () => stopAllActions();
-  }, [actions]);
+    return () => {
+      console.log(`${isSpider ? '🕷️' : '🤖'} Component unmounting - stopping all animations`);
+      stopAllActions();
+    };
+  }, []);
 
   useFrame((_, delta) => {
     if (!robotState || !modelRef.current) return;
-    mixer?.update(delta);
+    
+    // Update animation mixer
+    if (mixer) {
+      mixer.update(delta);
+    }
 
     const targetPos = new THREE.Vector3(
       robotState.position.x,
@@ -127,6 +192,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       robotState.position.z
     );
 
+    // Smooth position interpolation
     if (isMoving) {
       prevPositionRef.current.lerp(targetPos, 0.15);
     } else {
@@ -135,6 +201,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     modelRef.current.position.copy(prevPositionRef.current);
 
+    // Smooth rotation
     const targetRot = robotState.rotation.y;
     modelRef.current.rotation.y += (targetRot - modelRef.current.rotation.y) * 0.12;
   });
