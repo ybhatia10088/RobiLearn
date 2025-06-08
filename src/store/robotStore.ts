@@ -107,8 +107,20 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     if ((window as any).robotMoveInterval) {
       clearInterval((window as any).robotMoveInterval);
     }
+    if ((window as any).robotRotateInterval) {
+      clearInterval((window as any).robotRotateInterval);
+    }
 
-    set({ isMoving: true });
+    console.log('🎮 Move robot triggered:', { direction, speed, robotType: state.selectedRobot?.type });
+
+    // Set moving state immediately for animation
+    set({ 
+      isMoving: true,
+      robotState: {
+        ...state.robotState,
+        isMoving: true,
+      }
+    });
 
     if (state.selectedRobot?.type === 'arm' && joint) {
       // Handle arm movement
@@ -133,24 +145,41 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       return;
     }
 
-    // Handle movement for other robot types
-    const moveStep = 0.1 * speed; // Increased step size for more noticeable movement
-    const angle = state.robotState.rotation.y;
-    const deltaX = Math.sin(angle) * moveStep;
-    const deltaZ = Math.cos(angle) * moveStep;
-    const multiplier = direction === 'forward' ? 1 : -1;
+    // Handle movement for spider, humanoid, and other robot types
+    const moveStep = 0.1 * speed;
+    let deltaX = 0;
+    let deltaZ = 0;
+
+    // Calculate movement delta based on direction
+    if (direction === 'forward' || direction === 'backward') {
+      const angle = state.robotState.rotation.y;
+      deltaX = Math.sin(angle) * moveStep;
+      deltaZ = Math.cos(angle) * moveStep;
+      const multiplier = direction === 'forward' ? 1 : -1;
+      deltaX *= multiplier;
+      deltaZ *= multiplier;
+    } else if (direction === 'left' || direction === 'right') {
+      // Strafe movement
+      const angle = state.robotState.rotation.y + (Math.PI / 2); // Perpendicular to facing direction
+      deltaX = Math.sin(angle) * moveStep;
+      deltaZ = Math.cos(angle) * moveStep;
+      const multiplier = direction === 'right' ? 1 : -1;
+      deltaX *= multiplier;
+      deltaZ *= multiplier;
+    }
 
     const moveInterval = setInterval(() => {
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
         clearInterval(moveInterval);
+        (window as any).robotMoveInterval = null;
         return;
       }
 
       const newPosition = {
-        x: currentState.robotState.position.x + deltaX * multiplier,
+        x: currentState.robotState.position.x + deltaX,
         y: currentState.robotState.position.y,
-        z: currentState.robotState.position.z + deltaZ * multiplier,
+        z: currentState.robotState.position.z + deltaZ,
       };
 
       set({
@@ -159,6 +188,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           position: newPosition,
           isMoving: true,
         },
+        isMoving: true,
       });
     }, 16);
 
@@ -169,18 +199,33 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     const state = get();
     if (!state.robotState) return;
 
+    // Clear any existing intervals
     if ((window as any).robotRotateInterval) {
       clearInterval((window as any).robotRotateInterval);
     }
+    if ((window as any).robotMoveInterval) {
+      clearInterval((window as any).robotMoveInterval);
+    }
 
-    set({ isMoving: true });
-    const rotateStep = 0.05 * speed; // Increased step size for more noticeable rotation
+    console.log('🔄 Rotate robot triggered:', { direction, speed, robotType: state.selectedRobot?.type });
+
+    // Set moving state immediately for animation
+    set({ 
+      isMoving: true,
+      robotState: {
+        ...state.robotState,
+        isMoving: true,
+      }
+    });
+
+    const rotateStep = 0.05 * speed;
     const delta = direction === 'left' ? rotateStep : -rotateStep;
 
     const rotateInterval = setInterval(() => {
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
         clearInterval(rotateInterval);
+        (window as any).robotRotateInterval = null;
         return;
       }
 
@@ -195,6 +240,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           rotation: newRotation,
           isMoving: true,
         },
+        isMoving: true,
       });
     }, 16);
 
@@ -202,6 +248,9 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
 
   stopRobot: () => {
+    console.log('⏹️ Stop robot triggered');
+
+    // Clear all movement intervals
     if ((window as any).robotMoveInterval) {
       clearInterval((window as any).robotMoveInterval);
       (window as any).robotMoveInterval = null;
@@ -212,6 +261,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       (window as any).robotRotateInterval = null;
     }
 
+    // Set moving state to false immediately for animation
     set((state) => ({
       isMoving: false,
       robotState: state.robotState ? {
@@ -250,21 +300,45 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     jointPositions: { ...state.jointPositions, [joint]: value },
   })),
 
-  resetRobotState: () => set((state) => ({
-    robotState: state.robotState ? {
-      ...state.robotState,
-      ...INITIAL_ROBOT_STATE,
-    } : null,
-    isMoving: false,
-  })),
+  resetRobotState: () => {
+    // Clear any intervals when resetting
+    if ((window as any).robotMoveInterval) {
+      clearInterval((window as any).robotMoveInterval);
+      (window as any).robotMoveInterval = null;
+    }
+    if ((window as any).robotRotateInterval) {
+      clearInterval((window as any).robotRotateInterval);
+      (window as any).robotRotateInterval = null;
+    }
 
-  resetRobotStateByType: () => set((state) => ({
-    robotState: state.robotState ? {
-      ...state.robotState,
-      ...INITIAL_ROBOT_STATE,
-    } : null,
-    isMoving: false,
-  })),
+    set((state) => ({
+      robotState: state.robotState ? {
+        ...state.robotState,
+        ...INITIAL_ROBOT_STATE,
+      } : null,
+      isMoving: false,
+    }));
+  },
+
+  resetRobotStateByType: () => {
+    // Clear any intervals when resetting
+    if ((window as any).robotMoveInterval) {
+      clearInterval((window as any).robotMoveInterval);
+      (window as any).robotMoveInterval = null;
+    }
+    if ((window as any).robotRotateInterval) {
+      clearInterval((window as any).robotRotateInterval);
+      (window as any).robotRotateInterval = null;
+    }
+
+    set((state) => ({
+      robotState: state.robotState ? {
+        ...state.robotState,
+        ...INITIAL_ROBOT_STATE,
+      } : null,
+      isMoving: false,
+    }));
+  },
 
   startHover: () => {
     const state = get();
