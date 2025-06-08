@@ -15,82 +15,79 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const lastPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const movementThresholdRef = useRef(0);
   const { robotState } = useRobotStore();
-  const [currentAction, setCurrentAction] = useState<string | null>(null);
+
   const [isMoving, setIsMoving] = useState(false);
+  const [currentAction, setCurrentAction] = useState<string | null>(null);
 
   const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const humanoidGLTF = useGLTF('/models/humanoid-robot/animated_humanoid_robot.glb');
+  const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb'); // <-- Updated path
 
   const isSpider = robotConfig.type === 'spider';
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
   const { scene, animations } = activeGLTF;
 
-  // Use the original scene to preserve skeleton binding
-  const { actions, names, mixer } = useAnimations(animations, scene);
   const visualRoot = scene;
+  const { actions, mixer } = useAnimations(animations, visualRoot);
 
-  const runName = 'RUN'; // <-- updated
+  const RUN_ANIM = animations.find((a) => /run|walk/i.test(a.name || ''))?.name || animations[0]?.name || '';
 
   const stopAllActions = () => {
     if (!actions || !mixer) return;
-    Object.keys(actions).forEach((name) => {
-      const action = actions[name];
+    Object.values(actions).forEach((action) => {
       if (action?.isRunning()) action.stop();
     });
     setCurrentAction(null);
   };
 
   const switchAnimation = (name: string) => {
-    if (!actions || !name || !mixer || currentAction === name) return;
+    if (!actions || !name || currentAction === name) return;
+
+    const next = actions[name];
+    if (!next) {
+      console.warn(`Animation "${name}" not found`);
+      return;
+    }
 
     if (currentAction && actions[currentAction]?.isRunning()) {
-      actions[currentAction].stop();
+      actions[currentAction].fadeOut(0.2);
     }
 
-    const newAction = actions[name];
-    if (newAction) {
-      newAction.reset();
-      newAction.setLoop(THREE.LoopRepeat, Infinity);
-      newAction.clampWhenFinished = false;
-      newAction.enabled = true;
-      newAction.timeScale = 1;
-      newAction.play();
-      setCurrentAction(name);
-    } else {
-      console.warn("Animation not found:", name);
-    }
+    next.reset().fadeIn(0.2).play();
+    setCurrentAction(name);
   };
 
   useEffect(() => {
     if (!robotState) return;
+
     const currentPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
+
     const distance = currentPos.distanceTo(lastPositionRef.current);
     movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
+
     const shouldBeMoving = movementThresholdRef.current > 2;
     if (shouldBeMoving !== isMoving) {
       setIsMoving(shouldBeMoving);
     }
+
     lastPositionRef.current.copy(currentPos);
   }, [robotState?.position, isMoving]);
 
   useEffect(() => {
     if (!actions || isSpider) return;
-    if (isMoving) {
-      switchAnimation(runName);
+    if (isMoving && RUN_ANIM) {
+      switchAnimation(RUN_ANIM);
+    } else {
+      stopAllActions();
     }
-  }, [actions, isMoving, isSpider, runName]);
+  }, [isMoving, actions, isSpider, RUN_ANIM]);
 
   useEffect(() => {
     return () => {
-      if (actions) {
-        Object.values(actions).forEach((action) => {
-          if (action?.isRunning()) action.stop();
-        });
-      }
+      stopAllActions();
     };
   }, [actions]);
 
@@ -119,13 +116,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   return (
     <group
       onClick={() => {
-        if (!isSpider) {
-          console.log("CLICK: play RUN");
+        if (!isSpider && RUN_ANIM) {
+          console.log('CLICK: start walk/run');
           setIsMoving(true);
           setTimeout(() => {
-            console.log("STOP RUN");
+            console.log('STOP animation');
             setIsMoving(false);
-            stopAllActions();
           }, 3000);
         }
       }}
@@ -143,6 +139,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 };
 
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
-useGLTF.preload('/models/humanoid-robot/animated_humanoid_robot.glb');
+useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb'); // <-- Updated preload path
 
 export default RobotModel;
