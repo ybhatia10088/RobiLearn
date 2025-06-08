@@ -30,7 +30,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const { actions, mixer } = useAnimations(animations, visualRoot);
 
   const animNames = animations.map((a, i) => a.name || `Unnamed_${i}`);
-  const secondAnimName = animNames[1] || animNames[0];
+  const mixamoAnim = animNames.find((name) => /mixamo/i.test(name)) || animNames[0];
 
   useEffect(() => {
     if (animations.length > 0) {
@@ -91,15 +91,15 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     if (!actions || isSpider) return;
 
     if (isMoving) {
-      if (secondAnimName && currentAction !== secondAnimName) {
-        switchAnimation(secondAnimName);
+      if (mixamoAnim && currentAction !== mixamoAnim) {
+        switchAnimation(mixamoAnim);
       }
     } else {
       if (currentAction && actions[currentAction]?.isRunning()) {
         stopAllActions();
       }
     }
-  }, [isMoving, actions, isSpider, secondAnimName]);
+  }, [isMoving, actions, isSpider, mixamoAnim]);
 
   useEffect(() => {
     return () => stopAllActions();
