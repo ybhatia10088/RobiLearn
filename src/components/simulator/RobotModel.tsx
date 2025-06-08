@@ -15,7 +15,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const lastPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const movementThresholdRef = useRef(0);
 
-  const { robotState } = useRobotStore();
+  const { robotState, isMoving: storeIsMoving } = useRobotStore();
   const [isMoving, setIsMoving] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
@@ -40,6 +40,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   const animToPlay = getFallbackActionName();
 
+  // Updated effect to check both store flags AND position changes
   useEffect(() => {
     if (!robotState) return;
 
@@ -52,13 +53,25 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const distance = currentPos.distanceTo(lastPositionRef.current);
     movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
 
-    const shouldBeMoving = movementThresholdRef.current > 2;
+    // Check BOTH store movement flags AND position-based movement detection
+    const positionBasedMoving = movementThresholdRef.current > 2;
+    const shouldBeMoving = storeIsMoving || robotState.isMoving || positionBasedMoving;
+
+    console.log('🚶 Movement check:', { 
+      shouldBeMoving, 
+      storeIsMoving, 
+      robotStateIsMoving: robotState.isMoving, 
+      positionBasedMoving,
+      currentIsMoving: isMoving
+    });
+
     if (shouldBeMoving !== isMoving) {
+      console.log('🚶 Movement state changed from', isMoving, 'to', shouldBeMoving);
       setIsMoving(shouldBeMoving);
     }
 
     lastPositionRef.current.copy(currentPos);
-  }, [robotState?.position, isMoving]);
+  }, [robotState?.position, robotState?.isMoving, storeIsMoving, isMoving]);
 
   const stopAllActions = () => {
     if (!actions || !mixer) return;
@@ -98,7 +111,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         stopAllActions();
       }
     }
-  }, [isMoving, actions, isSpider, animToPlay]);
+  }, [isMoving, actions, isSpider, animToPlay, currentAction]);
 
   useEffect(() => {
     return () => stopAllActions();
