@@ -29,43 +29,16 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const visualRoot = scene;
   const { actions, mixer } = useAnimations(animations, visualRoot);
 
-  const animNames = animations.map((a, i) => a.name || `Unnamed_${i}`);
-  const mixamoAnim = animNames.find((name) => /mixamo/i.test(name)) || animNames[0];
+  const getFallbackActionName = () => {
+    const allKeys = Object.keys(actions);
+    console.log('🎬 Available animation actions:', allKeys);
 
-  useEffect(() => {
-    if (animations.length > 0) {
-      console.log('🎞️ Available animations:');
-      animNames.forEach((name, i) => {
-        console.log(`#${i + 1}:`, name);
-      });
-    } else {
-      console.warn('⚠️ No animations found in the model.');
-    }
-  }, [animations]);
-
-  const stopAllActions = () => {
-    if (!actions || !mixer) return;
-    Object.values(actions).forEach((action) => {
-      if (action?.isRunning()) action.stop();
-    });
-    setCurrentAction(null);
+    if (allKeys.includes('mixamo.com')) return 'mixamo.com';
+    if (allKeys.length > 0) return allKeys[0];
+    return null;
   };
 
-  const switchAnimation = (name: string) => {
-    if (!actions || !name || currentAction === name) return;
-    const next = actions[name];
-    if (!next) {
-      console.warn(`⚠️ Animation "${name}" not found`);
-      return;
-    }
-
-    if (currentAction && actions[currentAction]?.isRunning()) {
-      actions[currentAction].fadeOut(0.2);
-    }
-
-    next.reset().fadeIn(0.2).play();
-    setCurrentAction(name);
-  };
+  const animToPlay = getFallbackActionName();
 
   useEffect(() => {
     if (!robotState) return;
@@ -87,19 +60,45 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     lastPositionRef.current.copy(currentPos);
   }, [robotState?.position, isMoving]);
 
+  const stopAllActions = () => {
+    if (!actions || !mixer) return;
+    Object.values(actions).forEach((action) => {
+      if (action?.isRunning()) action.stop();
+    });
+    setCurrentAction(null);
+  };
+
+  const switchAnimation = (name: string) => {
+    if (!actions || !name || currentAction === name) return;
+    const next = actions[name];
+    if (!next) {
+      console.warn(`⚠️ Animation "${name}" not found in actions.`);
+      return;
+    }
+
+    if (currentAction && actions[currentAction]?.isRunning()) {
+      actions[currentAction].fadeOut(0.2);
+    }
+
+    next.reset().fadeIn(0.2).play();
+    setCurrentAction(name);
+  };
+
   useEffect(() => {
-    if (!actions || isSpider) return;
+    if (!actions || isSpider || !animToPlay) return;
 
     if (isMoving) {
-      if (mixamoAnim && currentAction !== mixamoAnim) {
-        switchAnimation(mixamoAnim);
+      if (currentAction !== animToPlay) {
+        console.log('▶️ Triggering animation:', animToPlay);
+        switchAnimation(animToPlay);
       }
     } else {
       if (currentAction && actions[currentAction]?.isRunning()) {
+        console.log('⏹️ Stopping animation');
         stopAllActions();
       }
     }
-  }, [isMoving, actions, isSpider, mixamoAnim]);
+  }, [isMoving, actions, isSpider, animToPlay]);
 
   useEffect(() => {
     return () => stopAllActions();
