@@ -41,21 +41,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   const { actions, names, mixer } = useAnimations(animations, visualRoot);
 
-  const getAnimationName = (type: 'idle' | 'walk') => {
-    if (!names || names.length === 0) return '';
-    if (type === 'idle') {
-      return names.find((n) =>
-        /^idle$/i.test(n) || /idle|stand|breath|rest/i.test(n)
-      ) || names[0] || '';
-    } else {
-      return names.find((n) =>
-        /^walk$/i.test(n) || /walk|move|run|step|locomotion/i.test(n)
-      ) || names[1] || '';
-    }
-  };
-
-  const idleName = getAnimationName('idle');
-  const walkName = getAnimationName('walk');
+  const idleName = 'IDLE';
+  const walkName = 'WALK';
 
   const stopAllActions = () => {
     if (!actions || !mixer) return;
@@ -68,9 +55,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   const switchAnimation = (name: string) => {
     if (!actions || !name || !mixer || currentAction === name) return;
+    console.log("Switching to animation:", name);
+
     if (currentAction && actions[currentAction]?.isRunning()) {
       actions[currentAction].stop();
     }
+
     const newAction = actions[name];
     if (newAction) {
       newAction.reset();
@@ -80,6 +70,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       newAction.timeScale = 1;
       newAction.play();
       setCurrentAction(name);
+    } else {
+      console.warn("Animation not found:", name);
     }
   };
 
@@ -92,7 +84,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   }, [isSpider]);
 
   useEffect(() => {
-    if (!actions || !names.length || isSpider || !mixer) return;
+    if (!actions || isSpider || !mixer) return;
     if (idleName && actions[idleName]) {
       const idleAction = actions[idleName];
       idleAction.setLoop(THREE.LoopRepeat, Infinity);
@@ -101,7 +93,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       idleAction.play();
       setCurrentAction(idleName);
     }
-  }, [actions, names, isSpider, idleName, mixer]);
+  }, [actions, isSpider, idleName, mixer]);
 
   useEffect(() => {
     if (!robotState) return;
@@ -120,12 +112,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   }, [robotState?.position, isMoving]);
 
   useEffect(() => {
-    if (!actions || !names.length || isSpider) return;
+    if (!actions || isSpider) return;
     const selectedName = isMoving ? walkName : idleName;
     if (selectedName) {
       switchAnimation(selectedName);
     }
-  }, [actions, names, isMoving, isSpider, walkName, idleName]);
+  }, [actions, isMoving, isSpider, walkName, idleName]);
 
   useEffect(() => {
     return () => {
@@ -176,8 +168,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     <group
       onClick={() => {
         if (!isSpider) {
+          console.log("CLICK: trigger walk");
           setIsMoving(true);
-          setTimeout(() => setIsMoving(false), 3000);
+          setTimeout(() => {
+            setIsMoving(false);
+            console.log("Timeout: back to idle");
+          }, 3000);
         }
       }}
     >
