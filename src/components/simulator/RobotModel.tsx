@@ -20,7 +20,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
   const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb'); // <-- Updated path
+  const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 
   const isSpider = robotConfig.type === 'spider';
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
@@ -29,7 +29,20 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const visualRoot = scene;
   const { actions, mixer } = useAnimations(animations, visualRoot);
 
-  const RUN_ANIM = animations.find((a) => /run|walk/i.test(a.name || ''))?.name || animations[0]?.name || '';
+  // Select second animation name if it exists
+  const animNames = animations.map((a, i) => a.name || `Unnamed_${i}`);
+  const secondAnimName = animNames[1] || animNames[0]; // fallback to first if only one exists
+
+  useEffect(() => {
+    if (animations.length > 0) {
+      console.log("🎞️ Available animations:");
+      animNames.forEach((name, i) => {
+        console.log(`#${i + 1}:`, name);
+      });
+    } else {
+      console.warn("⚠️ No animations found in the model.");
+    }
+  }, [animations]);
 
   const stopAllActions = () => {
     if (!actions || !mixer) return;
@@ -44,7 +57,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     const next = actions[name];
     if (!next) {
-      console.warn(`Animation "${name}" not found`);
+      console.warn(`⚠️ Animation "${name}" not found in actions.`);
       return;
     }
 
@@ -78,12 +91,12 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   useEffect(() => {
     if (!actions || isSpider) return;
-    if (isMoving && RUN_ANIM) {
-      switchAnimation(RUN_ANIM);
+    if (isMoving && secondAnimName) {
+      switchAnimation(secondAnimName);
     } else {
       stopAllActions();
     }
-  }, [isMoving, actions, isSpider, RUN_ANIM]);
+  }, [isMoving, actions, isSpider, secondAnimName]);
 
   useEffect(() => {
     return () => {
@@ -116,11 +129,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   return (
     <group
       onClick={() => {
-        if (!isSpider && RUN_ANIM) {
-          console.log('CLICK: start walk/run');
+        if (!isSpider && secondAnimName) {
+          console.log(`▶️ CLICK: play animation "${secondAnimName}"`);
           setIsMoving(true);
           setTimeout(() => {
-            console.log('STOP animation');
+            console.log('⏹️ STOP animation');
             setIsMoving(false);
           }, 3000);
         }
@@ -139,6 +152,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 };
 
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
-useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb'); // <-- Updated preload path
+useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 
 export default RobotModel;
