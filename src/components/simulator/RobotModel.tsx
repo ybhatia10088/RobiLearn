@@ -27,48 +27,29 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
   const { scene, animations } = activeGLTF;
 
-  // Clone the scene graph, set shadows, and scale
   const visualRoot = useMemo(() => {
     const clone = SkeletonUtils.clone(scene) as THREE.Group;
-
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
-
-    // Adjust scale for humanoid or spider as needed
     clone.scale.set(0.5, 0.5, 0.5);
     return clone;
   }, [scene]);
 
-  // Hook into animations on the cloned root
   const { actions, names, mixer } = useAnimations(animations, visualRoot);
 
-  // Enhanced animation name detection for humanoid models
   const getAnimationName = (type: 'idle' | 'walk') => {
     if (!names || names.length === 0) return '';
-    
-    // Log available animations for debugging
-    console.log(`Available animations for ${isSpider ? 'spider' : 'humanoid'}:`, names);
-    
     if (type === 'idle') {
-      return names.find((n) => 
-        /^idle$/i.test(n) || 
-        /idle/i.test(n) || 
-        /stand/i.test(n) ||
-        /breathing/i.test(n) ||
-        /rest/i.test(n)
+      return names.find((n) =>
+        /^idle$/i.test(n) || /idle|stand|breath|rest/i.test(n)
       ) || names[0] || '';
     } else {
-      return names.find((n) => 
-        /^walk$/i.test(n) || 
-        /walk/i.test(n) || 
-        /move/i.test(n) ||
-        /run/i.test(n) ||
-        /step/i.test(n) ||
-        /locomotion/i.test(n)
+      return names.find((n) =>
+        /^walk$/i.test(n) || /walk|move|run|step|locomotion/i.test(n)
       ) || names[1] || '';
     }
   };
@@ -76,33 +57,20 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const idleName = getAnimationName('idle');
   const walkName = getAnimationName('walk');
 
-  // Stop all actions helper
   const stopAllActions = () => {
     if (!actions || !mixer) return;
-    
     Object.keys(actions).forEach((name) => {
       const action = actions[name];
-      if (action && action.isRunning()) {
-        action.stop();
-      }
+      if (action?.isRunning()) action.stop();
     });
     setCurrentAction(null);
   };
 
   const switchAnimation = (name: string) => {
     if (!actions || !name || !mixer || currentAction === name) return;
-
-    console.log(`Switching animation to: ${name}`);
-
-    // Stop current action if it exists
-    if (currentAction && actions[currentAction]) {
-      const currentActionObj = actions[currentAction];
-      if (currentActionObj.isRunning()) {
-        currentActionObj.stop();
-      }
+    if (currentAction && actions[currentAction]?.isRunning()) {
+      actions[currentAction].stop();
     }
-
-    // Start the new action
     const newAction = actions[name];
     if (newAction) {
       newAction.reset();
@@ -115,25 +83,17 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     }
   };
 
-  // Reset animations when switching models
   useEffect(() => {
     if (isSpider) return;
-    
     stopAllActions();
     setIsMoving(false);
     movementThresholdRef.current = 0;
     setCurrentAction(null);
   }, [isSpider]);
 
-  // Initialize animations properly
   useEffect(() => {
     if (!actions || !names.length || isSpider || !mixer) return;
-    
-    console.log('Initializing humanoid animations:', names);
-    
-    // Start with idle animation
     if (idleName && actions[idleName]) {
-      console.log('Starting idle animation:', idleName);
       const idleAction = actions[idleName];
       idleAction.setLoop(THREE.LoopRepeat, Infinity);
       idleAction.clampWhenFinished = false;
@@ -143,77 +103,50 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     }
   }, [actions, names, isSpider, idleName, mixer]);
 
-  // Detect movement based on position changes
   useEffect(() => {
     if (!robotState) return;
-
     const currentPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
-
     const distance = currentPos.distanceTo(lastPositionRef.current);
-    
-    // Update movement threshold
     movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
-    
-    // Set moving state based on consistent movement
     const shouldBeMoving = movementThresholdRef.current > 2;
-    
     if (shouldBeMoving !== isMoving) {
       setIsMoving(shouldBeMoving);
-      console.log(`Movement state changed: ${shouldBeMoving ? 'moving' : 'idle'}`);
     }
-
     lastPositionRef.current.copy(currentPos);
   }, [robotState?.position, isMoving]);
 
-  // Play idle or walk based on isMoving
   useEffect(() => {
-    if (!actions || !names.length) return;
-    
-    // Skip animation switching for spider models to avoid interference
-    if (isSpider) return;
-    
+    if (!actions || !names.length || isSpider) return;
     const selectedName = isMoving ? walkName : idleName;
-    console.log(`Animation selection: ${isMoving ? 'walking' : 'idle'} -> ${selectedName}`);
-    
     if (selectedName) {
       switchAnimation(selectedName);
     }
   }, [actions, names, isMoving, isSpider, walkName, idleName]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Clean up actions first
       if (actions) {
-        Object.values(actions).forEach(action => {
-          if (action && action.isRunning()) {
-            action.stop();
-          }
+        Object.values(actions).forEach((action) => {
+          if (action?.isRunning()) action.stop();
         });
       }
-      
-      // Then clean up geometry and materials
       visualRoot.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          if (child.geometry) child.geometry.dispose();
+          child.geometry?.dispose();
           if (child.material instanceof THREE.Material) child.material.dispose();
         }
       });
     };
   }, [visualRoot, actions]);
 
-  // Update position, rotation, and idle breathing
   useFrame((_, delta) => {
     if (!robotState || !modelRef.current) return;
 
-    // Always update mixer first and more frequently for smoother animations
-    if (mixer) {
-      mixer.update(delta);
-    }
+    mixer?.update(delta);
 
     const targetPos = new THREE.Vector3(
       robotState.position.x,
@@ -229,7 +162,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     modelRef.current.position.copy(prevPositionRef.current);
 
-    // Apply breathing effect only when idle and not spider
     if (!isMoving && !isSpider) {
       breathingOffsetRef.current += delta;
       const offset = Math.sin(breathingOffsetRef.current * 2.1) * 0.002;
@@ -241,18 +173,26 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   });
 
   return (
-    <primitive
-      ref={modelRef}
-      object={visualRoot}
-      position={[0, 0, 0]}
-      rotation={[0, Math.PI, 0]}
-      castShadow
-      receiveShadow
-    />
+    <group
+      onClick={() => {
+        if (!isSpider) {
+          setIsMoving(true);
+          setTimeout(() => setIsMoving(false), 3000);
+        }
+      }}
+    >
+      <primitive
+        ref={modelRef}
+        object={visualRoot}
+        position={[0, 0, 0]}
+        rotation={[0, Math.PI, 0]}
+        castShadow
+        receiveShadow
+      />
+    </group>
   );
 };
 
-// Preload both models for performance
 useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 useGLTF.preload('/models/humanoid-robot/animated_humanoid_robot.glb');
 
