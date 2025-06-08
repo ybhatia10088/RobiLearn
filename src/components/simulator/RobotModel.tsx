@@ -19,8 +19,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const [isMoving, setIsMoving] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
-  const spiderGLTF = useGLTF('/models/spider-model/spider_bot.glb'); // ✅ updated
-  const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb'); // ✅ unchanged
+  const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
+  const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 
   const isSpider = robotConfig.type === 'spider';
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
@@ -29,18 +29,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const visualRoot = scene;
   const { actions, mixer } = useAnimations(animations, visualRoot);
 
-  // ✅ select correct animation for spider bot
   const getFallbackActionName = () => {
     const allKeys = Object.keys(actions);
     console.log('🎬 Available animation actions:', allKeys);
 
-    if (isSpider && allKeys.includes('Take 001')) return 'Take 001';
+    if (allKeys.includes('mixamo.com')) return 'mixamo.com';
     if (allKeys.length > 0) return allKeys[0];
     return null;
   };
 
   const animToPlay = getFallbackActionName();
 
+  // Updated effect to check both store flags AND position changes
   useEffect(() => {
     if (!robotState) return;
 
@@ -53,13 +53,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const distance = currentPos.distanceTo(lastPositionRef.current);
     movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
 
+    // Check BOTH store movement flags AND position-based movement detection
     const positionBasedMoving = movementThresholdRef.current > 2;
     const shouldBeMoving = storeIsMoving || robotState.isMoving || positionBasedMoving;
 
-    console.log('🚶 Movement check:', {
-      shouldBeMoving,
-      storeIsMoving,
-      robotStateIsMoving: robotState.isMoving,
+    console.log('🚶 Movement check:', { 
+      shouldBeMoving, 
+      storeIsMoving, 
+      robotStateIsMoving: robotState.isMoving, 
       positionBasedMoving,
       currentIsMoving: isMoving
     });
@@ -150,7 +151,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
-useGLTF.preload('/models/spider-model/spider_bot.glb');
+useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 
 export default RobotModel;
