@@ -29,7 +29,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const { actions, names, mixer } = useAnimations(animations, scene);
   const visualRoot = scene;
 
-  const walkName = 'WALK';
+  const runName = 'RUN'; // <-- updated
 
   const stopAllActions = () => {
     if (!actions || !mixer) return;
@@ -80,9 +80,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   useEffect(() => {
     if (!actions || isSpider) return;
     if (isMoving) {
-      switchAnimation(walkName);
+      switchAnimation(runName);
     }
-  }, [actions, isMoving, isSpider, walkName]);
+  }, [actions, isMoving, isSpider, runName]);
 
   useEffect(() => {
     return () => {
@@ -120,10 +120,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     <group
       onClick={() => {
         if (!isSpider) {
-          console.log("CLICK: play WALK");
+          console.log("CLICK: play RUN");
           setIsMoving(true);
           setTimeout(() => {
-            console.log("STOP WALK");
+            console.log("STOP RUN");
             setIsMoving(false);
             stopAllActions();
           }, 3000);
