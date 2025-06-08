@@ -14,8 +14,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const lastPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const movementThresholdRef = useRef(0);
-  const { robotState } = useRobotStore();
 
+  const { robotState } = useRobotStore();
   const [isMoving, setIsMoving] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
@@ -29,18 +29,17 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const visualRoot = scene;
   const { actions, mixer } = useAnimations(animations, visualRoot);
 
-  // Select second animation name if it exists
   const animNames = animations.map((a, i) => a.name || `Unnamed_${i}`);
-  const secondAnimName = animNames[1] || animNames[0]; // fallback to first if only one exists
+  const secondAnimName = animNames[1] || animNames[0];
 
   useEffect(() => {
     if (animations.length > 0) {
-      console.log("🎞️ Available animations:");
+      console.log('🎞️ Available animations:');
       animNames.forEach((name, i) => {
         console.log(`#${i + 1}:`, name);
       });
     } else {
-      console.warn("⚠️ No animations found in the model.");
+      console.warn('⚠️ No animations found in the model.');
     }
   }, [animations]);
 
@@ -54,10 +53,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   const switchAnimation = (name: string) => {
     if (!actions || !name || currentAction === name) return;
-
     const next = actions[name];
     if (!next) {
-      console.warn(`⚠️ Animation "${name}" not found in actions.`);
+      console.warn(`⚠️ Animation "${name}" not found`);
       return;
     }
 
@@ -91,17 +89,20 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   useEffect(() => {
     if (!actions || isSpider) return;
-    if (isMoving && secondAnimName) {
-      switchAnimation(secondAnimName);
+
+    if (isMoving) {
+      if (secondAnimName && currentAction !== secondAnimName) {
+        switchAnimation(secondAnimName);
+      }
     } else {
-      stopAllActions();
+      if (currentAction && actions[currentAction]?.isRunning()) {
+        stopAllActions();
+      }
     }
   }, [isMoving, actions, isSpider, secondAnimName]);
 
   useEffect(() => {
-    return () => {
-      stopAllActions();
-    };
+    return () => stopAllActions();
   }, [actions]);
 
   useFrame((_, delta) => {
@@ -127,27 +128,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   });
 
   return (
-    <group
-      onClick={() => {
-        if (!isSpider && secondAnimName) {
-          console.log(`▶️ CLICK: play animation "${secondAnimName}"`);
-          setIsMoving(true);
-          setTimeout(() => {
-            console.log('⏹️ STOP animation');
-            setIsMoving(false);
-          }, 3000);
-        }
-      }}
-    >
-      <primitive
-        ref={modelRef}
-        object={visualRoot}
-        position={[0, 0, 0]}
-        rotation={[0, Math.PI, 0]}
-        castShadow
-        receiveShadow
-      />
-    </group>
+    <primitive
+      ref={modelRef}
+      object={visualRoot}
+      position={[0, 0, 0]}
+      rotation={[0, Math.PI, 0]}
+      castShadow
+      receiveShadow
+    />
   );
 };
 
