@@ -14,6 +14,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const lastPositionRef = useRef(new THREE.Vector3(0, 0, 0));
   const movementThresholdRef = useRef(0);
+  
+  // Physics-based movement state
+  const velocityRef = useRef(new THREE.Vector3(0, 0, 0));
+  const accelerationRef = useRef(new THREE.Vector3(0, 0, 0));
+  const angularVelocityRef = useRef(0);
+  const lastUpdateTimeRef = useRef(Date.now());
+  const targetVelocityRef = useRef(new THREE.Vector3(0, 0, 0));
+  const targetAngularVelocityRef = useRef(0);
 
   const { robotState, isMoving: storeIsMoving } = useRobotStore();
   const [isMoving, setIsMoving] = useState(false);
@@ -201,49 +209,144 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       mixer.update(delta);
     }
 
+    const currentTime = Date.now();
+    const realDelta = Math.min((currentTime - lastUpdateTimeRef.current) / 1000, 0.016); // Cap at 60fps
+    lastUpdateTimeRef.current = currentTime;
+
+    // Physics constants based on robot type
+    const robotMass = isSpider ? 0.5 : 2.0; // kg
+    const maxSpeed = isSpider ? 3.0 : 1.5; // m/s
+    const acceleration = isSpider ? 8.0 : 4.0; // m/s²
+    const deceleration = isSpider ? 12.0 : 6.0; // m/s²
+    const angularAcceleration = isSpider ? 8.0 : 3.0; // rad/s²
+    const maxAngularSpeed = isSpider ? 4.0 : 2.0; // rad/s
+    const friction = isSpider ? 0.85 : 0.75; // friction coefficient
+    const groundContactForce = robotMass * 9.81; // Normal force
+
     const targetPos = new THREE.Vector3(
       robotState.position.x,
       robotState.position.y,
       robotState.position.z
     );
 
-    // More realistic movement interpolation
-    const currentPos = modelRef.current.position;
-    const distance = currentPos.distanceTo(targetPos);
-    
-    if (isMoving && distance > 0.01) {
-      // Smoother, more realistic movement with acceleration/deceleration
-      const moveSpeed = Math.min(distance * 8, 0.25); // Dynamic speed based on distance
-      prevPositionRef.current.lerp(targetPos, moveSpeed * delta * 60);
-    } else if (!isMoving) {
-      // Gradual stop with deceleration
-      const stopSpeed = 0.08;
-      prevPositionRef.current.lerp(targetPos, stopSpeed);
+    const currentPos = modelRef.current.position.clone();
+    const positionDiff = targetPos.clone().sub(currentPos);
+    const distance = positionDiff.length();
+
+    // Calculate target velocity based on movement state
+    if (isMoving && distance > 0.001) {
+      const direction = positionDiff.normalize();
+      const desiredSpeed = Math.min(distance * 5, maxSpeed);
+      targetVelocityRef.current = direction.multiplyScalar(desiredSpeed);
     } else {
-      // Snap to target if very close
-      prevPositionRef.current.copy(targetPos);
+      targetVelocityRef.current.set(0, 0, 0);
     }
 
-    modelRef.current.position.copy(prevPositionRef.current);
+    // Apply acceleration/deceleration with physics
+    const velocityDiff = targetVelocityRef.current.clone().sub(velocityRef.current);
+    const currentAcceleration = isMoving ? acceleration : deceleration;
     
-    // More realistic rotation with momentum
+    // Limit acceleration based on friction and contact force
+    const maxAccelerationForce = friction * groundContactForce / robotMass;
+    const accelerationMagnitude = Math.min(currentAcceleration, maxAccelerationForce);
+    
+    if (velocityDiff.length() > 0.001) {
+      const accelerationVector = velocityDiff.normalize().multiplyScalar(accelerationMagnitude * realDelta);
+      velocityRef.current.add(accelerationVector);
+    }
+
+    // Apply velocity damping when not moving
+    if (!isMoving) {
+      velocityRef.current.multiplyScalar(Math.pow(0.1, realDelta));
+    }
+
+    // Limit velocity to max speed
+    if (velocityRef.current.length() > maxSpeed) {
+      velocityRef.current.normalize().multiplyScalar(maxSpeed);
+    }
+
+    // Update position based on velocity
+    const deltaPosition = velocityRef.current.clone().multiplyScalar(realDelta);
+    prevPositionRef.current.add(deltaPosition);
+
+    // Handle rotation with angular physics
     const targetRot = robotState.rotation.y;
     const currentRot = modelRef.current.rotation.y;
-    const rotDiff = targetRot - currentRot;
     
-    // Handle rotation wrapping (shortest path)
-    const normalizedDiff = ((rotDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-    const rotSpeed = isMoving ? 0.15 : 0.08; // Faster rotation when moving
-    
-    modelRef.current.rotation.y += normalizedDiff * rotSpeed;
-    
-    // Add subtle bobbing animation for more realistic walking
-    if (isMoving && currentAction) {
-      const bobFrequency = isSpider ? 8 : 4; // Spiders move legs faster
-      const bobAmplitude = isSpider ? 0.005 : 0.01;
-      const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
+    // Calculate shortest angular distance
+    let angularDiff = targetRot - currentRot;
+    while (angularDiff > Math.PI) angularDiff -= Math.PI * 2;
+    while (angularDiff < -Math.PI) angularDiff += Math.PI * 2;
+
+    // Calculate target angular velocity
+    if (Math.abs(angularDiff) > 0.01) {
+      const desiredAngularSpeed = Math.min(Math.abs(angularDiff) * 3, maxAngularSpeed);
+      targetAngularVelocityRef.current = Math.sign(angularDiff) * desiredAngularSpeed;
+    } else {
+      targetAngularVelocityRef.current = 0;
+    }
+
+    // Apply angular acceleration
+    const angularVelDiff = targetAngularVelocityRef.current - angularVelocityRef.current;
+    if (Math.abs(angularVelDiff) > 0.001) {
+      const angularAccel = Math.sign(angularVelDiff) * angularAcceleration * realDelta;
+      angularVelocityRef.current += angularAccel;
+    }
+
+    // Apply angular damping
+    if (Math.abs(targetAngularVelocityRef.current) < 0.01) {
+      angularVelocityRef.current *= Math.pow(0.1, realDelta);
+    }
+
+    // Update rotation
+    modelRef.current.rotation.y += angularVelocityRef.current * realDelta;
+
+    // Apply position
+    modelRef.current.position.copy(prevPositionRef.current);
+
+    // Realistic walking animation with physics-based bobbing
+    if (isMoving && currentAction && velocityRef.current.length() > 0.1) {
+      const speed = velocityRef.current.length();
+      const normalizedSpeed = speed / maxSpeed;
       
-      modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
+      // Step frequency based on speed and robot type
+      const baseFrequency = isSpider ? 12 : 6;
+      const stepFrequency = baseFrequency * (0.5 + normalizedSpeed * 0.5);
+      
+      // Bob amplitude based on speed and robot characteristics
+      const baseBobAmplitude = isSpider ? 0.008 : 0.015;
+      const bobAmplitude = baseBobAmplitude * normalizedSpeed;
+      
+      // Add some randomness for more natural movement
+      const time = currentTime * 0.001;
+      const primaryBob = Math.sin(time * stepFrequency) * bobAmplitude;
+      const secondaryBob = Math.sin(time * stepFrequency * 0.7) * bobAmplitude * 0.3;
+      
+      modelRef.current.position.y = prevPositionRef.current.y + primaryBob + secondaryBob;
+      
+      // Add subtle side-to-side sway for more realism
+      if (!isSpider) { // Humanoids have more sway
+        const swayAmplitude = 0.005 * normalizedSpeed;
+        const swayFrequency = stepFrequency * 0.5;
+        const sway = Math.sin(time * swayFrequency) * swayAmplitude;
+        
+        const perpDirection = new THREE.Vector3(-velocityRef.current.z, 0, velocityRef.current.x).normalize();
+        const swayOffset = perpDirection.multiplyScalar(sway);
+        modelRef.current.position.add(swayOffset);
+      }
+      
+      // Adjust animation speed based on actual movement speed
+      if (actions && actions[currentAction]) {
+        const animationSpeedMultiplier = 0.5 + normalizedSpeed * 1.5;
+        actions[currentAction].setEffectiveTimeScale(animationSpeedMultiplier);
+      }
+    }
+
+    // Add subtle idle animations when not moving
+    if (!isMoving && velocityRef.current.length() < 0.01) {
+      const idleTime = currentTime * 0.0005;
+      const idleBob = Math.sin(idleTime) * 0.002; // Very subtle breathing/idle movement
+      modelRef.current.position.y = prevPositionRef.current.y + idleBob;
     }
   });
 
