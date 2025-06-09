@@ -21,7 +21,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   // Load both models
   const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
-  const spiderGLTF = useGLTF('/models/spider-model/spider_bot.glb');
+  const spiderGLTF = useGLTF('/models/spider-model/source/spider_bot.glb');
 
   const isSpider = robotConfig.type === 'spider';
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
