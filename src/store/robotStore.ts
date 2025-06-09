@@ -30,6 +30,8 @@ interface RobotStoreState {
   isMoving: boolean;
   jointPositions: JointState;
   performance: PerformanceMetrics;
+  moveIntervalId: NodeJS.Timeout | null;
+  rotateIntervalId: NodeJS.Timeout | null;
   selectRobot: (config: RobotConfig) => void;
   moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: keyof JointState }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
@@ -58,6 +60,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   selectedRobot: null,
   robotState: null,
   isMoving: false,
+  moveIntervalId: null,
+  rotateIntervalId: null,
   jointPositions: {
     base: 0,
     shoulder: 0,
@@ -79,7 +83,18 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
 
   selectRobot: (config) => {
+    const state = get();
+    
+    // Clear any existing intervals when selecting a new robot
+    if (state.moveIntervalId) {
+      clearInterval(state.moveIntervalId);
+    }
+    if (state.rotateIntervalId) {
+      clearInterval(state.rotateIntervalId);
+    }
+
     const initialPosition = { x: 0, y: 0, z: 0 };
+    
     set({
       selectedRobot: config,
       robotState: {
@@ -96,6 +111,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         currentJointCommand: null,
       },
       isMoving: false,
+      moveIntervalId: null,
+      rotateIntervalId: null,
     });
   },
 
@@ -104,11 +121,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     if (!state.robotState) return;
 
     // Clear any existing intervals
-    if ((window as any).robotMoveInterval) {
-      clearInterval((window as any).robotMoveInterval);
+    if (state.moveIntervalId) {
+      clearInterval(state.moveIntervalId);
     }
-    if ((window as any).robotRotateInterval) {
-      clearInterval((window as any).robotRotateInterval);
+    if (state.rotateIntervalId) {
+      clearInterval(state.rotateIntervalId);
     }
 
     console.log('🎮 Move robot triggered:', { direction, speed, robotType: state.selectedRobot?.type });
@@ -119,7 +136,9 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       robotState: {
         ...state.robotState,
         isMoving: true,
-      }
+      },
+      moveIntervalId: null,
+      rotateIntervalId: null,
     });
 
     if (state.selectedRobot?.type === 'arm' && joint) {
@@ -172,7 +191,10 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
         clearInterval(moveInterval);
-        (window as any).robotMoveInterval = null;
+        set((state) => ({
+          ...state,
+          moveIntervalId: null,
+        }));
         return;
       }
 
@@ -192,7 +214,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       });
     }, 16);
 
-    (window as any).robotMoveInterval = moveInterval;
+    set({ moveIntervalId: moveInterval });
   },
 
   rotateRobot: ({ direction, speed }) => {
@@ -200,11 +222,11 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     if (!state.robotState) return;
 
     // Clear any existing intervals
-    if ((window as any).robotRotateInterval) {
-      clearInterval((window as any).robotRotateInterval);
+    if (state.rotateIntervalId) {
+      clearInterval(state.rotateIntervalId);
     }
-    if ((window as any).robotMoveInterval) {
-      clearInterval((window as any).robotMoveInterval);
+    if (state.moveIntervalId) {
+      clearInterval(state.moveIntervalId);
     }
 
     console.log('🔄 Rotate robot triggered:', { direction, speed, robotType: state.selectedRobot?.type });
@@ -215,7 +237,9 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       robotState: {
         ...state.robotState,
         isMoving: true,
-      }
+      },
+      moveIntervalId: null,
+      rotateIntervalId: null,
     });
 
     const rotateStep = 0.05 * speed;
@@ -225,7 +249,10 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
         clearInterval(rotateInterval);
-        (window as any).robotRotateInterval = null;
+        set((state) => ({
+          ...state,
+          rotateIntervalId: null,
+        }));
         return;
       }
 
@@ -244,26 +271,27 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       });
     }, 16);
 
-    (window as any).robotRotateInterval = rotateInterval;
+    set({ rotateIntervalId: rotateInterval });
   },
 
   stopRobot: () => {
+    const state = get();
     console.log('⏹️ Stop robot triggered');
 
     // Clear all movement intervals
-    if ((window as any).robotMoveInterval) {
-      clearInterval((window as any).robotMoveInterval);
-      (window as any).robotMoveInterval = null;
+    if (state.moveIntervalId) {
+      clearInterval(state.moveIntervalId);
     }
 
-    if ((window as any).robotRotateInterval) {
-      clearInterval((window as any).robotRotateInterval);
-      (window as any).robotRotateInterval = null;
+    if (state.rotateIntervalId) {
+      clearInterval(state.rotateIntervalId);
     }
 
     // Set moving state to false immediately for animation
     set((state) => ({
       isMoving: false,
+      moveIntervalId: null,
+      rotateIntervalId: null,
       robotState: state.robotState ? {
         ...state.robotState,
         isMoving: false,
@@ -290,25 +318,28 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
 
   setEnvironment: (config) => set({ environment: config }),
+  
   updateRobotPosition: (position) => set((state) => ({
     robotState: state.robotState ? { ...state.robotState, position } : null,
   })),
+  
   updateRobotRotation: (rotation) => set((state) => ({
     robotState: state.robotState ? { ...state.robotState, rotation } : null,
   })),
+  
   updateJointPosition: (joint, value) => set((state) => ({
     jointPositions: { ...state.jointPositions, [joint]: value },
   })),
 
   resetRobotState: () => {
+    const state = get();
+    
     // Clear any intervals when resetting
-    if ((window as any).robotMoveInterval) {
-      clearInterval((window as any).robotMoveInterval);
-      (window as any).robotMoveInterval = null;
+    if (state.moveIntervalId) {
+      clearInterval(state.moveIntervalId);
     }
-    if ((window as any).robotRotateInterval) {
-      clearInterval((window as any).robotRotateInterval);
-      (window as any).robotRotateInterval = null;
+    if (state.rotateIntervalId) {
+      clearInterval(state.rotateIntervalId);
     }
 
     set((state) => ({
@@ -317,18 +348,20 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         ...INITIAL_ROBOT_STATE,
       } : null,
       isMoving: false,
+      moveIntervalId: null,
+      rotateIntervalId: null,
     }));
   },
 
   resetRobotStateByType: () => {
+    const state = get();
+    
     // Clear any intervals when resetting
-    if ((window as any).robotMoveInterval) {
-      clearInterval((window as any).robotMoveInterval);
-      (window as any).robotMoveInterval = null;
+    if (state.moveIntervalId) {
+      clearInterval(state.moveIntervalId);
     }
-    if ((window as any).robotRotateInterval) {
-      clearInterval((window as any).robotRotateInterval);
-      (window as any).robotRotateInterval = null;
+    if (state.rotateIntervalId) {
+      clearInterval(state.rotateIntervalId);
     }
 
     set((state) => ({
@@ -337,6 +370,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         ...INITIAL_ROBOT_STATE,
       } : null,
       isMoving: false,
+      moveIntervalId: null,
+      rotateIntervalId: null,
     }));
   },
 
