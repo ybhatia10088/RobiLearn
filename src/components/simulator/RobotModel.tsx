@@ -98,7 +98,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   };
 
   useEffect(() => {
-    if (!actions || !animToPlay) return;
+    if (!actions || isSpider || !animToPlay) return;
 
     if (isMoving) {
       if (currentAction !== animToPlay) {
