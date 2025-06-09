@@ -25,6 +25,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   // Load models conditionally with proper error handling
   let spiderGLTF: any = null;
   let humanoidGLTF: any = null;
+  let loadError = false;
 
   try {
     if (isSpider) {
@@ -32,13 +33,23 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     } else {
       humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
     }
-    setModelLoaded(true);
   } catch (error) {
     console.warn(`${isSpider ? 'Spider' : 'Humanoid'} model not found, using fallback`, error);
-    setModelError(true);
+    loadError = true;
   }
 
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
+
+  // Set model loaded state in useEffect to avoid re-render loops
+  useEffect(() => {
+    if (activeGLTF && !loadError) {
+      setModelLoaded(true);
+      setModelError(false);
+    } else if (loadError) {
+      setModelLoaded(false);
+      setModelError(true);
+    }
+  }, [activeGLTF, loadError]);
   
   // Initialize animations only if model is loaded
   const { actions, mixer } = useAnimations(
@@ -47,7 +58,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 
   // Fallback component if models don't load
-  if (!activeGLTF || modelError || !modelLoaded) {
+  if (!activeGLTF || modelError) {
     return (
       <group ref={modelRef}>
         <Box args={[1, 1, 1]} position={[0, 0.5, 0]}>
