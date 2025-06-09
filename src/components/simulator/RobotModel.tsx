@@ -19,28 +19,16 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const [isMoving, setIsMoving] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
-  const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
   const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+  const { scene, animations } = humanoidGLTF;
+  const { actions, mixer } = useAnimations(animations, scene);
 
-  const isSpider = robotConfig.type === 'spider';
-  const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
-  const { scene, animations } = activeGLTF;
-
-  const visualRoot = scene;
-  const { actions, mixer } = useAnimations(animations, visualRoot);
-
-  const getFallbackActionName = () => {
-    const allKeys = Object.keys(actions);
-    console.log('🎬 Available animation actions:', allKeys);
-
+  const animToPlay = (() => {
+    const allKeys = Object.keys(actions || {});
     if (allKeys.includes('mixamo.com')) return 'mixamo.com';
-    if (allKeys.length > 0) return allKeys[0];
-    return null;
-  };
+    return allKeys[0] || null;
+  })();
 
-  const animToPlay = getFallbackActionName();
-
-  // Updated effect to check both store flags AND position changes
   useEffect(() => {
     if (!robotState) return;
 
@@ -53,20 +41,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const distance = currentPos.distanceTo(lastPositionRef.current);
     movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
 
-    // Check BOTH store movement flags AND position-based movement detection
     const positionBasedMoving = movementThresholdRef.current > 2;
     const shouldBeMoving = storeIsMoving || robotState.isMoving || positionBasedMoving;
 
-    console.log('🚶 Movement check:', { 
-      shouldBeMoving, 
-      storeIsMoving, 
-      robotStateIsMoving: robotState.isMoving, 
-      positionBasedMoving,
-      currentIsMoving: isMoving
-    });
-
     if (shouldBeMoving !== isMoving) {
-      console.log('🚶 Movement state changed from', isMoving, 'to', shouldBeMoving);
       setIsMoving(shouldBeMoving);
     }
 
@@ -98,20 +76,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   };
 
   useEffect(() => {
-    if (!actions || isSpider || !animToPlay) return;
+    if (!actions || !animToPlay) return;
 
     if (isMoving) {
       if (currentAction !== animToPlay) {
-        console.log('▶️ Triggering animation:', animToPlay);
         switchAnimation(animToPlay);
       }
     } else {
       if (currentAction && actions[currentAction]?.isRunning()) {
-        console.log('⏹️ Stopping animation');
         stopAllActions();
       }
     }
-  }, [isMoving, actions, isSpider, animToPlay, currentAction]);
+  }, [isMoving, actions, animToPlay, currentAction]);
 
   useEffect(() => {
     return () => stopAllActions();
@@ -134,7 +110,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     }
 
     modelRef.current.position.copy(prevPositionRef.current);
-
     const targetRot = robotState.rotation.y;
     modelRef.current.rotation.y += (targetRot - modelRef.current.rotation.y) * 0.12;
   });
@@ -142,7 +117,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   return (
     <primitive
       ref={modelRef}
-      object={visualRoot}
+      object={scene}
       position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
       castShadow
@@ -151,7 +126,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
-useGLTF.preload('/models/spider-model/source/spider_robot.glb');
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 
 export default RobotModel;
