@@ -1,179 +1,157 @@
-import { create } from 'zustand';
+import React, { useRef, useEffect, useState } from 'react';
+import { useGLTF, useAnimations } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import { RobotConfig } from '@/types/robot.types';
+import { useRobotStore } from '@/store/robotStore';
 
-interface RobotConfig {
-  id: string;
-  name: string;
-  type: 'mobile' | 'arm' | 'drone' | 'spider' | 'tank' | 'humanoid';
-  description: string;
-  model: string;
-  basePosition: { x: number; y: number; z: number };
-  baseRotation: { x: number; y: number; z: number; w: number };
-  sensors: any[];
+interface RobotModelProps {
+  robotConfig: RobotConfig;
 }
 
-interface RobotState {
-  position: { x: number; y: number; z: number };
-  rotation: { x: number; y: number; z: number };
-  batteryLevel: number;
-  isGrabbing?: boolean;
-  isMoving: boolean;
-}
+const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
+  const modelRef = useRef<THREE.Group>(null);
+  const prevPositionRef = useRef(new THREE.Vector3(0, 0, 0));
+  const lastPositionRef = useRef(new THREE.Vector3(0, 0, 0));
+  const movementThresholdRef = useRef(0);
 
-interface RobotStore {
-  selectedRobot: RobotConfig | null;
-  robotState: RobotState | null;
-  isMoving: boolean;
-  
-  // Actions
-  selectRobot: (robot: RobotConfig | null) => void;
-  setRobotState: (state: RobotState) => void;
-  setIsMoving: (moving: boolean) => void;
-  moveRobot: (params: { direction: string; speed: number; joint?: string }) => void;
-  rotateRobot: (params: { direction: string; speed: number }) => void;
-  grabObject: () => void;
-  releaseObject: () => void;
-  stopRobot: () => void;
-  landDrone: () => void;
-  startHover: () => void;
-}
+  const { robotState, isMoving: storeIsMoving } = useRobotStore();
+  const [isMoving, setIsMoving] = useState(false);
+  const [currentAction, setCurrentAction] = useState<string | null>(null);
 
-export const useRobotStore = create<RobotStore>((set, get) => ({
-  selectedRobot: null,
-  robotState: null,
-  isMoving: false,
-  
-  selectRobot: (robot) => {
-    set({ selectedRobot: robot });
-    if (robot) {
-      // Initialize robot state when selecting a robot
-      set({
-        robotState: {
-          position: robot.basePosition,
-          rotation: { x: robot.baseRotation.x, y: robot.baseRotation.y, z: robot.baseRotation.z },
-          batteryLevel: 100,
-          isGrabbing: false,
-          isMoving: false
-        }
-      });
+  const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
+  const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+
+  const isSpider = robotConfig.type === 'spider';
+  const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
+  const { scene, animations } = activeGLTF;
+
+  const visualRoot = scene;
+  const { actions, mixer } = useAnimations(animations, visualRoot);
+
+  const getFallbackActionName = () => {
+    const allKeys = Object.keys(actions);
+    console.log('🎬 Available animation actions:', allKeys);
+
+    if (allKeys.includes('mixamo.com')) return 'mixamo.com';
+    if (allKeys.length > 0) return allKeys[0];
+    return null;
+  };
+
+  const animToPlay = getFallbackActionName();
+
+  // Updated effect to check both store flags AND position changes
+  useEffect(() => {
+    if (!robotState) return;
+
+    const currentPos = new THREE.Vector3(
+      robotState.position.x,
+      robotState.position.y,
+      robotState.position.z
+    );
+
+    const distance = currentPos.distanceTo(lastPositionRef.current);
+    movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
+
+    // Check BOTH store movement flags AND position-based movement detection
+    const positionBasedMoving = movementThresholdRef.current > 2;
+    const shouldBeMoving = storeIsMoving || robotState.isMoving || positionBasedMoving;
+
+    console.log('🚶 Movement check:', { 
+      shouldBeMoving, 
+      storeIsMoving, 
+      robotStateIsMoving: robotState.isMoving, 
+      positionBasedMoving,
+      currentIsMoving: isMoving
+    });
+
+    if (shouldBeMoving !== isMoving) {
+      console.log('🚶 Movement state changed from', isMoving, 'to', shouldBeMoving);
+      setIsMoving(shouldBeMoving);
     }
-  },
-  
-  setRobotState: (state) => set({ robotState: state }),
-  setIsMoving: (moving) => set({ isMoving: moving }),
-  
-  moveRobot: (params) => {
-    const { selectedRobot, robotState } = get();
-    if (!selectedRobot || !robotState) return;
-    
-    console.log(`Moving robot ${params.direction} with speed ${params.speed}`);
-    set({ isMoving: true });
-    
-    // Simulate movement by updating position
-    const newPosition = { ...robotState.position };
-    const moveDistance = params.speed * 0.1;
-    
-    switch (params.direction) {
-      case 'forward':
-        newPosition.z -= moveDistance;
-        break;
-      case 'backward':
-        newPosition.z += moveDistance;
-        break;
+
+    lastPositionRef.current.copy(currentPos);
+  }, [robotState?.position, robotState?.isMoving, storeIsMoving, isMoving]);
+
+  const stopAllActions = () => {
+    if (!actions || !mixer) return;
+    Object.values(actions).forEach((action) => {
+      if (action?.isRunning()) action.stop();
+    });
+    setCurrentAction(null);
+  };
+
+  const switchAnimation = (name: string) => {
+    if (!actions || !name || currentAction === name) return;
+    const next = actions[name];
+    if (!next) {
+      console.warn(`⚠️ Animation "${name}" not found in actions.`);
+      return;
     }
-    
-    set({
-      robotState: {
-        ...robotState,
-        position: newPosition,
-        batteryLevel: Math.max(0, robotState.batteryLevel - 0.1)
-      }
-    });
-  },
-  
-  rotateRobot: (params) => {
-    const { selectedRobot, robotState } = get();
-    if (!selectedRobot || !robotState) return;
-    
-    console.log(`Rotating robot ${params.direction} with speed ${params.speed}`);
-    set({ isMoving: true });
-    
-    // Simulate rotation
-    const newRotation = { ...robotState.rotation };
-    const rotateAmount = params.speed * 0.05;
-    
-    switch (params.direction) {
-      case 'left':
-        newRotation.y += rotateAmount;
-        break;
-      case 'right':
-        newRotation.y -= rotateAmount;
-        break;
+
+    if (currentAction && actions[currentAction]?.isRunning()) {
+      actions[currentAction].fadeOut(0.2);
     }
-    
-    set({
-      robotState: {
-        ...robotState,
-        rotation: newRotation,
-        batteryLevel: Math.max(0, robotState.batteryLevel - 0.05)
+
+    next.reset().fadeIn(0.2).play();
+    setCurrentAction(name);
+  };
+
+  useEffect(() => {
+    if (!actions || isSpider || !animToPlay) return;
+
+    if (isMoving) {
+      if (currentAction !== animToPlay) {
+        console.log('▶️ Triggering animation:', animToPlay);
+        switchAnimation(animToPlay);
       }
-    });
-  },
-  
-  grabObject: () => {
-    const { robotState } = get();
-    if (!robotState) return;
-    
-    console.log('Grabbing object');
-    set({
-      robotState: {
-        ...robotState,
-        isGrabbing: true
+    } else {
+      if (currentAction && actions[currentAction]?.isRunning()) {
+        console.log('⏹️ Stopping animation');
+        stopAllActions();
       }
-    });
-  },
-  
-  releaseObject: () => {
-    const { robotState } = get();
-    if (!robotState) return;
-    
-    console.log('Releasing object');
-    set({
-      robotState: {
-        ...robotState,
-        isGrabbing: false
-      }
-    });
-  },
-  
-  stopRobot: () => {
-    console.log('Stopping robot');
-    set({ isMoving: false });
-  },
-  
-  landDrone: () => {
-    const { robotState } = get();
-    if (!robotState) return;
-    
-    console.log('Landing drone');
-    set({
-      robotState: {
-        ...robotState,
-        position: { ...robotState.position, y: 0 }
-      },
-      isMoving: false
-    });
-  },
-  
-  startHover: () => {
-    const { robotState } = get();
-    if (!robotState) return;
-    
-    console.log('Starting hover');
-    set({
-      robotState: {
-        ...robotState,
-        position: { ...robotState.position, y: 2 }
-      }
-    });
-  }
-}));
+    }
+  }, [isMoving, actions, isSpider, animToPlay, currentAction]);
+
+  useEffect(() => {
+    return () => stopAllActions();
+  }, [actions]);
+
+  useFrame((_, delta) => {
+    if (!robotState || !modelRef.current) return;
+    mixer?.update(delta);
+
+    const targetPos = new THREE.Vector3(
+      robotState.position.x,
+      robotState.position.y,
+      robotState.position.z
+    );
+
+    if (isMoving) {
+      prevPositionRef.current.lerp(targetPos, 0.15);
+    } else {
+      prevPositionRef.current.copy(targetPos);
+    }
+
+    modelRef.current.position.copy(prevPositionRef.current);
+
+    const targetRot = robotState.rotation.y;
+    modelRef.current.rotation.y += (targetRot - modelRef.current.rotation.y) * 0.12;
+  });
+
+  return (
+    <primitive
+      ref={modelRef}
+      object={visualRoot}
+      position={[0, 0, 0]}
+      rotation={[0, Math.PI, 0]}
+      castShadow
+      receiveShadow
+    />
+  );
+};
+
+useGLTF.preload('/models/spider-model/source/spider_robot.glb');
+useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+
+export default RobotModel;
