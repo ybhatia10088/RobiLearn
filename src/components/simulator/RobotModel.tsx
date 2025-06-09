@@ -216,6 +216,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       object={clonedScene}
       position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
+      scale={isSpider ? [0.1, 0.1, 0.1] : [1, 1, 1]}
       castShadow
       receiveShadow
     />
