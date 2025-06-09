@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useGLTF, useAnimations } from '@react-three/drei';
+import { useGLTF, useAnimations, Box } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RobotConfig } from '@/types/robot.types';
@@ -17,19 +17,53 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const { robotState, isMoving: storeIsMoving } = useRobotStore();
   const [isMoving, setIsMoving] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
+  const [modelError, setModelError] = useState(false);
 
-  const spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
-  const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+  // Try to load models with error handling
+  let spiderGLTF: any = null;
+  let humanoidGLTF: any = null;
+
+  try {
+    // Only attempt to load if the files exist
+    spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb', true);
+    setModelLoaded(true);
+  } catch (error) {
+    console.warn('Spider model not found, using fallback');
+    setModelError(true);
+  }
+
+  try {
+    humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb', true);
+    setModelLoaded(true);
+  } catch (error) {
+    console.warn('Humanoid model not found, using fallback');
+    setModelError(true);
+  }
 
   const isSpider = robotConfig.type === 'spider';
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
-  const { scene, animations } = activeGLTF;
+  
+  // Fallback if models don't load
+  if (!activeGLTF || modelError) {
+    return (
+      <group ref={modelRef}>
+        <Box args={[1, 1, 1]} position={[0, 0.5, 0]}>
+          <meshStandardMaterial color={isSpider ? '#8B5CF6' : '#3B82F6'} />
+        </Box>
+        <Box args={[0.5, 0.5, 0.5]} position={[0, 1.25, 0]}>
+          <meshStandardMaterial color={isSpider ? '#A855F7' : '#60A5FA'} />
+        </Box>
+      </group>
+    );
+  }
 
+  const { scene, animations } = activeGLTF;
   const visualRoot = scene;
   const { actions, mixer } = useAnimations(animations, visualRoot);
 
   const getSpiderAnimationName = () => {
-    if (!isSpider) return null;
+    if (!isSpider || !actions) return null;
     
     const allKeys = Object.keys(actions);
     console.log('🕷️ Available spider animation actions:', allKeys);
@@ -62,7 +96,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   };
 
   const getHumanoidAnimationName = () => {
-    if (isSpider) return null;
+    if (isSpider || !actions) return null;
     
     const allKeys = Object.keys(actions);
     console.log('🤖 Available humanoid animation actions:', allKeys);
@@ -218,7 +252,17 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
-useGLTF.preload('/models/spider-model/source/spider_robot.glb');
-useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+// Only preload if the files exist - wrap in try/catch to prevent errors
+try {
+  useGLTF.preload('/models/spider-model/source/spider_robot.glb');
+} catch (error) {
+  console.warn('Could not preload spider model');
+}
+
+try {
+  useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+} catch (error) {
+  console.warn('Could not preload humanoid model');
+}
 
 export default RobotModel;
