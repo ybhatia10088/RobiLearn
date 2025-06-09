@@ -27,9 +27,13 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
   const { scene, animations } = activeGLTF;
   
-  // Clone the scene to avoid sharing between instances
-  const clonedScene = React.useMemo(() => scene.clone(), [scene]);
-  const { actions, mixer } = useAnimations(animations, clonedScene);
+  // Clone the scene only if needed to avoid sharing between instances
+  const processedScene = React.useMemo(() => {
+    // Clone for spider to avoid conflicts, use original for humanoid
+    return isSpider ? scene.clone() : scene;
+  }, [scene, isSpider]);
+  
+  const { actions, mixer } = useAnimations(animations, processedScene);
 
   // Debug: Log available animations
   useEffect(() => {
@@ -213,7 +217,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   return (
     <primitive
       ref={modelRef}
-      object={clonedScene}
+      object={processedScene}
       position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
       scale={isSpider ? [0.1, 0.1, 0.1] : [1, 1, 1]}
