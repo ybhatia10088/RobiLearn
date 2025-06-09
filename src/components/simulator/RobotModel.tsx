@@ -27,25 +27,33 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const [isMoving, setIsMoving] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
-  // Load both models
+  // Load all models
   const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
   const spiderGLTF = useGLTF('/models/spider-model/source/spider_bot.glb');
+  const tankGLTF = useGLTF('/models/tank-model/t-35_heavy_five-turret_tank.glb');
 
   const isSpider = robotConfig.type === 'spider';
-  const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
+  const isTank = robotConfig.type === 'tank';
+  
+  const activeGLTF = isSpider 
+    ? spiderGLTF 
+    : isTank 
+    ? tankGLTF 
+    : humanoidGLTF;
+    
   const { scene, animations } = activeGLTF;
   
   // Clone the scene only if needed to avoid sharing between instances
   const processedScene = React.useMemo(() => {
-    // Clone for spider to avoid conflicts, use original for humanoid
-    return isSpider ? scene.clone() : scene;
-  }, [scene, isSpider]);
+    // Clone for spider and tank to avoid conflicts, use original for humanoid
+    return (isSpider || isTank) ? scene.clone() : scene;
+  }, [scene, isSpider, isTank]);
   
   const { actions, mixer } = useAnimations(animations, processedScene);
 
   // Debug: Log available animations
   useEffect(() => {
-    console.log(`🤖 ${isSpider ? 'Spider' : 'Humanoid'} model loaded:`);
+    console.log(`🤖 ${isSpider ? 'Spider' : isTank ? 'Tank' : 'Humanoid'} model loaded:`);
     console.log('Available animations:', animations?.map(anim => anim.name) || 'None');
     console.log('Available actions:', Object.keys(actions || {}));
     
@@ -54,7 +62,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         console.log(`Animation ${index}: "${clip.name}" - Duration: ${clip.duration}s`);
       });
     }
-  }, [animations, actions, isSpider]);
+  }, [animations, actions, isSpider, isTank]);
 
   // Improved animation selection logic
   const animToPlay = React.useMemo(() => {
@@ -89,6 +97,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       }
     }
 
+    // Try tank animation names
+    if (isTank) {
+      if (allKeys.includes('Scene')) {
+        console.log(`✅ Found tank animation: Scene`);
+        return 'Scene';
+      }
+    }
+
     // Fallback: try mixamo.com or first available
     if (allKeys.includes('mixamo.com')) {
       console.log('✅ Using mixamo.com animation');
@@ -102,7 +118,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     console.log('❌ No suitable animation found');
     return null;
-  }, [actions, isSpider]);
+  }, [actions, isSpider, isTank]);
 
   useEffect(() => {
     if (!robotState) return;
@@ -165,7 +181,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     next.clampWhenFinished = false;
     
     // Adjust animation speed based on robot type for more realism
-    const speedMultiplier = isSpider ? 1.2 : 0.8; // Spiders move faster, humanoids more deliberate
+    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : 0.8; // Tanks move slower
     next.setEffectiveTimeScale(speedMultiplier);
     
     setCurrentAction(name);
@@ -247,8 +263,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     
     // Add subtle bobbing animation for more realistic walking
     if (isMoving && currentAction) {
-      const bobFrequency = isSpider ? 8 : 4; // Spiders move legs faster
-      const bobAmplitude = isSpider ? 0.005 : 0.01;
+      const bobFrequency = isSpider ? 8 : isTank ? 2 : 4; // Tanks have slower bobbing
+      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : 0.01; // Tanks have less bobbing
       const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
       
       modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
@@ -261,15 +277,22 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       object={processedScene}
       position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
-      scale={isSpider ? [0.1, 0.1, 0.1] : [1, 1, 1]}
+      scale={
+        isSpider 
+          ? [0.1, 0.1, 0.1] 
+          : isTank 
+          ? [1.2, 1.2, 1.2] 
+          : [1, 1, 1]
+      }
       castShadow
       receiveShadow
     />
   );
 };
 
-// Preload both models
+// Preload all models
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 useGLTF.preload('/models/spider-model/source/spider_bot.glb');
+useGLTF.preload('/models/tank-model/t-35_heavy_five-turret_tank.glb');
 
 export default RobotModel;
