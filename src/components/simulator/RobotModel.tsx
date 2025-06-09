@@ -20,32 +20,34 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const [modelLoaded, setModelLoaded] = useState(false);
   const [modelError, setModelError] = useState(false);
 
-  // Try to load models with error handling
+  const isSpider = robotConfig.type === 'spider';
+  
+  // Load models conditionally with proper error handling
   let spiderGLTF: any = null;
   let humanoidGLTF: any = null;
 
   try {
-    // Only attempt to load if the files exist
-    spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb', true);
+    if (isSpider) {
+      spiderGLTF = useGLTF('/models/spider-model/source/spider_robot.glb');
+    } else {
+      humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+    }
     setModelLoaded(true);
   } catch (error) {
-    console.warn('Spider model not found, using fallback');
+    console.warn(`${isSpider ? 'Spider' : 'Humanoid'} model not found, using fallback`, error);
     setModelError(true);
   }
 
-  try {
-    humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb', true);
-    setModelLoaded(true);
-  } catch (error) {
-    console.warn('Humanoid model not found, using fallback');
-    setModelError(true);
-  }
-
-  const isSpider = robotConfig.type === 'spider';
   const activeGLTF = isSpider ? spiderGLTF : humanoidGLTF;
   
-  // Fallback if models don't load
-  if (!activeGLTF || modelError) {
+  // Initialize animations only if model is loaded
+  const { actions, mixer } = useAnimations(
+    activeGLTF?.animations || [], 
+    activeGLTF?.scene || null
+  );
+
+  // Fallback component if models don't load
+  if (!activeGLTF || modelError || !modelLoaded) {
     return (
       <group ref={modelRef}>
         <Box args={[1, 1, 1]} position={[0, 0.5, 0]}>
@@ -58,9 +60,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     );
   }
 
-  const { scene, animations } = activeGLTF;
-  const visualRoot = scene;
-  const { actions, mixer } = useAnimations(animations, visualRoot);
+  const { scene } = activeGLTF;
 
   const getSpiderAnimationName = () => {
     if (!isSpider || !actions) return null;
@@ -108,14 +108,14 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   const animToPlay = isSpider ? getSpiderAnimationName() : getHumanoidAnimationName();
 
-  // Simplified movement detection - only check store flags for spider
+  // Movement detection
   useEffect(() => {
     if (!robotState) return;
 
     let shouldBeMoving = false;
 
     if (isSpider) {
-      // For spider, only use store movement flags - no position-based detection
+      // For spider, only use store movement flags
       shouldBeMoving = storeIsMoving || robotState.isMoving;
       console.log('🕷️ Spider movement check:', { 
         shouldBeMoving, 
@@ -123,7 +123,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         robotStateIsMoving: robotState.isMoving 
       });
     } else {
-      // Keep original logic for humanoid
+      // For humanoid, check position changes too
       const currentPos = new THREE.Vector3(
         robotState.position.x,
         robotState.position.y,
@@ -153,7 +153,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const stopAllActions = () => {
     if (!actions || !mixer) return;
     Object.values(actions).forEach((action) => {
-      if (action?.isRunning()) {
+      if (action && action.isRunning()) {
         action.stop();
       }
     });
@@ -173,7 +173,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     console.log(`${isSpider ? '🕷️' : '🤖'} Switching to animation:`, name);
 
     // Stop current animation with fade out
-    if (currentAction && actions[currentAction]?.isRunning()) {
+    if (currentAction && actions[currentAction] && actions[currentAction].isRunning()) {
       actions[currentAction].fadeOut(0.2);
     }
 
@@ -197,7 +197,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         switchAnimation(animToPlay);
       }
     } else {
-      if (currentAction && actions[currentAction]?.isRunning()) {
+      if (currentAction && actions[currentAction] && actions[currentAction].isRunning()) {
         console.log(`${isSpider ? '🕷️' : '🤖'} Stopping animation:`, currentAction);
         stopAllActions();
       }
@@ -210,7 +210,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       console.log(`${isSpider ? '🕷️' : '🤖'} Component unmounting - stopping all animations`);
       stopAllActions();
     };
-  }, []);
+  }, [isSpider]);
 
   useFrame((_, delta) => {
     if (!robotState || !modelRef.current) return;
@@ -243,7 +243,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   return (
     <primitive
       ref={modelRef}
-      object={visualRoot}
+      object={scene.clone()} // Clone the scene to avoid conflicts
       position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
       castShadow
@@ -252,17 +252,22 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   );
 };
 
-// Only preload if the files exist - wrap in try/catch to prevent errors
-try {
-  useGLTF.preload('/models/spider-model/source/spider_robot.glb');
-} catch (error) {
-  console.warn('Could not preload spider model');
-}
+// Preload models safely
+const preloadModels = () => {
+  try {
+    useGLTF.preload('/models/spider-model/source/spider_robot.glb');
+  } catch (error) {
+    console.warn('Could not preload spider model');
+  }
 
-try {
-  useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
-} catch (error) {
-  console.warn('Could not preload humanoid model');
-}
+  try {
+    useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
+  } catch (error) {
+    console.warn('Could not preload humanoid model');
+  }
+};
+
+// Call preload function
+preloadModels();
 
 export default RobotModel;
