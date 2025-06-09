@@ -224,6 +224,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
 // Preload both models
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
-useGLTF.preload('/models/spider-model/spider_bot.glb');
+useGLTF.preload('/models/spider-model/source/spider_bot.glb');
 
 export default RobotModel;
