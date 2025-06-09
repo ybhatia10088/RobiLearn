@@ -298,7 +298,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         isSpider 
           ? [0.1, 0.1, 0.1] 
           : isTank 
-          ? [1.2, 1.2, 1.2] 
+          ? [0.3, 0.3, 0.3] 
           : [1, 1, 1]
       }
       castShadow
