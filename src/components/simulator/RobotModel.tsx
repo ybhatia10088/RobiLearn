@@ -146,18 +146,22 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     // Stop current animation with fade out
     if (currentAction && actions[currentAction]?.isRunning()) {
       console.log(`Fading out: ${currentAction}`);
-      actions[currentAction].fadeOut(0.2);
+      actions[currentAction].fadeOut(0.3);
     }
 
     // Start new animation with fade in
-    next.reset().fadeIn(0.2).play();
+    next.reset().fadeIn(0.3).play();
     
-    // Set animation properties for better looping
+    // Set animation properties for better looping and realistic speed
     next.setLoop(THREE.LoopRepeat, Infinity);
     next.clampWhenFinished = false;
     
+    // Adjust animation speed based on robot type for more realism
+    const speedMultiplier = isSpider ? 1.2 : 0.8; // Spiders move faster, humanoids more deliberate
+    next.setEffectiveTimeScale(speedMultiplier);
+    
     setCurrentAction(name);
-    console.log(`✅ Animation "${name}" started`);
+    console.log(`✅ Animation "${name}" started with speed: ${speedMultiplier}`);
   };
 
   useEffect(() => {
@@ -203,15 +207,44 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       robotState.position.z
     );
 
-    if (isMoving) {
-      prevPositionRef.current.lerp(targetPos, 0.15);
+    // More realistic movement interpolation
+    const currentPos = modelRef.current.position;
+    const distance = currentPos.distanceTo(targetPos);
+    
+    if (isMoving && distance > 0.01) {
+      // Smoother, more realistic movement with acceleration/deceleration
+      const moveSpeed = Math.min(distance * 8, 0.25); // Dynamic speed based on distance
+      prevPositionRef.current.lerp(targetPos, moveSpeed * delta * 60);
+    } else if (!isMoving) {
+      // Gradual stop with deceleration
+      const stopSpeed = 0.08;
+      prevPositionRef.current.lerp(targetPos, stopSpeed);
     } else {
+      // Snap to target if very close
       prevPositionRef.current.copy(targetPos);
     }
 
     modelRef.current.position.copy(prevPositionRef.current);
+    
+    // More realistic rotation with momentum
     const targetRot = robotState.rotation.y;
-    modelRef.current.rotation.y += (targetRot - modelRef.current.rotation.y) * 0.12;
+    const currentRot = modelRef.current.rotation.y;
+    const rotDiff = targetRot - currentRot;
+    
+    // Handle rotation wrapping (shortest path)
+    const normalizedDiff = ((rotDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+    const rotSpeed = isMoving ? 0.15 : 0.08; // Faster rotation when moving
+    
+    modelRef.current.rotation.y += normalizedDiff * rotSpeed;
+    
+    // Add subtle bobbing animation for more realistic walking
+    if (isMoving && currentAction) {
+      const bobFrequency = isSpider ? 8 : 4; // Spiders move legs faster
+      const bobAmplitude = isSpider ? 0.005 : 0.01;
+      const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
+      
+      modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
+    }
   });
 
   return (
