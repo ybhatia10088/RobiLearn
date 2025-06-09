@@ -99,9 +99,26 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     // Try tank animation names
     if (isTank) {
-      if (allKeys.includes('Scene')) {
-        console.log(`✅ Found tank animation: Scene`);
-        return 'Scene';
+      const tankAnimNames = [
+        'Scene',
+        'Take 001',
+        'Take001',
+        'Armature|Take 001',
+        'Armature|Take001',
+        'ArmatureAction',
+        'Action',
+        'drive',
+        'move',
+        'animation',
+        'default',
+        'Main'
+      ];
+      
+      for (const name of tankAnimNames) {
+        if (allKeys.includes(name)) {
+          console.log(`✅ Found tank animation: ${name}`);
+          return name;
+        }
       }
     }
 
