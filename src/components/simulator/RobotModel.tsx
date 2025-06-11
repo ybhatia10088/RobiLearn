@@ -73,6 +73,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     }
     if (isExplorer) {
       console.log('🌐 Loading Explorer model');
+      console.log('🌐 Explorer GLTF object:', explorerGLTF);
+      console.log('🌐 Explorer scene:', explorerGLTF?.scene);
+      console.log('🌐 Explorer animations:', explorerGLTF?.animations);
       return explorerGLTF;
     }
     console.log('🤖 Loading Humanoid model (default)');
@@ -83,9 +86,20 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   
   // Clone the scene only if needed to avoid sharing between instances
   const processedScene = React.useMemo(() => {
+    if (!scene) {
+      console.error(`❌ No scene found for robot type: ${robotType}`);
+      return null;
+    }
+    
     const shouldClone = isSpider || isTank || isExplorer;
     console.log(`📦 ${shouldClone ? 'Cloning' : 'Using original'} scene for ${robotType}`);
-    return shouldClone ? scene.clone() : scene;
+    const resultScene = shouldClone ? scene.clone() : scene;
+    
+    // Log scene structure for debugging
+    console.log(`📦 Scene for ${robotType}:`, resultScene);
+    console.log(`📦 Scene children count:`, resultScene?.children?.length);
+    
+    return resultScene;
   }, [scene, isSpider, isTank, isExplorer, robotType]);
   
   const { actions, mixer } = useAnimations(animations, processedScene);
@@ -101,10 +115,22 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       animations.forEach((clip, index) => {
         console.log(`Animation ${index}: "${clip.name}" - Duration: ${clip.duration}s`);
       });
+    } else {
+      console.warn(`⚠️ No animations found for ${modelTypeName}`);
     }
-  }, [animations, actions, isSpider, isTank, isExplorer, robotConfig?.type]);
 
-  // Improved animation selection logic
+    // Special debugging for Explorer
+    if (isExplorer) {
+      console.log('🌐 EXPLORER DEBUG:');
+      console.log('🌐 Explorer GLTF:', explorerGLTF);
+      console.log('🌐 Explorer scene:', explorerGLTF?.scene);
+      console.log('🌐 Explorer animations:', explorerGLTF?.animations);
+      console.log('🌐 Explorer actions:', actions);
+      console.log('🌐 Explorer mixer:', mixer);
+    }
+  }, [animations, actions, isSpider, isTank, isExplorer, robotConfig?.type, explorerGLTF, mixer]);
+
+  // Improved animation selection logic with correct Explorer animation name
   const animToPlay = React.useMemo(() => {
     if (!actions || Object.keys(actions).length === 0) {
       console.log('⚠️ No actions available');
@@ -114,7 +140,43 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const allKeys = Object.keys(actions);
     console.log('All available action keys:', allKeys);
 
-    // Try common spider animation names first
+    // Explorer animation names - INCLUDING the exact name from Sketchfab
+    if (isExplorer) {
+      const explorerAnimNames = [
+        'sphere body|sphere bodyAction', // EXACT name from Sketchfab
+        'sphere bodysphere bodyAction',
+        'sphere body|sphere body|Action',
+        'sphere bodyAction',
+        'sphere body|Action',
+        'Action',
+        'Idle',
+        'Rotate',
+        'rotate',
+        'Roll',
+        'roll',
+        'move',
+        'Move',
+        'Take 001',
+        'Take001',
+        'Scene'
+      ];
+      
+      for (const name of explorerAnimNames) {
+        if (allKeys.includes(name)) {
+          console.log(`✅ Found explorer animation: "${name}"`);
+          return name;
+        }
+      }
+      
+      // If no specific match, log all available and use first one
+      console.log('🌐 No matching explorer animation found, available keys:', allKeys);
+      if (allKeys.length > 0) {
+        console.log(`🌐 Using first available animation for explorer: "${allKeys[0]}"`);
+        return allKeys[0];
+      }
+    }
+
+    // Try common spider animation names
     if (isSpider) {
       const spiderAnimNames = [
         'walk',
@@ -157,32 +219,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       for (const name of tankAnimNames) {
         if (allKeys.includes(name)) {
           console.log(`✅ Found tank animation: ${name}`);
-          return name;
-        }
-      }
-    }
-
-    // Try explorer animation names
-    if (isExplorer) {
-      const explorerAnimNames = [
-        'sphere bodysphere bodyAction',
-        'sphere bodyAction',
-        'Action',
-        'Idle',
-        'Rotate',
-        'rotate',
-        'Roll',
-        'roll',
-        'move',
-        'Move',
-        'Take 001',
-        'Take001',
-        'Scene'
-      ];
-      
-      for (const name of explorerAnimNames) {
-        if (allKeys.includes(name)) {
-          console.log(`✅ Found explorer animation: ${name}`);
           return name;
         }
       }
@@ -264,7 +300,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     next.clampWhenFinished = false;
     
     // Adjust animation speed based on robot type for more realism
-    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : isExplorer ? 1 : 0.8;
+    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : isExplorer ? 1.5 : 0.8; // Faster speed for explorer
     next.setEffectiveTimeScale(speedMultiplier);
     
     setCurrentAction(name);
@@ -274,6 +310,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   useEffect(() => {
     if (!actions || !animToPlay) {
       console.log('⚠️ No actions or animation to play available');
+      if (isExplorer) {
+        console.log('🌐 EXPLORER: Missing actions or animToPlay');
+        console.log('🌐 EXPLORER: actions:', actions);
+        console.log('🌐 EXPLORER: animToPlay:', animToPlay);
+      }
       return;
     }
 
@@ -344,21 +385,27 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     
     modelRef.current.rotation.y += normalizedDiff * rotSpeed;
     
-    // Add subtle bobbing animation for more realistic walking
+    // Add subtle bobbing animation for more realistic movement
     if (isMoving && currentAction) {
-      const bobFrequency = isSpider ? 8 : isTank ? 2 : isExplorer ? 3 : 4; // Explorer has moderate bobbing
-      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : isExplorer ? 0.003 : 0.01; // Explorer has subtle bobbing
+      const bobFrequency = isSpider ? 8 : isTank ? 2 : isExplorer ? 6 : 4; // Higher frequency for explorer (sphere rolling)
+      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : isExplorer ? 0.002 : 0.01; // Subtle bobbing for explorer
       const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
       
       modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
     }
   });
 
+  // Early return if no scene (prevents crashes)
+  if (!processedScene) {
+    console.error(`❌ Cannot render ${robotType} - no scene available`);
+    return null;
+  }
+
   // Debug render - log the final scale and model type being used
   console.log(`🎨 Rendering ${robotType} with scale:`, 
     isSpider ? [0.1, 0.1, 0.1] : 
     isTank ? [0.3, 0.3, 0.3] : 
-    isExplorer ? [0.5, 0.5, 0.5] : [1, 1, 1]
+    isExplorer ? [0.8, 0.8, 0.8] : [1, 1, 1] // Slightly larger scale for explorer
   );
 
   return (
@@ -373,7 +420,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           : isTank 
           ? [0.3, 0.3, 0.3] 
           : isExplorer
-          ? [0.5, 0.5, 0.5]
+          ? [0.8, 0.8, 0.8] // Better scale for explorer
           : [1, 1, 1]
       }
       castShadow
