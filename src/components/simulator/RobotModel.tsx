@@ -33,31 +33,52 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const tankGLTF = useGLTF('/models/tank-model/t-35_heavy_five-turret_tank.glb');
   const explorerGLTF = useGLTF('/models/explorer-bot/360_sphere_robot_no_glass.glb');
 
-  const isSpider = robotConfig.type === 'spider';
-  const isTank = robotConfig.type === 'tank';
-  const isExplorer = robotConfig.type === 'explorer';
+  // Debug the robot type - this will help identify the issue
+  console.log('🔍 Robot Config Type:', robotConfig?.type);
+  console.log('🔍 Robot Config:', robotConfig);
+
+  // Make the type comparison more robust
+  const robotType = robotConfig?.type?.toLowerCase();
+  const isSpider = robotType === 'spider';
+  const isTank = robotType === 'tank';
+  const isExplorer = robotType === 'explorer';
+  const isHumanoid = robotType === 'humanoid' || (!isSpider && !isTank && !isExplorer);
   
-  const activeGLTF = isSpider 
-    ? spiderGLTF 
-    : isTank 
-    ? tankGLTF 
-    : isExplorer
-    ? explorerGLTF
-    : humanoidGLTF;
+  console.log('🤖 Robot Type Checks:', { isSpider, isTank, isExplorer, isHumanoid });
+  
+  // Model selection with explicit fallback
+  const activeGLTF = (() => {
+    if (isSpider) {
+      console.log('🕷️ Loading Spider model');
+      return spiderGLTF;
+    }
+    if (isTank) {
+      console.log('🚗 Loading Tank model');
+      return tankGLTF;
+    }
+    if (isExplorer) {
+      console.log('🌐 Loading Explorer model');
+      return explorerGLTF;
+    }
+    console.log('🤖 Loading Humanoid model (default)');
+    return humanoidGLTF;
+  })();
     
   const { scene, animations } = activeGLTF;
   
   // Clone the scene only if needed to avoid sharing between instances
   const processedScene = React.useMemo(() => {
-    // Clone for spider, tank, and explorer to avoid conflicts, use original for humanoid
-    return (isSpider || isTank || isExplorer) ? scene.clone() : scene;
-  }, [scene, isSpider, isTank, isExplorer]);
+    const shouldClone = isSpider || isTank || isExplorer;
+    console.log(`📦 ${shouldClone ? 'Cloning' : 'Using original'} scene for ${robotType}`);
+    return shouldClone ? scene.clone() : scene;
+  }, [scene, isSpider, isTank, isExplorer, robotType]);
   
   const { actions, mixer } = useAnimations(animations, processedScene);
 
   // Debug: Log available animations
   useEffect(() => {
-    console.log(`🤖 ${isSpider ? 'Spider' : isTank ? 'Tank' : isExplorer ? 'Explorer' : 'Humanoid'} model loaded:`);
+    const modelTypeName = isSpider ? 'Spider' : isTank ? 'Tank' : isExplorer ? 'Explorer' : 'Humanoid';
+    console.log(`🤖 ${modelTypeName} model loaded for robot type: ${robotConfig?.type}`);
     console.log('Available animations:', animations?.map(anim => anim.name) || 'None');
     console.log('Available actions:', Object.keys(actions || {}));
     
@@ -66,7 +87,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         console.log(`Animation ${index}: "${clip.name}" - Duration: ${clip.duration}s`);
       });
     }
-  }, [animations, actions, isSpider, isTank, isExplorer]);
+  }, [animations, actions, isSpider, isTank, isExplorer, robotConfig?.type]);
 
   // Improved animation selection logic
   const animToPlay = React.useMemo(() => {
@@ -138,7 +159,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         'Roll',
         'roll',
         'move',
-        'Move'
+        'Move',
+        'Take 001',
+        'Take001',
+        'Scene'
       ];
       
       for (const name of explorerAnimNames) {
@@ -314,6 +338,13 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
     }
   });
+
+  // Debug render - log the final scale and model type being used
+  console.log(`🎨 Rendering ${robotType} with scale:`, 
+    isSpider ? [0.1, 0.1, 0.1] : 
+    isTank ? [0.3, 0.3, 0.3] : 
+    isExplorer ? [0.5, 0.5, 0.5] : [1, 1, 1]
+  );
 
   return (
     <primitive
