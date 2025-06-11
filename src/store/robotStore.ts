@@ -126,6 +126,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       clearInterval((window as any).robotMoveInterval);
     }
 
+    // EXPLORER FIX: Set isMoving immediately for better responsiveness
+    console.log(`🚀 STORE: Starting movement for ${state.selectedRobot?.type} - Direction: ${direction}, Speed: ${speed}`);
     set({ isMoving: true });
 
     if (state.selectedRobot?.type === 'arm' && joint) {
@@ -151,17 +153,40 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       return;
     }
 
-    // Handle movement for other robot types
-    const moveStep = 0.1 * speed; // Increased step size for more noticeable movement
+    // EXPLORER FIX: Enhanced movement parameters based on robot type
+    const isExplorer = state.selectedRobot?.type?.toLowerCase() === 'explorer';
+    const baseMoveStep = isExplorer ? 0.15 : 0.1; // Faster movement for explorer
+    const moveStep = baseMoveStep * speed;
+    
+    // EXPLORER FIX: Immediate position update for better responsiveness
     const angle = state.robotState.rotation.y;
     const deltaX = Math.sin(angle) * moveStep;
     const deltaZ = Math.cos(angle) * moveStep;
     const multiplier = direction === 'forward' ? 1 : -1;
 
+    // EXPLORER FIX: Update position immediately for instant feedback
+    const immediatePosition = {
+      x: state.robotState.position.x + deltaX * multiplier * 0.1, // Small immediate step
+      y: state.robotState.position.y,
+      z: state.robotState.position.z + deltaZ * multiplier * 0.1,
+    };
+
+    set({
+      robotState: {
+        ...state.robotState,
+        position: immediatePosition,
+        isMoving: true,
+      },
+    });
+
+    // EXPLORER FIX: Shorter interval for smoother movement (especially for sphere)
+    const intervalDuration = isExplorer ? 12 : 16; // Faster updates for explorer
+    
     const moveInterval = setInterval(() => {
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
         clearInterval(moveInterval);
+        console.log(`🛑 STORE: Movement stopped for ${currentState.selectedRobot?.type}`);
         return;
       }
 
@@ -171,6 +196,15 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         z: currentState.robotState.position.z + deltaZ * multiplier,
       };
 
+      // EXPLORER FIX: Extra logging for explorer movement
+      if (isExplorer) {
+        console.log(`🌐 STORE: Explorer position update:`, {
+          from: currentState.robotState.position,
+          to: newPosition,
+          delta: { x: deltaX * multiplier, z: deltaZ * multiplier }
+        });
+      }
+
       set({
         robotState: {
           ...currentState.robotState,
@@ -178,7 +212,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           isMoving: true,
         },
       });
-    }, 16);
+    }, intervalDuration);
 
     (window as any).robotMoveInterval = moveInterval;
   },
@@ -191,14 +225,37 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       clearInterval((window as any).robotRotateInterval);
     }
 
+    console.log(`🔄 STORE: Starting rotation for ${state.selectedRobot?.type} - Direction: ${direction}, Speed: ${speed}`);
     set({ isMoving: true });
-    const rotateStep = 0.05 * speed; // Increased step size for more noticeable rotation
+
+    // EXPLORER FIX: Enhanced rotation parameters
+    const isExplorer = state.selectedRobot?.type?.toLowerCase() === 'explorer';
+    const baseRotateStep = isExplorer ? 0.08 : 0.05; // Faster rotation for explorer
+    const rotateStep = baseRotateStep * speed;
     const delta = direction === 'left' ? rotateStep : -rotateStep;
+
+    // EXPLORER FIX: Immediate rotation update
+    const immediateRotation = {
+      ...state.robotState.rotation,
+      y: (state.robotState.rotation.y + delta * 0.2) % (Math.PI * 2), // Small immediate rotation
+    };
+
+    set({
+      robotState: {
+        ...state.robotState,
+        rotation: immediateRotation,
+        isMoving: true,
+      },
+    });
+
+    // EXPLORER FIX: Shorter interval for smoother rotation
+    const intervalDuration = isExplorer ? 12 : 16;
 
     const rotateInterval = setInterval(() => {
       const currentState = get();
       if (!currentState.robotState || !currentState.isMoving) {
         clearInterval(rotateInterval);
+        console.log(`🛑 STORE: Rotation stopped for ${currentState.selectedRobot?.type}`);
         return;
       }
 
@@ -207,6 +264,15 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         y: (currentState.robotState.rotation.y + delta) % (Math.PI * 2),
       };
 
+      // EXPLORER FIX: Extra logging for explorer rotation
+      if (isExplorer) {
+        console.log(`🌐 STORE: Explorer rotation update:`, {
+          from: currentState.robotState.rotation.y,
+          to: newRotation.y,
+          delta: delta
+        });
+      }
+
       set({
         robotState: {
           ...currentState.robotState,
@@ -214,12 +280,14 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           isMoving: true,
         },
       });
-    }, 16);
+    }, intervalDuration);
 
     (window as any).robotRotateInterval = rotateInterval;
   },
 
   stopRobot: () => {
+    console.log('🛑 STORE: stopRobot called');
+    
     if ((window as any).robotMoveInterval) {
       clearInterval((window as any).robotMoveInterval);
       (window as any).robotMoveInterval = null;
@@ -237,6 +305,10 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         isMoving: false,
       } : null,
     }));
+
+    // EXPLORER FIX: Extra logging for debugging
+    const state = get();
+    console.log(`🛑 STORE: Robot stopped - Type: ${state.selectedRobot?.type}, isMoving: ${state.isMoving}`);
   },
 
   grabObject: () => {
