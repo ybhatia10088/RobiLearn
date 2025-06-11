@@ -31,7 +31,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
   const spiderGLTF = useGLTF('/models/spider-model/source/spider_bot.glb');
   const tankGLTF = useGLTF('/models/tank-model/t-35_heavy_five-turret_tank.glb');
-  const explorerGLTF = useGLTF('/models/explorer-model/360_sphere_robot_no_glass.glb');
+  const explorerGLTF = useGLTF('/models/explorer-bot/360_sphere_robot_no_glass.glb');
 
   const isSpider = robotConfig.type === 'spider';
   const isTank = robotConfig.type === 'tank';
@@ -340,6 +340,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 useGLTF.preload('/models/spider-model/source/spider_bot.glb');
 useGLTF.preload('/models/tank-model/t-35_heavy_five-turret_tank.glb');
-useGLTF.preload('/models/explorer-model/360_sphere_robot_no_glass.glb');
+useGLTF.preload('/models/explorer-bot/360_sphere_robot_no_glass.glb');
 
 export default RobotModel;
