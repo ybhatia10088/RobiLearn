@@ -287,15 +287,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     }
   });
 
-    return (
+  return (
     <primitive
       ref={modelRef}
       object={processedScene}
-      position={
-        isExplorer
-          ? [0, 0.1, 0]  // Raise explorer bot slightly above the grid
-          : [0, 0, 0]
-      }
+      position={[0, 0, 0]}
       rotation={[0, Math.PI, 0]}
       scale={
         isSpider
@@ -303,7 +299,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           : isTank
           ? [0.3, 0.3, 0.3]
           : isExplorer
-          ? [1.4, 1.4, 1.4]  // Increase size of explorer bot
+          ? [1.4, 1.4, 1.4] // Increased scale significantly for visibility
           : [1, 1, 1]
       }
       castShadow
@@ -311,7 +307,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     />
   );
 };
-
 
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 useGLTF.preload('/models/spider-model/source/spider_bot.glb');
