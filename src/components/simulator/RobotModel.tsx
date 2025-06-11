@@ -90,9 +90,21 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     }
 
     if (isExplorer) {
-      const explorerAnimNames = ['rotate', 'rolling', 'ExplorerSpin', 'Move'];
+      const explorerAnimNames = [
+        'sphere body|sphere bodyAction', // The exact animation name from Sketchfab
+        'sphere bodyAction',
+        'sphere body',
+        'sphere bodyAction.001',
+        'rotate', 
+        'rolling', 
+        'ExplorerSpin', 
+        'Move',
+        'Action',
+        'Scene'
+      ];
       for (const name of explorerAnimNames) {
         if (allKeys.includes(name)) {
+          console.log(`🎯 Found explorer animation: "${name}"`);
           return name;
         }
       }
@@ -141,6 +153,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const next = actions[name];
     if (!next) return;
 
+    console.log(`🎬 Switching to animation: "${name}" for ${isExplorer ? 'Explorer' : isSpider ? 'Spider' : isTank ? 'Tank' : 'Humanoid'}`);
+
     if (currentAction && actions[currentAction]?.isRunning()) {
       actions[currentAction].fadeOut(0.3);
     }
@@ -148,7 +162,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     next.reset().fadeIn(0.3).play();
     next.setLoop(THREE.LoopRepeat, Infinity);
     next.clampWhenFinished = false;
-    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : isExplorer ? 1.0 : 0.8;
+    
+    // Adjusted speed multipliers for different robot types
+    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : isExplorer ? 0.8 : 0.8;
     next.setEffectiveTimeScale(speedMultiplier);
     setCurrentAction(name);
   };
@@ -208,9 +224,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const rotSpeed = isMoving ? 0.15 : 0.08;
     modelRef.current.rotation.y += normalizedDiff * rotSpeed;
 
+    // Enhanced bobbing animation for different robot types
     if (isMoving && currentAction) {
-      const bobFrequency = isSpider ? 8 : isTank ? 2 : isExplorer ? 5 : 4;
-      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : isExplorer ? 0.004 : 0.01;
+      const bobFrequency = isSpider ? 8 : isTank ? 2 : isExplorer ? 6 : 4;
+      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : isExplorer ? 0.003 : 0.01;
       const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
       modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
     }
