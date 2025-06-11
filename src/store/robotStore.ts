@@ -44,6 +44,8 @@ interface RobotStoreState {
   resetRobotStateByType: () => void;
   landDrone: () => void;
   startHover: () => void;
+  startExplorerAnimation: () => void;
+  stopExplorerAnimation: () => void;
 }
 
 const INITIAL_ROBOT_STATE = {
@@ -133,8 +135,61 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       return;
     }
 
+    // Handle movement for explorer bot (sphere robot)
+    if (state.selectedRobot?.type === 'explorer') {
+      const moveStep = 0.12 * speed; // Slightly increased step for explorer
+      const angle = state.robotState.rotation.y;
+      let deltaX = 0;
+      let deltaZ = 0;
+
+      // Handle directional movement for explorer
+      switch (direction) {
+        case 'forward':
+          deltaX = Math.sin(angle) * moveStep;
+          deltaZ = Math.cos(angle) * moveStep;
+          break;
+        case 'backward':
+          deltaX = -Math.sin(angle) * moveStep;
+          deltaZ = -Math.cos(angle) * moveStep;
+          break;
+        case 'left':
+          deltaX = -Math.cos(angle) * moveStep;
+          deltaZ = Math.sin(angle) * moveStep;
+          break;
+        case 'right':
+          deltaX = Math.cos(angle) * moveStep;
+          deltaZ = -Math.sin(angle) * moveStep;
+          break;
+      }
+
+      const moveInterval = setInterval(() => {
+        const currentState = get();
+        if (!currentState.robotState || !currentState.isMoving) {
+          clearInterval(moveInterval);
+          return;
+        }
+
+        const newPosition = {
+          x: currentState.robotState.position.x + deltaX,
+          y: currentState.robotState.position.y,
+          z: currentState.robotState.position.z + deltaZ,
+        };
+
+        set({
+          robotState: {
+            ...currentState.robotState,
+            position: newPosition,
+            isMoving: true,
+          },
+        });
+      }, 16);
+
+      (window as any).robotMoveInterval = moveInterval;
+      return;
+    }
+
     // Handle movement for other robot types
-    const moveStep = 0.1 * speed; // Increased step size for more noticeable movement
+    const moveStep = 0.1 * speed; // Standard step size
     const angle = state.robotState.rotation.y;
     const deltaX = Math.sin(angle) * moveStep;
     const deltaZ = Math.cos(angle) * moveStep;
@@ -174,7 +229,13 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     }
 
     set({ isMoving: true });
-    const rotateStep = 0.05 * speed; // Increased step size for more noticeable rotation
+    
+    // Adjust rotation speed for different robot types
+    let rotateStep = 0.05 * speed;
+    if (state.selectedRobot?.type === 'explorer') {
+      rotateStep = 0.08 * speed; // Faster rotation for explorer bot
+    }
+    
     const delta = direction === 'left' ? rotateStep : -rotateStep;
 
     const rotateInterval = setInterval(() => {
@@ -288,6 +349,33 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       robotState: state.robotState ? {
         ...state.robotState,
         position: { ...state.robotState.position, y: 0 },
+        isMoving: false,
+      } : null,
+      isMoving: false,
+    }));
+  },
+
+  // New methods for explorer bot animation control
+  startExplorerAnimation: () => {
+    const state = get();
+    if (!state.robotState || state.selectedRobot?.type !== 'explorer') return;
+    
+    set((state) => ({
+      robotState: state.robotState ? {
+        ...state.robotState,
+        isMoving: true,
+      } : null,
+      isMoving: true,
+    }));
+  },
+
+  stopExplorerAnimation: () => {
+    const state = get();
+    if (!state.robotState || state.selectedRobot?.type !== 'explorer') return;
+    
+    set((state) => ({
+      robotState: state.robotState ? {
+        ...state.robotState,
         isMoving: false,
       } : null,
       isMoving: false,
