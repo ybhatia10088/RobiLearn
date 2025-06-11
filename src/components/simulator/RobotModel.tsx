@@ -239,6 +239,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     return null;
   }, [actions, isSpider, isTank, isExplorer]);
 
+  // FIXED: More sensitive movement detection for Explorer
   useEffect(() => {
     if (!robotState) return;
 
@@ -249,18 +250,36 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     );
 
     const distance = currentPos.distanceTo(lastPositionRef.current);
-    movementThresholdRef.current = distance > 0.01 ? movementThresholdRef.current + 1 : 0;
+    
+    // EXPLORER FIX: More sensitive threshold for explorer (sphere bot should be more responsive)
+    const threshold = isExplorer ? 0.001 : 0.01; // Much more sensitive for explorer
+    movementThresholdRef.current = distance > threshold ? movementThresholdRef.current + 1 : 0;
 
-    const positionBasedMoving = movementThresholdRef.current > 2;
+    // EXPLORER FIX: Immediate response for explorer, less buffering
+    const requiredFrames = isExplorer ? 1 : 2; // Explorer responds immediately
+    const positionBasedMoving = movementThresholdRef.current > requiredFrames;
     const shouldBeMoving = storeIsMoving || robotState.isMoving || positionBasedMoving;
 
     if (shouldBeMoving !== isMoving) {
       setIsMoving(shouldBeMoving);
-      console.log(`🎭 Movement state changed: ${shouldBeMoving ? 'MOVING' : 'STOPPED'}`);
+      console.log(`🎭 Movement state changed for ${robotType}: ${shouldBeMoving ? 'MOVING' : 'STOPPED'}`);
+      
+      // EXPLORER FIX: Extra logging for explorer
+      if (isExplorer) {
+        console.log(`🌐 EXPLORER Movement Debug:`, {
+          distance,
+          threshold,
+          movementThreshold: movementThresholdRef.current,
+          storeIsMoving,
+          robotStateIsMoving: robotState.isMoving,
+          positionBasedMoving,
+          shouldBeMoving
+        });
+      }
     }
 
     lastPositionRef.current.copy(currentPos);
-  }, [robotState?.position, robotState?.isMoving, storeIsMoving, isMoving]);
+  }, [robotState?.position, robotState?.isMoving, storeIsMoving, isMoving, isExplorer, robotType]);
 
   const stopAllActions = () => {
     if (!actions || !mixer) return;
@@ -299,12 +318,22 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     next.setLoop(THREE.LoopRepeat, Infinity);
     next.clampWhenFinished = false;
     
-    // Adjust animation speed based on robot type for more realism
-    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : isExplorer ? 1.5 : 0.8; // Faster speed for explorer
+    // EXPLORER FIX: Adjusted animation speed for explorer (higher speed for more visible rolling effect)
+    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : isExplorer ? 2.0 : 0.8; // Much faster for explorer
     next.setEffectiveTimeScale(speedMultiplier);
     
     setCurrentAction(name);
     console.log(`✅ Animation "${name}" started with speed: ${speedMultiplier}`);
+    
+    // EXPLORER FIX: Extra logging for explorer
+    if (isExplorer) {
+      console.log(`🌐 EXPLORER Animation started:`, {
+        animationName: name,
+        speedMultiplier,
+        isRunning: next.isRunning(),
+        duration: next.getClip().duration
+      });
+    }
   };
 
   useEffect(() => {
@@ -323,6 +352,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     if (isMoving) {
       if (currentAction !== animToPlay) {
         console.log(`Starting movement animation: ${animToPlay}`);
+        // EXPLORER FIX: Force animation start for explorer
+        if (isExplorer) {
+          console.log('🌐 EXPLORER: Forcing animation start');
+        }
         switchAnimation(animToPlay);
       }
     } else {
@@ -331,7 +364,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         stopAllActions();
       }
     }
-  }, [isMoving, actions, animToPlay, currentAction]);
+  }, [isMoving, actions, animToPlay, currentAction, isExplorer]);
 
   // Cleanup on unmount or when actions change
   useEffect(() => {
@@ -355,17 +388,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       robotState.position.z
     );
 
-    // More realistic movement interpolation
+    // EXPLORER FIX: More responsive movement for explorer
     const currentPos = modelRef.current.position;
     const distance = currentPos.distanceTo(targetPos);
     
     if (isMoving && distance > 0.01) {
-      // Smoother, more realistic movement with acceleration/deceleration
-      const moveSpeed = Math.min(distance * 8, 0.25); // Dynamic speed based on distance
+      // EXPLORER FIX: Faster movement speed for explorer to match animation
+      const baseSpeed = isExplorer ? 12 : 8; // Faster base speed for explorer
+      const moveSpeed = Math.min(distance * baseSpeed, isExplorer ? 0.4 : 0.25); // Higher max speed for explorer
       prevPositionRef.current.lerp(targetPos, moveSpeed * delta * 60);
     } else if (!isMoving) {
       // Gradual stop with deceleration
-      const stopSpeed = 0.08;
+      const stopSpeed = isExplorer ? 0.12 : 0.08; // Faster stopping for explorer
       prevPositionRef.current.lerp(targetPos, stopSpeed);
     } else {
       // Snap to target if very close
@@ -374,24 +408,33 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     modelRef.current.position.copy(prevPositionRef.current);
     
-    // More realistic rotation with momentum
+    // EXPLORER FIX: Faster rotation for explorer (sphere should rotate quickly)
     const targetRot = robotState.rotation.y;
     const currentRot = modelRef.current.rotation.y;
     const rotDiff = targetRot - currentRot;
     
     // Handle rotation wrapping (shortest path)
     const normalizedDiff = ((rotDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
-    const rotSpeed = isMoving ? 0.15 : 0.08; // Faster rotation when moving
+    const rotSpeed = isMoving ? 
+      (isExplorer ? 0.25 : 0.15) : // Much faster rotation for explorer when moving
+      (isExplorer ? 0.15 : 0.08);  // Faster rotation for explorer when stopped
     
     modelRef.current.rotation.y += normalizedDiff * rotSpeed;
     
-    // Add subtle bobbing animation for more realistic movement
+    // EXPLORER FIX: Enhanced bobbing animation for explorer (rolling sphere effect)
     if (isMoving && currentAction) {
-      const bobFrequency = isSpider ? 8 : isTank ? 2 : isExplorer ? 6 : 4; // Higher frequency for explorer (sphere rolling)
-      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : isExplorer ? 0.002 : 0.01; // Subtle bobbing for explorer
+      const bobFrequency = isSpider ? 8 : isTank ? 2 : isExplorer ? 10 : 4; // Higher frequency for explorer
+      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : isExplorer ? 0.003 : 0.01; // Slightly more bobbing for explorer
       const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
       
       modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
+      
+      // EXPLORER FIX: Add additional rotation for rolling effect
+      if (isExplorer) {
+        // Add continuous rotation on X-axis for rolling sphere effect
+        const rollSpeed = 0.1;
+        modelRef.current.rotation.x += rollSpeed * delta * (distance > 0.01 ? 1 : 0);
+      }
     }
   });
 
