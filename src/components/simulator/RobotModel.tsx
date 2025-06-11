@@ -46,7 +46,43 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const { scene, animations } = activeGLTF;
 
   const processedScene = React.useMemo(() => {
-    return (isSpider || isTank || isExplorer) ? scene.clone() : scene;
+    const clonedScene = scene.clone();
+    
+    // Special handling for explorer bot visibility
+    if (isExplorer && clonedScene) {
+      // Traverse the scene and ensure all materials are visible
+      clonedScene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          // Make sure the mesh is visible
+          child.visible = true;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          
+          // Fix material properties for better visibility
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => {
+                mat.transparent = false;
+                mat.opacity = 1;
+                if (mat instanceof THREE.MeshStandardMaterial) {
+                  mat.metalness = 0.3;
+                  mat.roughness = 0.7;
+                }
+              });
+            } else {
+              child.material.transparent = false;
+              child.material.opacity = 1;
+              if (child.material instanceof THREE.MeshStandardMaterial) {
+                child.material.metalness = 0.3;
+                child.material.roughness = 0.7;
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    return (isSpider || isTank || isExplorer) ? clonedScene : scene;
   }, [scene, isSpider, isTank, isExplorer]);
 
   const { actions, mixer } = useAnimations(animations, processedScene);
@@ -61,7 +97,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         console.log(`Animation ${index}: "${clip.name}" - Duration: ${clip.duration}s`);
       });
     }
-  }, [animations, actions, isSpider, isTank, isExplorer]);
+
+    // Debug explorer bot scene structure
+    if (isExplorer && processedScene) {
+      console.log('🔍 Explorer bot scene structure:');
+      processedScene.traverse((child) => {
+        console.log(`- ${child.name} (${child.type}), visible: ${child.visible}`);
+        if (child instanceof THREE.Mesh) {
+          console.log(`  Material: ${child.material?.type}, opacity: ${child.material?.opacity}`);
+        }
+      });
+    }
+  }, [animations, actions, isSpider, isTank, isExplorer, processedScene]);
 
   const animToPlay = React.useMemo(() => {
     if (!actions || Object.keys(actions).length === 0) {
@@ -245,7 +292,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           : isTank
           ? [0.3, 0.3, 0.3]
           : isExplorer
-          ? [0.15, 0.15, 0.15]
+          ? [1.0, 1.0, 1.0] // Increased scale significantly for visibility
           : [1, 1, 1]
       }
       castShadow
