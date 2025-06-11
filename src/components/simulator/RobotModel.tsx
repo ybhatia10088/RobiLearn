@@ -33,7 +33,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   const isSpider = robotConfig.type === 'spider';
   const isTank = robotConfig.type === 'tank';
-  const isExplorer = robotConfig.type === 'explorer';
+  const isExplorer = robotConfig.type === 'explorer' || robotConfig.type === 'mobile'; // Handle both explorer and mobile types
 
   console.log('🔍 Robot type debug:', {
     robotConfigType: robotConfig.type,
@@ -42,7 +42,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     isTank
   });
 
-  const activeGLTF = robotConfig.type === 'explorer'
+  const activeGLTF = robotConfig.type === 'explorer' || robotConfig.type === 'mobile'
     ? explorerGLTF
     : robotConfig.type === 'spider' 
     ? spiderGLTF 
@@ -95,7 +95,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const { actions, mixer } = useAnimations(animations, processedScene);
 
   useEffect(() => {
-    console.log(`🤖 ${isSpider ? 'Spider' : isTank ? 'Tank' : isExplorer ? 'Explorer' : 'Humanoid'} model loaded:`);
+    console.log(`🤖 ${isSpider ? 'Spider' : isTank ? 'Tank' : isExplorer ? 'Explorer/Mobile' : 'Humanoid'} model loaded:`);
     console.log('Available animations:', animations?.map(anim => anim.name) || 'None');
     console.log('Available actions:', Object.keys(actions || {}));
     
@@ -207,7 +207,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const next = actions[name];
     if (!next) return;
 
-    console.log(`🎬 Switching to animation: "${name}" for ${isExplorer ? 'Explorer' : isSpider ? 'Spider' : isTank ? 'Tank' : 'Humanoid'}`);
+    console.log(`🎬 Switching to animation: "${name}" for ${isExplorer ? 'Explorer/Mobile' : isSpider ? 'Spider' : isTank ? 'Tank' : 'Humanoid'}`);
 
     if (currentAction && actions[currentAction]?.isRunning()) {
       actions[currentAction].fadeOut(0.3);
