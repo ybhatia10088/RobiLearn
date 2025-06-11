@@ -35,11 +35,18 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const isTank = robotConfig.type === 'tank';
   const isExplorer = robotConfig.type === 'explorer';
 
-  const activeGLTF = isExplorer
+  console.log('🔍 Robot type debug:', {
+    robotConfigType: robotConfig.type,
+    isExplorer,
+    isSpider,
+    isTank
+  });
+
+  const activeGLTF = robotConfig.type === 'explorer'
     ? explorerGLTF
-    : isSpider 
+    : robotConfig.type === 'spider' 
     ? spiderGLTF 
-    : isTank 
+    : robotConfig.type === 'tank'
     ? tankGLTF 
     : humanoidGLTF;
 
