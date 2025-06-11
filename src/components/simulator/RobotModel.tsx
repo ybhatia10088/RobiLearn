@@ -23,7 +23,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const targetVelocityRef = useRef(new THREE.Vector3(0, 0, 0));
   const targetAngularVelocityRef = useRef(0);
 
-  const { robotState, isMoving: storeIsMoving } = useRobotStore();
+  const { robotState, isMoving: storeIsMoving, selectedRobot } = useRobotStore();
   const [isMoving, setIsMoving] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
 
@@ -33,18 +33,33 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const tankGLTF = useGLTF('/models/tank-model/t-35_heavy_five-turret_tank.glb');
   const explorerGLTF = useGLTF('/models/explorer-bot/360_sphere_robot_no_glass.glb');
 
-  // Debug the robot type - this will help identify the issue
-  console.log('🔍 Robot Config Type:', robotConfig?.type);
-  console.log('🔍 Robot Config:', robotConfig);
+  // Debug EVERYTHING - this will help identify the issue
+  console.log('🔍 Props robotConfig:', robotConfig);
+  console.log('🔍 Props robotConfig.type:', robotConfig?.type);
+  console.log('🔍 Store selectedRobot:', selectedRobot);
+  console.log('🔍 Store selectedRobot.type:', selectedRobot?.type);
+  console.log('🔍 Store robotState:', robotState);
+  console.log('🔍 Store robotState.type:', robotState?.type);
+
+  // Use the robot type from store as primary source, fallback to props
+  const actualRobotType = selectedRobot?.type || robotState?.type || robotConfig?.type;
+  console.log('🎯 Actual robot type being used:', actualRobotType);
 
   // Make the type comparison more robust
-  const robotType = robotConfig?.type?.toLowerCase();
+  const robotType = actualRobotType?.toLowerCase();
   const isSpider = robotType === 'spider';
   const isTank = robotType === 'tank';
   const isExplorer = robotType === 'explorer';
   const isHumanoid = robotType === 'humanoid' || (!isSpider && !isTank && !isExplorer);
   
-  console.log('🤖 Robot Type Checks:', { isSpider, isTank, isExplorer, isHumanoid });
+  console.log('🤖 Robot Type Checks:', { 
+    robotType, 
+    isSpider, 
+    isTank, 
+    isExplorer, 
+    isHumanoid,
+    actualRobotType 
+  });
   
   // Model selection with explicit fallback
   const activeGLTF = (() => {
