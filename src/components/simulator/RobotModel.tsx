@@ -31,29 +31,33 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const humanoidGLTF = useGLTF('/models/humanoid-robot/rusty_robot_walking_animated.glb');
   const spiderGLTF = useGLTF('/models/spider-model/source/spider_bot.glb');
   const tankGLTF = useGLTF('/models/tank-model/t-35_heavy_five-turret_tank.glb');
+  const explorerGLTF = useGLTF('/models/explorer-model/360_sphere_robot_no_glass.glb');
 
   const isSpider = robotConfig.type === 'spider';
   const isTank = robotConfig.type === 'tank';
+  const isExplorer = robotConfig.type === 'explorer';
   
   const activeGLTF = isSpider 
     ? spiderGLTF 
     : isTank 
     ? tankGLTF 
+    : isExplorer
+    ? explorerGLTF
     : humanoidGLTF;
     
   const { scene, animations } = activeGLTF;
   
   // Clone the scene only if needed to avoid sharing between instances
   const processedScene = React.useMemo(() => {
-    // Clone for spider and tank to avoid conflicts, use original for humanoid
-    return (isSpider || isTank) ? scene.clone() : scene;
-  }, [scene, isSpider, isTank]);
+    // Clone for spider, tank, and explorer to avoid conflicts, use original for humanoid
+    return (isSpider || isTank || isExplorer) ? scene.clone() : scene;
+  }, [scene, isSpider, isTank, isExplorer]);
   
   const { actions, mixer } = useAnimations(animations, processedScene);
 
   // Debug: Log available animations
   useEffect(() => {
-    console.log(`🤖 ${isSpider ? 'Spider' : isTank ? 'Tank' : 'Humanoid'} model loaded:`);
+    console.log(`🤖 ${isSpider ? 'Spider' : isTank ? 'Tank' : isExplorer ? 'Explorer' : 'Humanoid'} model loaded:`);
     console.log('Available animations:', animations?.map(anim => anim.name) || 'None');
     console.log('Available actions:', Object.keys(actions || {}));
     
@@ -62,7 +66,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         console.log(`Animation ${index}: "${clip.name}" - Duration: ${clip.duration}s`);
       });
     }
-  }, [animations, actions, isSpider, isTank]);
+  }, [animations, actions, isSpider, isTank, isExplorer]);
 
   // Improved animation selection logic
   const animToPlay = React.useMemo(() => {
@@ -122,6 +126,29 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       }
     }
 
+    // Try explorer animation names
+    if (isExplorer) {
+      const explorerAnimNames = [
+        'sphere bodysphere bodyAction',
+        'sphere bodyAction',
+        'Action',
+        'Idle',
+        'Rotate',
+        'rotate',
+        'Roll',
+        'roll',
+        'move',
+        'Move'
+      ];
+      
+      for (const name of explorerAnimNames) {
+        if (allKeys.includes(name)) {
+          console.log(`✅ Found explorer animation: ${name}`);
+          return name;
+        }
+      }
+    }
+
     // Fallback: try mixamo.com or first available
     if (allKeys.includes('mixamo.com')) {
       console.log('✅ Using mixamo.com animation');
@@ -135,7 +162,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
     console.log('❌ No suitable animation found');
     return null;
-  }, [actions, isSpider, isTank]);
+  }, [actions, isSpider, isTank, isExplorer]);
 
   useEffect(() => {
     if (!robotState) return;
@@ -198,7 +225,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     next.clampWhenFinished = false;
     
     // Adjust animation speed based on robot type for more realism
-    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : 0.8; // Tanks move slower
+    const speedMultiplier = isSpider ? 1.2 : isTank ? 0.6 : isExplorer ? 1 : 0.8;
     next.setEffectiveTimeScale(speedMultiplier);
     
     setCurrentAction(name);
@@ -280,8 +307,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     
     // Add subtle bobbing animation for more realistic walking
     if (isMoving && currentAction) {
-      const bobFrequency = isSpider ? 8 : isTank ? 2 : 4; // Tanks have slower bobbing
-      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : 0.01; // Tanks have less bobbing
+      const bobFrequency = isSpider ? 8 : isTank ? 2 : isExplorer ? 3 : 4; // Explorer has moderate bobbing
+      const bobAmplitude = isSpider ? 0.005 : isTank ? 0.002 : isExplorer ? 0.003 : 0.01; // Explorer has subtle bobbing
       const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
       
       modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
@@ -299,6 +326,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           ? [0.1, 0.1, 0.1] 
           : isTank 
           ? [0.3, 0.3, 0.3] 
+          : isExplorer
+          ? [0.5, 0.5, 0.5]
           : [1, 1, 1]
       }
       castShadow
@@ -311,5 +340,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 useGLTF.preload('/models/spider-model/source/spider_bot.glb');
 useGLTF.preload('/models/tank-model/t-35_heavy_five-turret_tank.glb');
+useGLTF.preload('/models/explorer-model/360_sphere_robot_no_glass.glb');
 
 export default RobotModel;
