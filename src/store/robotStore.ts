@@ -79,24 +79,42 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
   },
 
   selectRobot: (config) => {
+    // Add extensive debugging
+    console.log('🏪 STORE: selectRobot called with config:', config);
+    console.log('🏪 STORE: config.type:', config?.type);
+    console.log('🏪 STORE: config.id:', config?.id);
+    
     const initialPosition = { x: 0, y: 0, z: 0 };
+    
+    const newRobotState = {
+      robotId: config.id,
+      type: config.type, // Make sure this is preserved
+      position: initialPosition,
+      rotation: { x: 0, y: 0, z: 0 },
+      jointPositions: {},
+      sensorReadings: [],
+      isMoving: false,
+      isGrabbing: false,
+      batteryLevel: 100,
+      errors: [],
+      currentJointCommand: null,
+    };
+    
+    console.log('🏪 STORE: Created robotState:', newRobotState);
+    console.log('🏪 STORE: robotState.type:', newRobotState.type);
+    
     set({
       selectedRobot: config,
-      robotState: {
-        robotId: config.id,
-        type: config.type,
-        position: initialPosition,
-        rotation: { x: 0, y: 0, z: 0 },
-        jointPositions: {},
-        sensorReadings: [],
-        isMoving: false,
-        isGrabbing: false,
-        batteryLevel: 100,
-        errors: [],
-        currentJointCommand: null,
-      },
+      robotState: newRobotState,
       isMoving: false,
     });
+    
+    // Debug the state after setting
+    const newState = get();
+    console.log('🏪 STORE: After setting - selectedRobot:', newState.selectedRobot);
+    console.log('🏪 STORE: After setting - selectedRobot.type:', newState.selectedRobot?.type);
+    console.log('🏪 STORE: After setting - robotState:', newState.robotState);
+    console.log('🏪 STORE: After setting - robotState.type:', newState.robotState?.type);
   },
 
   moveRobot: ({ direction, speed, joint }) => {
