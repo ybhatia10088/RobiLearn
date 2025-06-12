@@ -38,7 +38,8 @@ const Hero: React.FC = () => {
 
               {/* Subtitle */}
               <p className="text-xl md:text-2xl lg:text-3xl text-dark-200 mb-12 leading-snug tracking-wide max-w-3xl mx-auto font-light text-balance w-full text-center">
-  Learn robotics programming through immersive 3D simulations. Code with natural language, visual blocks, or traditional programming.
+  Master Robotics Without Hardware. Learn robotics programming
+  through immersive 3D simulations.
 </p>
 
 
