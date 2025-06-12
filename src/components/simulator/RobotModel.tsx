@@ -55,8 +55,20 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const processedScene = React.useMemo(() => {
     const clonedScene = scene.clone();
     
-    // Special handling for explorer bot visibility
+    // Special handling for explorer bot visibility and positioning
     if (isExplorer && clonedScene) {
+      // Calculate bounding box to understand the model's actual dimensions
+      const box = new THREE.Box3().setFromObject(clonedScene);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      
+      console.log('🔍 Explorer bot bounding box:', {
+        size: { x: size.x, y: size.y, z: size.z },
+        center: { x: center.x, y: center.y, z: center.z },
+        min: { x: box.min.x, y: box.min.y, z: box.min.z },
+        max: { x: box.max.x, y: box.max.y, z: box.max.z }
+      });
+
       // Traverse the scene and ensure all materials are visible
       clonedScene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -259,6 +271,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     const currentPos = modelRef.current.position;
     const distance = currentPos.distanceTo(targetPos);
     
+    // Apply the explorer float height offset to the target position
+    if (isExplorer) {
+      targetPos.y += explorerFloatHeight;
+    }
+    
     if (isMoving && distance > 0.01) {
       const moveSpeed = Math.min(distance * 8, 0.25);
       prevPositionRef.current.lerp(targetPos, moveSpeed * delta * 60);
@@ -290,8 +307,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   // Safe explorer scaling to prevent crashes
   const explorerScale = Math.min(2.5, 5); // Change 2.5 to your desired scale, max 5 for safety
   
-  // Calculate floating height for explorer
-  const explorerFloatHeight = isExplorer ? explorerScale * 0.8 + 1.0 : 0; // Base height + scale adjustment
+  // Increased floating height for explorer - this is the key fix
+  const explorerFloatHeight = isExplorer ? 3.0 : 0; // Increased from explorerScale * 0.8 + 1.0 to 3.0
 
   return (
     <primitive
