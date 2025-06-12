@@ -17,11 +17,11 @@ const Hero: React.FC = () => {
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.02)_1px,transparent_1px)] bg-[size:60px_60px] opacity-40" />
       
-      <div className="container mx-auto px-4 relative z-10 pt-20 pb-16">
+      <div className="container mx-auto px-4 relative z-10 py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center min-h-[80vh]">
+          <div className="flex flex-col items-center justify-center min-h-[80vh]">
             {/* Centered Content */}
-            <div className="text-center">
+            <div className="text-center max-w-5xl mx-auto">
               {/* Badge */}
               <div className="inline-flex items-center px-6 py-3 rounded-full bg-primary-500/10 text-primary-400 text-sm font-medium mb-8 backdrop-blur-sm">
                 <Star size={16} className="mr-2" />
@@ -29,17 +29,21 @@ const Hero: React.FC = () => {
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black leading-tight mb-8">
+              <h1 className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black leading-[0.85] mb-8">
                 <div className="text-white">Master Robotics</div>
                 <div className="bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent font-black">
                   Without Hardware
                 </div>
               </h1>
 
-              {/* Subtitle */}
-              <p className="text-xl md:text-2xl lg:text-3xl text-dark-200 mb-12 leading-relaxed max-w-2xl mx-auto font-light">
-                Learn robotics programming through immersive 3D simulations. Code with natural language, visual blocks, or traditional programming.
-              </p>
+              {/* Subtitle - Properly aligned and spaced */}
+              <div className="max-w-4xl mx-auto mb-12">
+                <p className="text-xl md:text-2xl lg:text-3xl text-dark-200 leading-relaxed font-light text-center">
+                  Learn robotics programming through immersive 3D simulations.
+                  <br className="hidden sm:block" />
+                  <span className="block sm:inline"> Code with natural language, visual blocks, or traditional programming.</span>
+                </p>
+              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
@@ -84,7 +88,7 @@ const Hero: React.FC = () => {
           </div>
           
           {/* Feature highlights */}
-          <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 icon: <Cpu size={28} />,
