@@ -289,12 +289,15 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
 
   // Safe explorer scaling to prevent crashes
   const explorerScale = Math.min(2.5, 5); // Change 2.5 to your desired scale, max 5 for safety
+  
+  // Calculate floating height for explorer
+  const explorerFloatHeight = isExplorer ? explorerScale * 0.8 + 1.0 : 0; // Base height + scale adjustment
 
   return (
     <primitive
       ref={modelRef}
       object={processedScene}
-      position={isExplorer ? [0, explorerScale * 0.3, 0] : [0, 0, 0]} // Lift explorer above grid
+      position={isExplorer ? [0, explorerFloatHeight, 0] : [0, 0, 0]} // Float explorer above grid
       rotation={[0, Math.PI, 0]}
       scale={
         isSpider
