@@ -174,22 +174,26 @@ const Hero: React.FC = () => {
                         sensor.read()
                       </div>
                     </motion.div>
+                    
+                    {/* Integrated play button overlay */}
+                    <motion.div
+                      className="absolute inset-0 bg-dark-900/40 backdrop-blur-sm flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                      onClick={() => navigate('/simulator')}
+                    >
+                      <motion.div
+                        className="bg-primary-500 hover:bg-primary-600 text-white p-6 rounded-full shadow-glow hover:shadow-glow-lg transition-all duration-300"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Play size={32} />
+                      </motion.div>
+                    </motion.div>
                   </div>
                 </div>
                 
                 {/* Glow effect */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 via-secondary-500/20 to-accent-500/20 rounded-2xl blur-xl -z-10" />
               </div>
-              
-              {/* Floating action button */}
-              <motion.button
-                className="absolute bottom-6 right-6 bg-primary-500 hover:bg-primary-600 text-white p-4 rounded-full shadow-glow hover:shadow-glow-lg transition-all duration-300 group"
-                onClick={() => navigate('/simulator')}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Play size={24} className="group-hover:scale-110 transition-transform" />
-              </motion.button>
             </div>
           </motion.div>
         </div>
