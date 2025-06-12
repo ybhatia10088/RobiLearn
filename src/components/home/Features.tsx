@@ -119,30 +119,30 @@ const FeatureCard: React.FC<Feature & { index: number }> = ({
 }) => {
   return (
     <motion.div
-      className="group relative"
+      className="group relative h-full"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.6, ease: "easeOut" }}
     >
-      <div className={`card hover:shadow-glow-lg border-${color}-800/50 hover:border-${color}-600/70 transition-all duration-500 group-hover:-translate-y-2 relative overflow-hidden`}>
+      <div className={`card hover:shadow-glow-lg border-${color}-800/50 hover:border-${color}-600/70 transition-all duration-500 group-hover:-translate-y-2 relative overflow-hidden h-full flex flex-col`}>
         {/* Background gradient */}
         <div className={`absolute inset-0 bg-gradient-to-br from-${color}-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
         
-        <div className="relative z-10">
-          <div className={`bg-${color}-900/80 w-16 h-16 rounded-xl flex items-center justify-center mb-6 text-${color}-400 border border-${color}-700/50 group-hover:scale-110 transition-transform duration-300`}>
+        <div className="relative z-10 flex flex-col h-full">
+          <div className={`bg-${color}-900/80 w-16 h-16 rounded-xl flex items-center justify-center mb-6 text-${color}-400 border border-${color}-700/50 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
             {icon}
           </div>
           
-          <h3 className="text-xl font-bold mb-3 text-white group-hover:text-white transition-colors">
+          <h3 className="text-xl font-bold mb-4 text-white group-hover:text-white transition-colors leading-tight">
             {title}
           </h3>
           
-          <p className="text-dark-300 mb-4 leading-relaxed">
+          <p className="text-dark-300 mb-6 leading-relaxed flex-grow">
             {description}
           </p>
           
-          <ul className="space-y-2">
+          <ul className="space-y-3 mt-auto">
             {benefits.map((benefit, i) => (
               <li key={i} className="flex items-center text-sm text-dark-400">
                 <div className={`w-1.5 h-1.5 rounded-full bg-${color}-400 mr-3 flex-shrink-0`} />
@@ -196,7 +196,7 @@ const Features: React.FC = () => {
           </p>
         </motion.div>
         
-        {/* Main features grid */}
+        {/* Main features grid - Fixed height grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {features.map((feature, index) => (
             <FeatureCard key={feature.title} index={index} {...feature} />
