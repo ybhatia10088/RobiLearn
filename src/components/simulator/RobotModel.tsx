@@ -53,6 +53,11 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const { scene, animations } = activeGLTF;
 
   const processedScene = React.useMemo(() => {
+    if (!scene) {
+      console.warn('⚠️ Scene is null for robot type:', robotConfig.type);
+      return null;
+    }
+    
     const clonedScene = scene.clone();
     
     // Special handling for explorer bot visibility
@@ -244,7 +249,10 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   }, [actions]);
 
   useFrame((_, delta) => {
-    if (!robotState || !modelRef.current) return;
+    if (!robotState || !modelRef.current || !processedScene) return;
+
+    // Safety check to prevent crashes
+    try {
 
     if (mixer) {
       mixer.update(delta);
@@ -285,29 +293,52 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       const bobOffset = Math.sin(Date.now() * 0.01 * bobFrequency) * bobAmplitude;
       modelRef.current.position.y = prevPositionRef.current.y + bobOffset;
     }
+    } catch (error) {
+      console.error('❌ Error in useFrame:', error);
+    }
   });
+
+  // Safe scaling with bounds checking
+  const getScale = () => {
+    if (isSpider) return [0.1, 0.1, 0.1];
+    if (isTank) return [0.3, 0.3, 0.3];
+    if (isExplorer) {
+      // Clamp scale to prevent crashes - max scale of 5 for safety
+      const scale = Math.min(1.2, 5); // You can change 1.2 to your desired scale
+      return [scale, scale, scale];
+    }
+    return [1, 1, 1];
+  };
+
+  // Safe position adjustment for explorer to appear above grid
+  const getPosition = () => {
+    if (isExplorer) {
+      // Lift the explorer above the grid based on its scale
+      const scale = getScale()[1]; // Get Y scale
+      return [0, scale * 0.5, 0]; // Lift it by half its scaled height
+    }
+    return [0, 0, 0];
+  };
+
+  if (!processedScene) {
+    console.warn('⚠️ processedScene is null, skipping render');
+    return null;
+  }
 
   return (
     <primitive
       ref={modelRef}
       object={processedScene}
-      position={[0, 0, 0]}
+      position={getPosition()}
       rotation={[0, Math.PI, 0]}
-      scale={
-        isSpider
-          ? [0.1, 0.1, 0.1]
-          : isTank
-          ? [0.3, 0.3, 0.3]
-          : isExplorer
-          ? [1.2, 1.2, 1.2] // Increased scale significantly for visibility
-          : [1, 1, 1]
-      }
+      scale={getScale()}
       castShadow
       receiveShadow
     />
   );
 };
 
+// Preload all models
 useGLTF.preload('/models/humanoid-robot/rusty_robot_walking_animated.glb');
 useGLTF.preload('/models/spider-model/source/spider_bot.glb');
 useGLTF.preload('/models/tank-model/t-35_heavy_five-turret_tank.glb');
