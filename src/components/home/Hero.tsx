@@ -28,9 +28,9 @@ const Hero: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              {/* Badge */}
+              {/* Badge - Clean design without visible border */}
               <motion.div
-                className="inline-flex items-center px-6 py-3 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-sm font-medium mb-8 backdrop-blur-sm"
+                className="inline-flex items-center px-6 py-3 rounded-full bg-primary-500/10 text-primary-400 text-sm font-medium mb-8 backdrop-blur-sm"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
@@ -39,19 +39,19 @@ const Hero: React.FC = () => {
                 <span>Built by students, powered by innovation</span>
               </motion.div>
               
-              {/* Main Headline */}
+              {/* Main Headline - Clean typography without boxes */}
               <motion.div
                 className="mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
               >
-                <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.9] tracking-tight mb-6">
-                  <span className="block text-white mb-2">Master</span>
-                  <span className="block text-white mb-2">Robotics</span>
-                  <span className="block bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent font-black">
+                <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.85] tracking-tight">
+                  <div className="text-white mb-4">Master</div>
+                  <div className="text-white mb-4">Robotics</div>
+                  <div className="bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent font-black">
                     Without Hardware
-                  </span>
+                  </div>
                 </h1>
               </motion.div>
               
@@ -87,7 +87,7 @@ const Hero: React.FC = () => {
                 </button>
                 
                 <button 
-                  className="group bg-transparent border-2 border-primary-500/50 hover:border-primary-400 text-primary-400 hover:text-white text-lg px-10 py-5 rounded-2xl font-semibold transition-all duration-300 hover:bg-primary-500/10 backdrop-blur-sm hover:shadow-xl hover:shadow-primary-500/10 hover:-translate-y-1 active:translate-y-0"
+                  className="group bg-transparent text-primary-400 hover:text-white text-lg px-10 py-5 rounded-2xl font-semibold transition-all duration-300 hover:bg-primary-500/10 backdrop-blur-sm hover:shadow-xl hover:shadow-primary-500/10 hover:-translate-y-1 active:translate-y-0"
                   onClick={() => navigate('/challenges')}
                 >
                   <div className="flex items-center justify-center">
@@ -97,7 +97,7 @@ const Hero: React.FC = () => {
                 </button>
               </motion.div>
               
-              {/* Social proof */}
+              {/* Social proof - Clean design */}
               <motion.div
                 className="flex flex-wrap items-center justify-center lg:justify-start gap-8 text-sm text-dark-300"
                 initial={{ opacity: 0, y: 20 }}
@@ -128,9 +128,9 @@ const Hero: React.FC = () => {
             >
               <div className="relative w-full max-w-2xl">
                 {/* Main preview container */}
-                <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-dark-700/80 to-dark-800/80 rounded-3xl overflow-hidden backdrop-blur-xl border border-dark-600/50 shadow-2xl">
+                <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-dark-700/80 to-dark-800/80 rounded-3xl overflow-hidden backdrop-blur-xl border border-dark-600/30 shadow-2xl">
                   {/* Header bar */}
-                  <div className="h-14 bg-dark-800/90 border-b border-dark-600/50 flex items-center px-6 backdrop-blur-sm">
+                  <div className="h-14 bg-dark-800/90 border-b border-dark-600/30 flex items-center px-6 backdrop-blur-sm">
                     <div className="flex space-x-3">
                       <div className="w-3 h-3 rounded-full bg-error-500/80"></div>
                       <div className="w-3 h-3 rounded-full bg-warning-500/80"></div>
@@ -158,14 +158,14 @@ const Hero: React.FC = () => {
                         rotateY: { duration: 12, repeat: Infinity, ease: "linear" }
                       }}
                     >
-                      <div className="w-32 h-32 bg-gradient-to-br from-primary-400 via-secondary-400 to-accent-400 rounded-3xl shadow-2xl shadow-primary-500/30 flex items-center justify-center backdrop-blur-sm border border-white/10">
+                      <div className="w-32 h-32 bg-gradient-to-br from-primary-400 via-secondary-400 to-accent-400 rounded-3xl shadow-2xl shadow-primary-500/30 flex items-center justify-center backdrop-blur-sm">
                         <Cpu size={56} className="text-white drop-shadow-lg" />
                       </div>
                     </motion.div>
                     
                     {/* Floating elements with improved animations */}
                     <motion.div
-                      className="absolute top-1/4 left-1/4 w-20 h-20 bg-accent-500/15 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-accent-500/20"
+                      className="absolute top-1/4 left-1/4 w-20 h-20 bg-accent-500/15 rounded-2xl flex items-center justify-center backdrop-blur-sm"
                       animate={{ 
                         scale: [1, 1.3, 1],
                         opacity: [0.4, 1, 0.4],
@@ -177,7 +177,7 @@ const Hero: React.FC = () => {
                     </motion.div>
                     
                     <motion.div
-                      className="absolute bottom-1/4 right-1/4 w-16 h-16 bg-secondary-500/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-secondary-500/20"
+                      className="absolute bottom-1/4 right-1/4 w-16 h-16 bg-secondary-500/15 rounded-xl flex items-center justify-center backdrop-blur-sm"
                       animate={{ 
                         rotate: [0, -180, -360],
                         scale: [1, 1.2, 1],
@@ -190,7 +190,7 @@ const Hero: React.FC = () => {
                     
                     {/* Code snippets floating */}
                     <motion.div
-                      className="absolute top-1/3 right-1/6 bg-dark-700/90 backdrop-blur-sm rounded-xl p-4 border border-primary-500/20 shadow-lg"
+                      className="absolute top-1/3 right-1/6 bg-dark-700/90 backdrop-blur-sm rounded-xl p-4 shadow-lg"
                       animate={{ 
                         y: [0, -8, 0],
                         opacity: [0.6, 1, 0.6]
@@ -203,7 +203,7 @@ const Hero: React.FC = () => {
                     </motion.div>
                     
                     <motion.div
-                      className="absolute bottom-1/3 left-1/6 bg-dark-700/90 backdrop-blur-sm rounded-xl p-4 border border-secondary-500/20 shadow-lg"
+                      className="absolute bottom-1/3 left-1/6 bg-dark-700/90 backdrop-blur-sm rounded-xl p-4 shadow-lg"
                       animate={{ 
                         y: [0, 8, 0],
                         opacity: [0.6, 1, 0.6]
@@ -270,7 +270,7 @@ const Hero: React.FC = () => {
             </motion.div>
           </div>
           
-          {/* Feature highlights - Redesigned */}
+          {/* Feature highlights - Clean card design */}
           <motion.div 
             className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8"
             initial={{ opacity: 0, y: 30 }}
@@ -305,7 +305,7 @@ const Hero: React.FC = () => {
                 transition={{ delay: 1.3 + index * 0.1, duration: 0.6 }}
                 whileHover={{ y: -5 }}
               >
-                <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-dark-700/30 border border-dark-600/30 backdrop-blur-sm hover:bg-dark-700/50 hover:border-dark-500/50 transition-all duration-300 h-full">
+                <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-dark-700/20 backdrop-blur-sm hover:bg-dark-700/30 transition-all duration-300 h-full">
                   <div className={`bg-gradient-to-br from-${feature.color}-500 to-${feature.color}-600 p-4 rounded-2xl mb-6 shadow-lg shadow-${feature.color}-500/20 group-hover:shadow-${feature.color}-500/40 group-hover:scale-110 transition-all duration-300`}>
                     <div className="text-white">
                       {feature.icon}
