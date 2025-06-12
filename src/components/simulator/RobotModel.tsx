@@ -300,7 +300,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
           ? [0.3, 0.3, 0.3]
           : isExplorer
           ? [1.2, 1.2, 1.2] // Increased scale significantly for visibility
-          : [2, 2, 2]
+          : [1, 1, 1]
       }
       castShadow
       receiveShadow
