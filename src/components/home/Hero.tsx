@@ -37,10 +37,11 @@ const Hero: React.FC = () => {
               </h1>
 
               {/* Subtitle */}
-              <p className="text-xl md:text-2xl lg:text-3xl text-dark-200 mb-12 leading-snug max-w-4xl mx-auto font-light">
-                Learn robotics programming through immersive 3D simulations.<br className="hidden sm:block" />
-                Code with natural language, visual blocks, or traditional programming.
+              <p className="text-xl md:text-2xl lg:text-3xl text-dark-200 mb-12 leading-snug tracking-wide max-w-3xl mx-auto font-light text-balance">
+              Learn robotics programming through immersive 3D simulations.<br className="hidden sm:block" />
+              Code with natural language, visual blocks, or traditional programming.
               </p>
+
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
