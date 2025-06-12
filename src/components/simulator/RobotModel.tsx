@@ -308,7 +308,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
   const explorerScale = Math.min(2.5, 5); // Change 2.5 to your desired scale, max 5 for safety
   
   // Increased floating height for explorer - this is the key fix
-  const explorerFloatHeight = isExplorer ? 2.0 : 0; // Increased from explorerScale * 0.8 + 1.0 to 3.0
+  const explorerFloatHeight = isExplorer ? 1.5 : 0; // Increased from explorerScale * 0.8 + 1.0 to 3.0
 
   return (
     <primitive
