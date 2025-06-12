@@ -238,7 +238,7 @@ const Features: React.FC = () => {
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
         
         {/* Stats section */}
         <motion.div
