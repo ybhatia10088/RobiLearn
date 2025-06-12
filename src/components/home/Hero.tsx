@@ -29,7 +29,7 @@ const Hero: React.FC = () => {
               {/* Badge */}
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-sm font-medium mb-6">
                 <Star size={16} className="mr-2" />
-                <span>Trusted by 10,000+ students worldwide</span>
+                <span>Built by students, powered by innovation</span>
               </div>
               
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-[1.1]">
@@ -66,15 +66,15 @@ const Hero: React.FC = () => {
               <div className="flex items-center gap-8 text-sm text-dark-300">
                 <div className="flex items-center">
                   <Users size={16} className="mr-2 text-primary-400" />
-                  <span>10,000+ Students</span>
+                  <span>Growing Community</span>
                 </div>
                 <div className="flex items-center">
                   <Award size={16} className="mr-2 text-secondary-400" />
-                  <span>100+ Challenges</span>
+                  <span>Interactive Learning</span>
                 </div>
                 <div className="flex items-center">
                   <Star size={16} className="mr-2 text-accent-400" />
-                  <span>4.9/5 Rating</span>
+                  <span>Open Source</span>
                 </div>
               </div>
             </motion.div>

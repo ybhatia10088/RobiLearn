@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Twitter, Youtube, Mail, MapPin, Phone, Notebook as Robot } from 'lucide-react';
+import { Github, Twitter, Youtube, Mail, Phone, Notebook as Robot } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -130,17 +130,6 @@ const Footer: React.FC = () => {
                   >
                     +1 (555) 012-3456
                   </a>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <MapPin size={16} className="text-primary-400 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="text-sm text-white font-medium">Headquarters</p>
-                  <p className="text-sm text-dark-300">
-                    San Francisco, CA<br />
-                    United States
-                  </p>
                 </div>
               </div>
             </div>

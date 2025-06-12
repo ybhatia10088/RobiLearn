@@ -238,7 +238,7 @@ const Features: React.FC = () => {
               </motion.div>
             ))}
           </div>
-        </motion.div>
+        </div>
         
         {/* Stats section */}
         <motion.div
@@ -249,9 +249,9 @@ const Features: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.5 }}
         >
           {[
-            { number: '10,000+', label: 'Active Students', color: 'primary' },
-            { number: '100+', label: 'Challenges', color: 'secondary' },
-            { number: '50+', label: 'Robot Models', color: 'accent' },
+            { number: '1,000+', label: 'Active Students', color: 'primary' },
+            { number: '25+', label: 'Learning Modules', color: 'secondary' },
+            { number: '6', label: 'Robot Types', color: 'accent' },
             { number: '99.9%', label: 'Uptime', color: 'success' },
           ].map((stat, index) => (
             <div key={stat.label} className="text-center">
