@@ -1,246 +1,202 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Play, Cpu, Brain, Layers, Star, Users, Award } from 'lucide-react';
-import { useNavigate } from '@/hooks/useNavigation';
+import { ArrowRight, Play, Cpu, Brain, Layers, Star, Users, Award, Zap, Code, Settings } from 'lucide-react';
 
-const Hero: React.FC = () => {
-  const navigate = useNavigate();
-  
+const Hero = () => {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 pt-20 pb-32">
+    <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen flex items-center">
       {/* Enhanced background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
       </div>
       
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
+      {/* Animated grid pattern */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:60px_60px] animate-pulse opacity-30" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(147,51,234,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(147,51,234,0.05)_1px,transparent_1px)] bg-[size:120px_120px] animate-pulse" style={{animationDelay: '0.5s'}} />
+      </div>
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-6 relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
-          <div className="lg:w-1/2 max-w-2xl">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            >
-              {/* Badge */}
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-sm font-medium mb-6">
-                <Star size={16} className="mr-2" />
-                <span>Built by students, powered by innovation</span>
+          <div className="lg:w-1/2 max-w-3xl">
+            <div className="space-y-8">
+              {/* Enhanced Badge */}
+              <div className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 backdrop-blur-sm">
+                <Zap size={18} className="mr-3 text-yellow-400 animate-pulse" />
+                <span className="text-blue-300 font-medium text-sm">Next-Generation Robot Simulation Platform</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-[1.1]">
-                Master Robotics
-                <br />
-                <span className="bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent">
-                  Without Hardware
+              {/* Main Headline */}
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-black leading-[0.9] tracking-tight">
+                <span className="block text-white mb-2">Build & Code</span>
+                <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent animate-pulse">
+                  Virtual Robots
                 </span>
               </h1>
               
-              <p className="text-xl md:text-2xl text-dark-200 mb-10 leading-relaxed">
-                Learn robotics programming through immersive 3D simulations. 
-                Code with natural language, visual blocks, or traditional programming.
-              </p>
+              {/* Enhanced Description */}
+              <div className="space-y-4">
+                <p className="text-2xl md:text-3xl text-slate-300 font-light leading-relaxed">
+                  Experience robotics like never before with our 
+                  <span className="text-blue-400 font-medium"> physics-accurate 3D simulator</span>
+                </p>
+                <p className="text-xl text-slate-400 leading-relaxed max-w-2xl">
+                  Program robots using natural language, visual blocks, or traditional code. 
+                  No hardware required – just your imagination and creativity.
+                </p>
+              </div>
               
-              <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <button 
-                  className="group btn-primary text-lg px-8 py-4 flex items-center justify-center hover:shadow-glow-lg transition-all duration-300"
-                  onClick={() => navigate('/simulator')}
-                >
-                  <Play size={20} className="mr-3 group-hover:scale-110 transition-transform" />
-                  <span>Start Simulator</span>
-                  <ArrowRight size={20} className="ml-3 group-hover:translate-x-1 transition-transform" />
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-6 pt-4">
+                <button className="group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-xl px-10 py-5 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
+                  <div className="flex items-center justify-center">
+                    <Play size={24} className="mr-4 group-hover:scale-110 transition-transform" />
+                    <span>Launch Simulator</span>
+                    <ArrowRight size={24} className="ml-4 group-hover:translate-x-2 transition-transform" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur opacity-0 group-hover:opacity-20 transition-opacity duration-300 -z-10" />
                 </button>
-                <button 
-                  className="btn-outline text-lg px-8 py-4 hover:shadow-lg transition-all duration-300"
-                  onClick={() => navigate('/challenges')}
-                >
-                  View Challenges
+                
+                <button className="group border-2 border-slate-600 hover:border-blue-400 text-slate-300 hover:text-white font-bold text-xl px-10 py-5 rounded-2xl transition-all duration-300 hover:bg-slate-800/50 backdrop-blur-sm">
+                  <div className="flex items-center justify-center">
+                    <Code size={24} className="mr-3 group-hover:rotate-12 transition-transform" />
+                    <span>View Examples</span>
+                  </div>
                 </button>
               </div>
               
-              {/* Social proof */}
-              <div className="flex items-center gap-8 text-sm text-dark-300">
-                <div className="flex items-center">
-                  <Users size={16} className="mr-2 text-primary-400" />
-                  <span>Growing Community</span>
+              {/* Enhanced Social Proof */}
+              <div className="flex flex-wrap items-center gap-8 pt-8 text-slate-400">
+                <div className="flex items-center bg-slate-800/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-slate-700">
+                  <Users size={18} className="mr-3 text-blue-400" />
+                  <span className="font-medium">10K+ Creators</span>
                 </div>
-                <div className="flex items-center">
-                  <Award size={16} className="mr-2 text-secondary-400" />
-                  <span>Interactive Learning</span>
+                <div className="flex items-center bg-slate-800/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-slate-700">
+                  <Award size={18} className="mr-3 text-purple-400" />
+                  <span className="font-medium">Real Physics</span>
                 </div>
-                <div className="flex items-center">
-                  <Star size={16} className="mr-2 text-accent-400" />
-                  <span>Open Source</span>
+                <div className="flex items-center bg-slate-800/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-slate-700">
+                  <Star size={18} className="mr-3 text-yellow-400" />
+                  <span className="font-medium">Open Source</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
           
-          <motion.div 
-            className="lg:w-1/2 flex justify-center lg:justify-end"
-            initial={{ opacity: 0, scale: 0.9, x: 50 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-          >
-            <div className="relative">
-              {/* Main preview container */}
-              <div className="relative w-full max-w-2xl aspect-[4/3] bg-gradient-to-br from-dark-700 to-dark-800 rounded-2xl overflow-hidden shadow-2xl border border-dark-600">
-                {/* Simulated interface */}
-                <div className="absolute inset-0">
-                  {/* Header bar */}
-                  <div className="h-12 bg-dark-800 border-b border-dark-600 flex items-center px-4">
-                    <div className="flex space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-error-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-warning-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-success-500"></div>
-                    </div>
-                    <div className="flex-1 text-center text-sm text-dark-300 font-medium">
-                      RoboSim - 3D Robot Simulator
-                    </div>
+          {/* Enhanced Right Side Preview */}
+          <div className="lg:w-1/2 flex justify-center lg:justify-end">
+            <div className="relative w-full max-w-3xl">
+              {/* Main simulator preview */}
+              <div className="relative aspect-[16/10] bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-700">
+                {/* Top bar */}
+                <div className="h-16 bg-slate-800/90 backdrop-blur-sm border-b border-slate-700 flex items-center px-6">
+                  <div className="flex space-x-3">
+                    <div className="w-4 h-4 rounded-full bg-red-500 shadow-lg shadow-red-500/50"></div>
+                    <div className="w-4 h-4 rounded-full bg-yellow-500 shadow-lg shadow-yellow-500/50"></div>
+                    <div className="w-4 h-4 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></div>
                   </div>
-                  
-                  {/* Main content area */}
-                  <div className="h-[calc(100%-48px)] bg-gradient-to-br from-primary-900/20 via-dark-800/50 to-secondary-900/20 flex items-center justify-center relative overflow-hidden">
-                    {/* Animated grid background */}
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:30px_30px] animate-pulse-slow" />
-                    
-                    {/* Robot representation */}
-                    <motion.div
-                      className="relative z-10"
-                      animate={{ 
-                        y: [0, -10, 0],
-                        rotateY: [0, 360]
-                      }}
-                      transition={{ 
-                        y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                        rotateY: { duration: 8, repeat: Infinity, ease: "linear" }
-                      }}
-                    >
-                      <div className="w-24 h-24 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl shadow-glow flex items-center justify-center">
-                        <Cpu size={40} className="text-white" />
-                      </div>
-                    </motion.div>
-                    
-                    {/* Floating elements */}
-                    <motion.div
-                      className="absolute top-1/4 left-1/4 w-16 h-16 bg-accent-500/20 rounded-full flex items-center justify-center"
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 1, 0.5]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                    >
-                      <Brain size={24} className="text-accent-400" />
-                    </motion.div>
-                    
-                    <motion.div
-                      className="absolute bottom-1/4 right-1/4 w-12 h-12 bg-secondary-500/20 rounded-lg flex items-center justify-center"
-                      animate={{ 
-                        rotate: [0, 180, 360],
-                        scale: [1, 1.1, 1]
-                      }}
-                      transition={{ duration: 4, repeat: Infinity, delay: 1 }}
-                    >
-                      <Layers size={20} className="text-secondary-400" />
-                    </motion.div>
-                    
-                    {/* Code snippets floating */}
-                    <motion.div
-                      className="absolute top-1/3 right-1/6 bg-dark-700/80 backdrop-blur-sm rounded-lg p-3 border border-primary-500/30"
-                      animate={{ 
-                        y: [0, -5, 0],
-                        opacity: [0.7, 1, 0.7]
-                      }}
-                      transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
-                    >
-                      <div className="text-xs font-mono text-primary-400">
-                        robot.move()
-                      </div>
-                    </motion.div>
-                    
-                    <motion.div
-                      className="absolute bottom-1/3 left-1/6 bg-dark-700/80 backdrop-blur-sm rounded-lg p-3 border border-secondary-500/30"
-                      animate={{ 
-                        y: [0, 5, 0],
-                        opacity: [0.7, 1, 0.7]
-                      }}
-                      transition={{ duration: 2.5, repeat: Infinity, delay: 0.8 }}
-                    >
-                      <div className="text-xs font-mono text-secondary-400">
-                        sensor.read()
-                      </div>
-                    </motion.div>
-                    
-                    {/* Integrated play button overlay */}
-                    <motion.div
-                      className="absolute inset-0 bg-dark-900/40 backdrop-blur-sm flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                      onClick={() => navigate('/simulator')}
-                    >
-                      <motion.div
-                        className="bg-primary-500 hover:bg-primary-600 text-white p-6 rounded-full shadow-glow hover:shadow-glow-lg transition-all duration-300"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Play size={32} />
-                      </motion.div>
-                    </motion.div>
+                  <div className="flex-1 text-center">
+                    <span className="text-slate-300 font-bold text-lg">RoboSim Studio</span>
+                    <span className="text-slate-500 text-sm ml-2">v2.0</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Settings size={20} className="text-slate-400 hover:text-white cursor-pointer transition-colors" />
                   </div>
                 </div>
                 
-                {/* Glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 via-secondary-500/20 to-accent-500/20 rounded-2xl blur-xl -z-10" />
+                {/* Main content */}
+                <div className="h-[calc(100%-64px)] bg-gradient-to-br from-slate-900 via-blue-900/20 to-purple-900/20 flex items-center justify-center relative overflow-hidden">
+                  {/* Floating grid */}
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:40px_40px] animate-pulse" />
+                  
+                  {/* Central robot */}
+                  <div className="relative z-10 transform hover:scale-110 transition-transform duration-500">
+                    <div className="w-32 h-32 bg-gradient-to-br from-blue-400 via-purple-500 to-cyan-400 rounded-3xl shadow-2xl shadow-blue-500/50 flex items-center justify-center animate-pulse">
+                      <Cpu size={48} className="text-white animate-spin" style={{animationDuration: '8s'}} />
+                    </div>
+                    
+                    {/* Robot glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-500 to-cyan-400 rounded-3xl blur-xl opacity-50 animate-pulse" />
+                  </div>
+                  
+                  {/* Floating UI elements */}
+                  <div className="absolute top-1/4 left-1/6 bg-slate-800/80 backdrop-blur-md rounded-xl p-4 border border-blue-500/30 shadow-xl animate-bounce" style={{animationDuration: '3s'}}>
+                    <Brain size={24} className="text-blue-400 mb-2" />
+                    <div className="text-xs text-slate-300 font-mono">AI Assistant</div>
+                  </div>
+                  
+                  <div className="absolute top-1/3 right-1/6 bg-slate-800/80 backdrop-blur-md rounded-xl p-4 border border-purple-500/30 shadow-xl animate-bounce" style={{animationDuration: '2.5s', animationDelay: '0.5s'}}>
+                    <Layers size={24} className="text-purple-400 mb-2" />
+                    <div className="text-xs text-slate-300 font-mono">3D Physics</div>
+                  </div>
+                  
+                  <div className="absolute bottom-1/3 left-1/4 bg-slate-800/80 backdrop-blur-md rounded-xl p-4 border border-cyan-500/30 shadow-xl animate-bounce" style={{animationDuration: '3.5s', animationDelay: '1s'}}>
+                    <Code size={24} className="text-cyan-400 mb-2" />
+                    <div className="text-xs text-slate-300 font-mono">
+                      <span className="text-cyan-300">robot</span>
+                      <span className="text-slate-400">.</span>
+                      <span className="text-yellow-300">move</span>
+                      <span className="text-slate-400">()</span>
+                    </div>
+                  </div>
+                  
+                  <div className="absolute bottom-1/4 right-1/4 bg-slate-800/80 backdrop-blur-md rounded-xl p-4 border border-green-500/30 shadow-xl animate-bounce" style={{animationDuration: '2.8s', animationDelay: '1.5s'}}>
+                    <div className="text-xs text-slate-300 font-mono">
+                      <span className="text-green-400">✓</span> Simulation Ready
+                    </div>
+                  </div>
+                  
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-500 cursor-pointer group">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white p-8 rounded-full shadow-2xl shadow-blue-500/50 transform group-hover:scale-110 transition-all duration-300">
+                      <Play size={40} className="ml-1" />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Outer glow */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-2xl -z-10 animate-pulse" />
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
         
-        {/* Feature highlights */}
-        <motion.div 
-          className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-        >
-          <div className="flex items-start gap-4 p-6 rounded-xl bg-dark-700/50 border border-dark-600/50 backdrop-blur-sm hover:bg-dark-700/70 transition-all duration-300">
-            <div className="bg-primary-900 p-3 rounded-lg border border-primary-700 flex-shrink-0">
-              <Cpu size={24} className="text-primary-400" />
+        {/* Enhanced Feature Cards */}
+        <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="group relative bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 hover:bg-slate-800/70 transition-all duration-500 hover:transform hover:-translate-y-2">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl mb-6 w-fit shadow-lg shadow-blue-500/25">
+              <Cpu size={32} className="text-white" />
             </div>
-            <div>
-              <h3 className="font-semibold text-white mb-2">Multiple Robot Types</h3>
-              <p className="text-dark-300 text-sm leading-relaxed">
-                Control arms, mobile robots, drones, and specialized bots in realistic physics simulations
-              </p>
-            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">Multi-Robot Support</h3>
+            <p className="text-slate-400 leading-relaxed text-lg">
+              Simulate industrial arms, mobile rovers, flying drones, and custom robots with realistic physics and sensors.
+            </p>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
           </div>
           
-          <div className="flex items-start gap-4 p-6 rounded-xl bg-dark-700/50 border border-dark-600/50 backdrop-blur-sm hover:bg-dark-700/70 transition-all duration-300">
-            <div className="bg-secondary-900 p-3 rounded-lg border border-secondary-700 flex-shrink-0">
-              <Brain size={24} className="text-secondary-400" />
+          <div className="group relative bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 hover:bg-slate-800/70 transition-all duration-500 hover:transform hover:-translate-y-2">
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-xl mb-6 w-fit shadow-lg shadow-purple-500/25">
+              <Brain size={32} className="text-white" />
             </div>
-            <div>
-              <h3 className="font-semibold text-white mb-2">AI-Powered Learning</h3>
-              <p className="text-dark-300 text-sm leading-relaxed">
-                Natural language programming with intelligent code suggestions and real-time feedback
-              </p>
-            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">AI-Powered Coding</h3>
+            <p className="text-slate-400 leading-relaxed text-lg">
+              Write robot programs using natural language commands or get intelligent code suggestions as you type.
+            </p>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
           </div>
           
-          <div className="flex items-start gap-4 p-6 rounded-xl bg-dark-700/50 border border-dark-600/50 backdrop-blur-sm hover:bg-dark-700/70 transition-all duration-300">
-            <div className="bg-accent-900 p-3 rounded-lg border border-accent-700 flex-shrink-0">
-              <Layers size={24} className="text-accent-400" />
+          <div className="group relative bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 hover:bg-slate-800/70 transition-all duration-500 hover:transform hover:-translate-y-2">
+            <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 p-4 rounded-xl mb-6 w-fit shadow-lg shadow-cyan-500/25">
+              <Layers size={32} className="text-white" />
             </div>
-            <div>
-              <h3 className="font-semibold text-white mb-2">Progressive Curriculum</h3>
-              <p className="text-dark-300 text-sm leading-relaxed">
-                Structured learning path from basic movements to complex autonomous systems
-              </p>
-            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">Real-World Physics</h3>
+            <p className="text-slate-400 leading-relaxed text-lg">
+              Experience accurate collision detection, gravity, friction, and sensor feedback just like real robots.
+            </p>
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
