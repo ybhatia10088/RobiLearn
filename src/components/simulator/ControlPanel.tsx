@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useRobotStore } from '@/store/robotStore';
 import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand, Book, Zap, Target, Radar } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -22,83 +22,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     landDrone,
     startHover
   } = useRobotStore();
-
-    // ─── GENERIC OBJECTIVE PARSING ───
-  const criteriaList = useMemo(() => {
-    if (!challenge) return [];
-    return challenge.objectives.map(o => {
-      const d = o.description.toLowerCase();
-      let type: 'move' | 'rotate' | null = null;
-      let axis: 'x' | 'z' | 'y' | null = null;
-      let sign: 1 | -1 | null = null;
-      let threshold = 0;
-
-      // move … forward/backward/left/right N
-      const m = d.match(/move.*?(forward|backward|left|right)\s*(\d+(\.\d+)?)/);
-      if (m) {
-        type = 'move';
-        threshold = parseFloat(m[2]);
-        axis = (m[1]==='forward'||m[1]==='backward') ? 'z' : 'x';
-        sign = (m[1]==='forward'||m[1]==='right') ? 1 : -1;
-      }
-      // rotate … N degrees left/right
-      const r = d.match(/rotate.*?(\d+(\.\d+)?).*?degrees.*?(left|right)/);
-      if (r) {
-        type = 'rotate';
-        threshold = parseFloat(r[1]);
-        axis = 'y';
-        sign = (r[3]==='right') ? 1 : -1;
-      }
-      return { objectiveId: o.id, type, axis, threshold, sign, completed: o.completed };
-    });
-  }, [challenge]);
-
-  // ─── STATE REFS FOR PROGRESS ───
-  const progress = useRef<Record<string, number>>({});
-  const lastPos  = useRef(robotState?.position  || { x:0,y:0,z:0 });
-  const lastRot  = useRef(robotState?.rotation.y || 0);
-
-  // ─── EFFECT: WATCH ACTUAL MOTION ───
-  useEffect(() => {
-    if (!challenge || !robotState) return;
-    const pos = robotState.position;
-    const rot = robotState.rotation.y;
-    const dx  = pos.x - lastPos.current.x;
-    const dz  = pos.z - lastPos.current.z;
-    const dy  = (rot - lastRot.current) * (180/Math.PI);
-
-    criteriaList.forEach(c => {
-      if (!c.type || c.completed) return;
-      // init
-      if (progress.current[c.objectiveId] == null) progress.current[c.objectiveId] = 0;
-      let delta = 0;
-
-      if (c.type==='move' && c.axis) {
-        const v = c.axis==='x' ? dx : dz;
-        if (v * (c.sign||1) > 0) delta = Math.abs(v);
-      } else if (c.type==='rotate') {
-        if (dy * (c.sign||1) > 0) delta = Math.abs(dy);
-      }
-
-      if (delta > 0) {
-        progress.current[c.objectiveId] += delta;
-        if (progress.current[c.objectiveId] >= c.threshold) {
-          window.dispatchEvent(new CustomEvent('objectiveCompleted', {
-            detail: { challengeId: challenge.id, objectiveId: c.objectiveId }
-          }));
-        }
-      }
-    });
-
-    lastPos.current = { ...pos };
-    lastRot.current = rot;
-  },
-  [
-    robotState,
-    criteriaList,
-    challenge
-  ]);
-
   
   const [speed, setSpeed] = useState(50);
   const [activeSensorTab, setActiveSensorTab] = useState('camera');
