@@ -428,8 +428,7 @@ const ChallengeList: React.FC = () => {
     getChallengeStatus, 
     getObjectiveStatus,
     performance,
-    robotState,
-    setCurrentChallenge,
+    robotState
   } = useRobotStore();
   
   // Real-time objective completion listener
@@ -536,7 +535,7 @@ const ChallengeList: React.FC = () => {
 
   const handleChallengeClick = (challenge: Challenge) => {
     if (!challenge.unlocked) return;
-    setCurrentChallenge(challenge.id);
+    
     if (expandedChallenge === challenge.id) {
       navigate(`/simulator?challenge=${challenge.id}`);
     } else {
