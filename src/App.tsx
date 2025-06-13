@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import HomePage from '@/pages/HomePage';
 import SimulatorPage from '@/pages/SimulatorPage';
 import ChallengesPage from '@/pages/ChallengesPage';
+import AboutPage from '@/pages/AboutPage';
 import { useCurrentRoute } from '@/hooks/useNavigation';
 
 function App() {
@@ -36,6 +37,8 @@ function App() {
         return <SimulatorPage />;
       case '/challenges':
         return <ChallengesPage />;
+      case '/about':
+        return <AboutPage />;
       case '/':
         return <HomePage />;
       default:
