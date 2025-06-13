@@ -17,8 +17,6 @@ const NaturalLanguageInput: React.FC = () => {
   const isExecutingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-
-
   // Helper function to create abortable delay
   const delay = (ms: number, abortSignal?: AbortSignal): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -73,7 +71,7 @@ const NaturalLanguageInput: React.FC = () => {
     const { signal } = abortControllerRef.current;
 
     try {
-      const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot } = useRobotStore.getState();
+      const { moveRobot, rotateRobot, grabObject, releaseObject, stopRobot, getSensorData } = useRobotStore.getState();
       
       // Always stop robot first
       await stopRobot();
@@ -137,6 +135,11 @@ const NaturalLanguageInput: React.FC = () => {
       } else if (lowerCommand.includes('release') || lowerCommand.includes('drop')) {
         await releaseObject();
         await delay(1000, signal);
+        
+      } else if (lowerCommand.includes('sensor') || lowerCommand.includes('scan')) {
+        // Read sensor data
+        const sensorData = await getSensorData('ultrasonic');
+        console.log('Sensor data:', sensorData);
         
       } else if (lowerCommand.includes('wait') || lowerCommand.includes('pause')) {
         const timeMatch = lowerCommand.match(/(\d+)\s*(seconds?|sec|s)/);
@@ -230,6 +233,13 @@ const NaturalLanguageInput: React.FC = () => {
         code: `robot.release();`,
         canExecute: true
       };
+    } else if (lowerInput.includes('sensor') || lowerInput.includes('scan')) {
+      return {
+        action: 'read sensor',
+        code: `const sensorData = await robot.getSensorData('ultrasonic');
+console.log('Sensor data:', sensorData);`,
+        canExecute: true
+      };
     } else if (lowerInput.includes('stop')) {
       return {
         action: 'stop robot',
@@ -278,7 +288,7 @@ ${parsed.code}
 
 Should I run this command?`;
       } else {
-        response = 'I\'m not sure how to interpret that instruction. Could you please rephrase it or try a different command? For example: "forward", "move forward", "turn left", "turn right", "grab", "stop".';
+        response = 'I\'m not sure how to interpret that instruction. Could you please rephrase it or try a different command? For example: "forward", "move forward", "turn left", "turn right", "grab", "read sensor", "stop".';
       }
       
       setConversation(prev => [...prev, { 

@@ -28,7 +28,7 @@ await robot.rotate({
 });
 
 // Access sensors
-const sensorData = await robot.getSensorData('camera');
+const sensorData = await robot.getSensorData('ultrasonic');
 console.log('Sensor data:', sensorData);
 
 // More complex example
@@ -212,18 +212,27 @@ await robot.releaseObject();
         addOutput('info', `Reading ${sensorType} sensor...`);
         await delay(500, abortSignal);
         
-        // Mock sensor data for demonstration
-        const mockData = {
-          camera: { objects: ['red_ball', 'blue_cube'], brightness: 75 },
-          ultrasonic: { distance: 25.5, unit: 'cm' },
-          light: { level: 60, unit: 'lux' },
-          temperature: { value: 22.5, unit: 'C' }
-        };
-        
-        const sensorData = mockData[sensorType as keyof typeof mockData] || { error: 'Unknown sensor' };
+        // Use the enhanced sensor data function from the store
+        const sensorData = await getSensorData(sensorType);
         addOutput('success', `Sensor data: ${JSON.stringify(sensorData)}`);
         
         return sensorData;
+      },
+
+      getSensor: async (sensorType: string) => {
+        if (!isRunningRef.current || abortSignal.aborted) {
+          throw new Error('Execution stopped');
+        }
+        
+        addOutput('info', `Reading ${sensorType} sensor...`);
+        await delay(500, abortSignal);
+        
+        // Use the readSensor function from the store for backward compatibility
+        const { readSensor } = useRobotStore.getState();
+        const reading = await readSensor(sensorType);
+        addOutput('success', `Sensor reading: ${reading}`);
+        
+        return reading;
       },
 
       stop: async () => {
