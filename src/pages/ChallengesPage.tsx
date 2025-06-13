@@ -2,45 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { ChevronRight, ChevronDown, Trophy, LockKeyhole, Star, Book, Tag, Play, CheckCircle, Clock, Target, Award, HelpCircle, Eye, BookOpen, Code, Lightbulb, X } from 'lucide-react';
 import { useNavigate } from '@/hooks/useNavigation';
-
-// Mock types (you'll need to import these from your actual types file)
-const ChallengeCategory = {
-  INTRO: 'intro',
-  WAREHOUSE: 'warehouse',
-  SURGERY: 'surgery',
-  SEARCH_RESCUE: 'search_rescue',
-  MANUFACTURING: 'manufacturing'
-};
-
-const DifficultyLevel = {
-  BEGINNER: 'beginner',
-  INTERMEDIATE: 'intermediate',
-  ADVANCED: 'advanced',
-  EXPERT: 'expert'
-};
-
-// Mock robot store (replace with your actual store)
-const useRobotStore = () => ({
-  challengeTracking: {
-    completedChallenges: ['intro-1'],
-    completedObjectives: ['obj1'],
-    totalDistanceMoved: 15.3,
-    totalRotations: Math.PI * 2.5
-  },
-  getChallengeStatus: (id) => id === 'intro-1',
-  getObjectiveStatus: (id) => id === 'obj1',
-  performance: {},
-  robotState: {
-    position: { x: 2.5, z: 3.2 },
-    batteryLevel: 85
-  },
-  setCurrentChallenge: (challengeId) => {
-    console.log('Setting current challenge:', challengeId);
-  }
-});
+import { useRobotStore } from '@/store/robotStore';
+import { ChallengeCategory, DifficultyLevel, Challenge } from '@/types/challenge.types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Enhanced challenge data
-const challenges = [
+const challenges: Challenge[] = [
   {
     id: 'intro-1',
     title: 'Hello Robot',
@@ -53,7 +20,7 @@ const challenges = [
         id: 'obj1', 
         description: 'Understand basic robot movement commands',
         completionCriteria: 'theory_complete',
-        completed: true,
+        completed: false,
         theory: `Robot movement is controlled through basic commands that specify:
 - Direction (forward, backward, left, right)
 - Speed (usually as a percentage or m/s)
@@ -161,7 +128,7 @@ robot.move({ direction: "forward", speed: 0.5, duration: 2000 });`,
     robotType: 'mobile',
     environmentId: 'tutorial-room',
     unlocked: true,
-    completed: true,
+    completed: false,
     nextChallengeIds: ['intro-2'],
   },
   {
@@ -247,17 +214,19 @@ Each sensor type has specific uses and limitations.`,
   }
 ];
 
-const ChallengesPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
-  const [expandedChallenge, setExpandedChallenge] = useState(null);
-  const [realtimeChallenges, setRealtimeChallenges] = useState(challenges);
-  const [activeModal, setActiveModal] = useState(null);
-  const [selectedHints, setSelectedHints] = useState([]);
-  const [currentQuizAnswer, setCurrentQuizAnswer] = useState({});
-  const [showQuizResults, setShowQuizResults] = useState({});
+const ChallengesPage: React.FC = () => {
+  const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory | 'all'>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'all'>('all');
+  const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
+  const [realtimeChallenges, setRealtimeChallenges] = useState<Challenge[]>(challenges);
+  const [activeModal, setActiveModal] = useState<{ type: string; data: Challenge } | null>(null);
+  const [selectedHints, setSelectedHints] = useState<string[]>([]);
+  const [currentQuizAnswer, setCurrentQuizAnswer] = useState<Record<number, string>>({});
+  const [showQuizResults, setShowQuizResults] = useState<Record<number, { correct: boolean; selected: string }>>({});
   
   const navigate = useNavigate();
+  
+  // Use the actual robot store
   const { 
     challengeTracking, 
     getChallengeStatus, 
@@ -267,9 +236,53 @@ const ChallengesPage = () => {
     setCurrentChallenge
   } = useRobotStore();
 
+  // Real-time objective completion listener
+  useEffect(() => {
+    const handleObjectiveCompleted = (event: CustomEvent) => {
+      const { objectiveId, challengeId } = event.detail;
+      
+      setRealtimeChallenges(prev => 
+        prev.map(challenge => 
+          challenge.id === challengeId 
+            ? {
+                ...challenge,
+                objectives: challenge.objectives.map(obj => 
+                  obj.id === objectiveId 
+                    ? { ...obj, completed: true }
+                    : obj
+                )
+              }
+            : challenge
+        )
+      );
+    };
+
+    window.addEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+    };
+  }, []);
+
+  // Update challenge completion status based on robot store
+  useEffect(() => {
+    setRealtimeChallenges(prev => 
+      prev.map(challenge => ({
+        ...challenge,
+        completed: getChallengeStatus(challenge.id),
+        objectives: challenge.objectives.map(obj => ({
+          ...obj,
+          completed: getObjectiveStatus(obj.id)
+        }))
+      }))
+    );
+  }, [challengeTracking.completedChallenges, challengeTracking.completedObjectives, getChallengeStatus, getObjectiveStatus]);
+
   // Modal handlers
-  const openModal = (type, data = null) => {
-    setActiveModal({ type, data });
+  const openModal = (type: string, data: Challenge | null = null) => {
+    if (data) {
+      setActiveModal({ type, data });
+    }
   };
 
   const closeModal = () => {
@@ -279,13 +292,13 @@ const ChallengesPage = () => {
     setShowQuizResults({});
   };
 
-  const handleHintUnlock = (hint) => {
+  const handleHintUnlock = (hint: { id: string; unlockCost: number }) => {
     if (hint.unlockCost === 0 || window.confirm(`Unlock this hint for ${hint.unlockCost} points?`)) {
       setSelectedHints(prev => [...prev, hint.id]);
     }
   };
 
-  const handleQuizAnswer = (questionIndex, answer, correctAnswer) => {
+  const handleQuizAnswer = (questionIndex: number, answer: string, correctAnswer: string) => {
     setCurrentQuizAnswer(prev => ({
       ...prev,
       [questionIndex]: answer
@@ -324,17 +337,17 @@ const ChallengesPage = () => {
     { value: DifficultyLevel.EXPERT, label: 'Expert' },
   ];
   
-  const getDifficultyColor = (difficulty) => {
+  const getDifficultyColor = (difficulty: DifficultyLevel) => {
     switch (difficulty) {
-      case DifficultyLevel.BEGINNER: return 'green';
-      case DifficultyLevel.INTERMEDIATE: return 'blue';
-      case DifficultyLevel.ADVANCED: return 'yellow';
-      case DifficultyLevel.EXPERT: return 'red';
-      default: return 'blue';
+      case DifficultyLevel.BEGINNER: return 'success';
+      case DifficultyLevel.INTERMEDIATE: return 'primary';
+      case DifficultyLevel.ADVANCED: return 'warning';
+      case DifficultyLevel.EXPERT: return 'error';
+      default: return 'primary';
     }
   };
   
-  const getCategoryIcon = (category) => {
+  const getCategoryIcon = (category: ChallengeCategory) => {
     switch (category) {
       case ChallengeCategory.INTRO: return <Book size={16} />;
       case ChallengeCategory.WAREHOUSE: return <Tag size={16} />;
@@ -345,18 +358,18 @@ const ChallengesPage = () => {
     }
   };
 
-  const getObjectiveProgress = (challenge) => {
+  const getObjectiveProgress = (challenge: Challenge) => {
     const completed = challenge.objectives.filter(obj => obj.completed).length;
     const total = challenge.objectives.length;
     return { completed, total, percentage: Math.round((completed / total) * 100) };
   };
 
-  const handleChallengeClick = (challenge) => {
+  const handleChallengeClick = (challenge: Challenge) => {
     if (!challenge.unlocked) return;
     setExpandedChallenge(expandedChallenge === challenge.id ? null : challenge.id);
   };
 
-  const handleStartChallenge = (challenge) => {
+  const handleStartChallenge = (challenge: Challenge) => {
     // Set the current challenge in the store
     if (setCurrentChallenge) {
       setCurrentChallenge(challenge.id);
@@ -365,8 +378,13 @@ const ChallengesPage = () => {
     navigate(`/simulator?challenge=${challenge.id}`);
   };
 
+  // Calculate stats from actual robot store data
+  const completedChallengesCount = Array.from(challengeTracking.completedChallenges).length;
+  const totalChallenges = challenges.length;
+  const completedObjectivesCount = Array.from(challengeTracking.completedObjectives).length;
+
   // Modal Components
-  const TheoryModal = ({ challenge }) => (
+  const TheoryModal: React.FC<{ challenge: Challenge }> = ({ challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-dark-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-dark-600">
         <div className="p-6">
@@ -415,7 +433,7 @@ const ChallengesPage = () => {
     </div>
   );
 
-  const QuizModal = ({ challenge }) => (
+  const QuizModal: React.FC<{ challenge: Challenge }> = ({ challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-dark-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-dark-600">
         <div className="p-6">
@@ -460,7 +478,7 @@ const ChallengesPage = () => {
                       key={optIndex}
                       className={buttonClass}
                       onClick={() => handleQuizAnswer(qIndex, option, question.correctAnswer)}
-                      disabled={showResult}
+                      disabled={!!showResult}
                     >
                       {option}
                     </button>
@@ -479,7 +497,7 @@ const ChallengesPage = () => {
     </div>
   );
 
-  const HintsModal = ({ challenge }) => (
+  const HintsModal: React.FC<{ challenge: Challenge }> = ({ challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-dark-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-dark-600">
         <div className="p-6">
@@ -534,7 +552,7 @@ const ChallengesPage = () => {
     </div>
   );
 
-  const CodeModal = ({ challenge }) => (
+  const CodeModal: React.FC<{ challenge: Challenge }> = ({ challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-dark-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-dark-600">
         <div className="p-6">
@@ -564,7 +582,7 @@ const ChallengesPage = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(challenge.startingCode?.code);
+                  navigator.clipboard.writeText(challenge.startingCode?.code || '');
                   alert('Code copied to clipboard!');
                 }}
                 className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded"
@@ -605,7 +623,7 @@ const ChallengesPage = () => {
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-900 border border-primary-700 text-primary-400 mb-1">
                   <Award size={24} />
                 </div>
-                <span className="text-sm text-dark-300">1/2</span>
+                <span className="text-sm text-dark-300">{completedChallengesCount}/{totalChallenges}</span>
                 <span className="text-xs text-dark-500">Completed</span>
               </div>
               
@@ -613,16 +631,16 @@ const ChallengesPage = () => {
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-warning-900 border border-warning-700 text-warning-400 mb-1">
                   <Trophy size={24} />
                 </div>
-                <span className="text-sm text-dark-300">150</span>
-                <span className="text-xs text-dark-500">Points</span>
+                <span className="text-sm text-dark-300">{completedObjectivesCount}</span>
+                <span className="text-xs text-dark-500">Objectives</span>
               </div>
               
               <div className="flex flex-col items-center">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-accent-900 border border-accent-700 text-accent-400 mb-1">
                   <Star size={24} />
                 </div>
-                <span className="text-sm text-dark-300">4</span>
-                <span className="text-xs text-dark-500">Badges</span>
+                <span className="text-sm text-dark-300">{challengeTracking.totalDistanceMoved.toFixed(1)}m</span>
+                <span className="text-xs text-dark-500">Distance</span>
               </div>
             </div>
           </div>
@@ -635,7 +653,7 @@ const ChallengesPage = () => {
                 <select
                   className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={(e) => setSelectedCategory(e.target.value as any)}
                 >
                   {categories.map(category => (
                     <option key={category.value} value={category.value}>{category.label}</option>
@@ -648,7 +666,7 @@ const ChallengesPage = () => {
                 <select
                   className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   value={selectedDifficulty}
-                  onChange={(e) => setSelectedDifficulty(e.target.value)}
+                  onChange={(e) => setSelectedDifficulty(e.target.value as any)}
                 >
                   {difficulties.map(difficulty => (
                     <option key={difficulty.value} value={difficulty.value}>{difficulty.label}</option>
@@ -699,8 +717,10 @@ const ChallengesPage = () => {
               const isExpanded = expandedChallenge === challenge.id;
               
               return (
-                <div
+                <motion.div
                   key={challenge.id}
+                  initial={false}
+                  animate={{ height: isExpanded ? 'auto' : 'auto' }}
                   className={`bg-dark-800 rounded-lg border border-dark-700 p-6 cursor-pointer transition-all ${
                     challenge.unlocked ? 'hover:border-dark-600' : 'opacity-70'
                   } ${challenge.completed ? 'border-success-500 bg-success-900/10' : ''}`}
@@ -714,7 +734,13 @@ const ChallengesPage = () => {
                         </div>
                         <h3 className="text-xl font-semibold text-white">{challenge.title}</h3>
                         {challenge.completed && (
-                          <CheckCircle className="ml-2 text-success-400" size={20} />
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="ml-2 text-success-400"
+                          >
+                            <CheckCircle size={20} />
+                          </motion.div>
                         )}
                         {!challenge.unlocked && (
                           <LockKeyhole className="ml-2 text-dark-500" size={16} />
@@ -759,11 +785,13 @@ const ChallengesPage = () => {
                       
                       {progress.total > 0 && (
                         <div className="w-24 bg-dark-700 rounded-full h-2 mt-2">
-                          <div
+                          <motion.div
                             className={`h-2 rounded-full transition-all ${
                               challenge.completed ? 'bg-success-500' : 'bg-primary-500'
                             }`}
-                            style={{ width: `${progress.percentage}%` }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress.percentage}%` }}
+                            transition={{ duration: 0.5 }}
                           />
                         </div>
                       )}
@@ -771,146 +799,174 @@ const ChallengesPage = () => {
                   </div>
 
                   {/* Expanded Content */}
-                  {isExpanded && (
-                    <div className="mt-6 pt-6 border-t border-dark-700">
-                      {/* Action Buttons */}
-                      <div className="flex flex-wrap gap-3 mb-6">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openModal('theory', challenge);
-                          }}
-                          className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                        >
-                          <BookOpen size={14} className="mr-2" />
-                          Theory
-                        </button>
-                        
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openModal('quiz', challenge);
-                          }}
-                          className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                        >
-                          <Star size={14} className="mr-2" />
-                          Quiz
-                        </button>
-                        
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openModal('hints', challenge);
-                          }}
-                          className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                        >
-                          <Lightbulb size={14} className="mr-2" />
-                          Hints ({challenge.hints?.length || 0})
-                        </button>
-                        
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openModal('code', challenge);
-                          }}
-                          className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                        >
-                          <Code size={14} className="mr-2" />
-                          View Code
-                        </button>
-                        
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openModal('preview', challenge);
-                          }}
-                          className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                        >
-                          <Eye size={14} className="mr-2" />
-                          Preview
-                        </button>
-                      </div>
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-6 pt-6 border-t border-dark-700"
+                      >
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-3 mb-6">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal('theory', challenge);
+                            }}
+                            className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
+                          >
+                            <BookOpen size={14} className="mr-2" />
+                            Theory
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal('quiz', challenge);
+                            }}
+                            className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
+                          >
+                            <Star size={14} className="mr-2" />
+                            Quiz
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal('hints', challenge);
+                            }}
+                            className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
+                          >
+                            <Lightbulb size={14} className="mr-2" />
+                            Hints ({challenge.hints?.length || 0})
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal('code', challenge);
+                            }}
+                            className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
+                          >
+                            <Code size={14} className="mr-2" />
+                            View Code
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal('preview', challenge);
+                            }}
+                            className="bg-dark-700 hover:bg-dark-600 text-white px-4 py-2 rounded flex items-center text-sm"
+                          >
+                            <Eye size={14} className="mr-2" />
+                            Preview
+                          </button>
+                        </div>
 
-                      {/* Objectives */}
-                      <div>
-                        <h4 className="text-white font-medium mb-3 flex items-center">
-                          <Target size={16} className="mr-2" />
-                          Objectives
-                        </h4>
-                        <div className="space-y-3">
-                          {challenge.objectives.map((objective, index) => (
-                            <div
-                              key={objective.id}
-                              className={`p-4 rounded-lg border ${
-                                objective.completed
-                                  ? 'bg-success-900/20 border-success-700'
-                                  : 'bg-dark-700 border-dark-600'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center mb-2">
-                                    <span className="text-sm font-medium text-dark-400 mr-3">
-                                      #{index + 1}
-                                    </span>
-                                    <p className="text-white">{objective.description}</p>
+                        {/* Objectives */}
+                        <div>
+                          <h4 className="text-white font-medium mb-3 flex items-center">
+                            <Target size={16} className="mr-2" />
+                            Objectives
+                          </h4>
+                          <div className="space-y-3">
+                            {challenge.objectives.map((objective, index) => (
+                              <motion.div
+                                key={objective.id}
+                                className={`p-4 rounded-lg border ${
+                                  objective.completed
+                                    ? 'bg-success-900/20 border-success-700'
+                                    : 'bg-dark-700 border-dark-600'
+                                }`}
+                                animate={objective.completed ? { backgroundColor: 'rgba(34, 197, 94, 0.1)' } : {}}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center mb-2">
+                                      <span className="text-sm font-medium text-dark-400 mr-3">
+                                        #{index + 1}
+                                      </span>
+                                      <p className="text-white">{objective.description}</p>
+                                      <AnimatePresence>
+                                        {objective.completed && (
+                                          <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            exit={{ scale: 0 }}
+                                            className="ml-2 text-success-400"
+                                          >
+                                            <CheckCircle size={16} />
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                    
+                                    {objective.theory && (
+                                      <div className="mt-2 p-3 bg-dark-800 rounded border border-dark-600">
+                                        <h5 className="text-primary-400 text-sm font-medium mb-2">Theory:</h5>
+                                        <pre className="text-dark-300 text-xs whitespace-pre-wrap overflow-x-auto">
+                                          {objective.theory}
+                                        </pre>
+                                      </div>
+                                    )}
+                                    
+                                    {objective.hints && objective.hints.length > 0 && (
+                                      <div className="mt-2">
+                                        <details className="group">
+                                          <summary className="text-warning-400 text-sm cursor-pointer hover:text-warning-300">
+                                            💡 Show hints ({objective.hints.length})
+                                          </summary>
+                                          <div className="mt-2 space-y-1">
+                                            {objective.hints.map((hint, hintIndex) => (
+                                              <div key={hintIndex} className="text-dark-400 text-sm pl-4 border-l-2 border-warning-500">
+                                                {hint}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </details>
+                                      </div>
+                                    )}
+
                                     {objective.completed && (
-                                      <CheckCircle className="ml-2 text-success-400" size={16} />
+                                      <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="text-success-400 text-xs mt-1 font-medium"
+                                      >
+                                        ✓ Completed!
+                                      </motion.p>
                                     )}
                                   </div>
-                                  
-                                  {objective.theory && (
-                                    <div className="mt-2 p-3 bg-dark-800 rounded border border-dark-600">
-                                      <h5 className="text-primary-400 text-sm font-medium mb-2">Theory:</h5>
-                                      <pre className="text-dark-300 text-xs whitespace-pre-wrap overflow-x-auto">
-                                        {objective.theory}
-                                      </pre>
-                                    </div>
-                                  )}
-                                  
-                                  {objective.hints && objective.hints.length > 0 && (
-                                    <div className="mt-2">
-                                      <details className="group">
-                                        <summary className="text-warning-400 text-sm cursor-pointer hover:text-warning-300">
-                                          💡 Show hints ({objective.hints.length})
-                                        </summary>
-                                        <div className="mt-2 space-y-1">
-                                          {objective.hints.map((hint, hintIndex) => (
-                                            <div key={hintIndex} className="text-dark-400 text-sm pl-4 border-l-2 border-warning-500">
-                                              {hint}
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </details>
-                                    </div>
-                                  )}
                                 </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Next Challenges Preview */}
-                      {challenge.nextChallengeIds && challenge.nextChallengeIds.length > 0 && (
-                        <div className="mt-6 pt-4 border-t border-dark-700">
-                          <h4 className="text-white font-medium mb-3">Next Challenges:</h4>
-                          <div className="flex space-x-3">
-                            {challenge.nextChallengeIds.map((nextId) => {
-                              const nextChallenge = challenges.find(c => c.id === nextId);
-                              return nextChallenge ? (
-                                <div key={nextId} className="bg-dark-700 rounded p-3 text-sm">
-                                  <p className="text-white font-medium">{nextChallenge.title}</p>
-                                  <p className="text-dark-400 text-xs mt-1">{nextChallenge.category}</p>
-                                </div>
-                              ) : null;
-                            })}
+                              </motion.div>
+                            ))}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+
+                        {/* Next Challenges Preview */}
+                        {challenge.nextChallengeIds && challenge.nextChallengeIds.length > 0 && (
+                          <div className="mt-6 pt-4 border-t border-dark-700">
+                            <h4 className="text-white font-medium mb-3">Next Challenges:</h4>
+                            <div className="flex space-x-3">
+                              {challenge.nextChallengeIds.map((nextId) => {
+                                const nextChallenge = challenges.find(c => c.id === nextId);
+                                return nextChallenge ? (
+                                  <div key={nextId} className="bg-dark-700 rounded p-3 text-sm">
+                                    <p className="text-white font-medium">{nextChallenge.title}</p>
+                                    <p className="text-dark-400 text-xs mt-1">{nextChallenge.category}</p>
+                                  </div>
+                                ) : null;
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               );
             })}
           </div>
