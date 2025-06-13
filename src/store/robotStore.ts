@@ -23,6 +23,14 @@ interface PerformanceMetrics {
   batteryUsed: number;
 }
 
+interface ChallengeTracking {
+  completedChallenges: string[];
+  completedObjectives: string[];
+  totalDistanceMoved: number;
+  totalRotations: number;
+  currentChallenge?: string;
+}
+
 interface RobotStoreState {
   selectedRobot: RobotConfig | null;
   robotState: RobotState | null;
@@ -30,6 +38,7 @@ interface RobotStoreState {
   isMoving: boolean;
   jointPositions: JointState;
   performance: PerformanceMetrics;
+  challengeTracking: ChallengeTracking;
   selectRobot: (config: RobotConfig) => void;
   moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: keyof JointState }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
@@ -46,6 +55,11 @@ interface RobotStoreState {
   startHover: () => void;
   startExplorerAnimation: () => void;
   stopExplorerAnimation: () => void;
+  getChallengeStatus: (challengeId: string) => boolean;
+  getObjectiveStatus: (objectiveId: string) => boolean;
+  setCurrentChallenge: (challengeId: string) => void;
+  completeChallenge: (challengeId: string) => void;
+  completeObjective: (objectiveId: string) => void;
 }
 
 const INITIAL_ROBOT_STATE = {
@@ -78,6 +92,13 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     rotations: 0,
     tasksCompleted: 0,
     batteryUsed: 0,
+  },
+  challengeTracking: {
+    completedChallenges: [],
+    completedObjectives: [],
+    totalDistanceMoved: 0,
+    totalRotations: 0,
+    currentChallenge: undefined,
   },
 
   selectRobot: (config) => {
@@ -175,13 +196,19 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           z: currentState.robotState.position.z + deltaZ,
         };
 
-        set({
+        // Update distance tracking
+        const distance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+        set((state) => ({
           robotState: {
             ...currentState.robotState,
             position: newPosition,
             isMoving: true,
           },
-        });
+          challengeTracking: {
+            ...state.challengeTracking,
+            totalDistanceMoved: state.challengeTracking.totalDistanceMoved + distance,
+          },
+        }));
       }, 16);
 
       (window as any).robotMoveInterval = moveInterval;
@@ -208,13 +235,19 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         z: currentState.robotState.position.z + deltaZ * multiplier,
       };
 
-      set({
+      // Update distance tracking
+      const distance = Math.sqrt((deltaX * multiplier) ** 2 + (deltaZ * multiplier) ** 2);
+      set((state) => ({
         robotState: {
           ...currentState.robotState,
           position: newPosition,
           isMoving: true,
         },
-      });
+        challengeTracking: {
+          ...state.challengeTracking,
+          totalDistanceMoved: state.challengeTracking.totalDistanceMoved + distance,
+        },
+      }));
     }, 16);
 
     (window as any).robotMoveInterval = moveInterval;
@@ -250,13 +283,17 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         y: (currentState.robotState.rotation.y + delta) % (Math.PI * 2),
       };
 
-      set({
+      set((state) => ({
         robotState: {
           ...currentState.robotState,
           rotation: newRotation,
           isMoving: true,
         },
-      });
+        challengeTracking: {
+          ...state.challengeTracking,
+          totalRotations: state.challengeTracking.totalRotations + Math.abs(delta),
+        },
+      }));
     }, 16);
 
     (window as any).robotRotateInterval = rotateInterval;
@@ -379,6 +416,44 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         isMoving: false,
       } : null,
       isMoving: false,
+    }));
+  },
+
+  // Challenge tracking methods
+  getChallengeStatus: (challengeId: string) => {
+    const state = get();
+    return state.challengeTracking.completedChallenges.includes(challengeId);
+  },
+
+  getObjectiveStatus: (objectiveId: string) => {
+    const state = get();
+    return state.challengeTracking.completedObjectives.includes(objectiveId);
+  },
+
+  setCurrentChallenge: (challengeId: string) => {
+    set((state) => ({
+      challengeTracking: {
+        ...state.challengeTracking,
+        currentChallenge: challengeId,
+      },
+    }));
+  },
+
+  completeChallenge: (challengeId: string) => {
+    set((state) => ({
+      challengeTracking: {
+        ...state.challengeTracking,
+        completedChallenges: [...state.challengeTracking.completedChallenges, challengeId],
+      },
+    }));
+  },
+
+  completeObjective: (objectiveId: string) => {
+    set((state) => ({
+      challengeTracking: {
+        ...state.challengeTracking,
+        completedObjectives: [...state.challengeTracking.completedObjectives, objectiveId],
+      },
     }));
   },
 }));
