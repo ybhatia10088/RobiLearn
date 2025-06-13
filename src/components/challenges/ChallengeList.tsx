@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { ChevronRight, Trophy, LockKeyhole, Star, Book, Tag, Play, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, Trophy, LockKeyhole, Star, Book, Tag, Play, CheckCircle, Clock, Target } from 'lucide-react';
 import { ChallengeCategory, DifficultyLevel, Challenge } from '@/types/challenge.types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from '@/hooks/useNavigation';
+import { useRobotStore } from '@/store/robotStore'; // Import the robot store
 
 // Enhanced challenge data with learning content
 const challenges: Challenge[] = [
@@ -418,9 +419,61 @@ const ChallengeList: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory | 'all'>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'all'>('all');
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
+  const [realtimeChallenges, setRealtimeChallenges] = useState<Challenge[]>(challenges);
   const navigate = useNavigate();
   
-  const filteredChallenges = challenges.filter(challenge => 
+  // Get robot store state and functions
+  const { 
+    challengeTracking, 
+    getChallengeStatus, 
+    getObjectiveStatus,
+    performance,
+    robotState
+  } = useRobotStore();
+  
+  // Real-time objective completion listener
+  useEffect(() => {
+    const handleObjectiveCompleted = (event: CustomEvent) => {
+      const { objectiveId, challengeId } = event.detail;
+      
+      setRealtimeChallenges(prev => 
+        prev.map(challenge => 
+          challenge.id === challengeId 
+            ? {
+                ...challenge,
+                objectives: challenge.objectives.map(obj => 
+                  obj.id === objectiveId 
+                    ? { ...obj, completed: true }
+                    : obj
+                )
+              }
+            : challenge
+        )
+      );
+    };
+
+    window.addEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+    };
+  }, []);
+
+  // Update challenge completion status based on robot store
+  useEffect(() => {
+    setRealtimeChallenges(prev => 
+      prev.map(challenge => ({
+        ...challenge,
+        completed: getChallengeStatus(challenge.id),
+        objectives: challenge.objectives.map(obj => ({
+          ...obj,
+          completed: getObjectiveStatus(obj.id)
+        }))
+      }))
+    );
+  }, [challengeTracking.completedChallenges, challengeTracking.completedObjectives, getChallengeStatus, getObjectiveStatus]);
+  
+  const filteredChallenges = realtimeChallenges.filter(challenge => 
     (selectedCategory === 'all' || challenge.category === selectedCategory) &&
     (selectedDifficulty === 'all' || challenge.difficulty === selectedDifficulty)
   );
@@ -474,6 +527,12 @@ const ChallengeList: React.FC = () => {
     }
   };
 
+  const getObjectiveProgress = (challenge: Challenge) => {
+    const completed = challenge.objectives.filter(obj => obj.completed).length;
+    const total = challenge.objectives.length;
+    return { completed, total, percentage: Math.round((completed / total) * 100) };
+  };
+
   const handleChallengeClick = (challenge: Challenge) => {
     if (!challenge.unlocked) return;
     
@@ -482,6 +541,64 @@ const ChallengeList: React.FC = () => {
     } else {
       setExpandedChallenge(challenge.id);
     }
+  };
+
+  const ObjectiveProgressBar: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
+    const progress = getObjectiveProgress(challenge);
+    
+    return (
+      <div className="mt-2">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs text-dark-300">Progress</span>
+          <span className="text-xs text-dark-300">{progress.completed}/{progress.total}</span>
+        </div>
+        <div className="w-full bg-dark-600 rounded-full h-2">
+          <motion.div
+            className="bg-primary-500 h-2 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress.percentage}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const LiveStatsPanel: React.FC = () => {
+    if (!robotState) return null;
+
+    return (
+      <div className="bg-dark-700 rounded-lg p-4 border border-dark-600 mb-4">
+        <h3 className="text-white font-medium mb-3 flex items-center">
+          <Target size={16} className="mr-2" />
+          Live Robot Status
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="text-dark-300">Position</span>
+            <p className="text-white font-mono">
+              ({robotState.position.x.toFixed(1)}, {robotState.position.z.toFixed(1)})
+            </p>
+          </div>
+          <div>
+            <span className="text-dark-300">Distance</span>
+            <p className="text-white font-mono">
+              {challengeTracking.totalDistanceMoved.toFixed(1)}m
+            </p>
+          </div>
+          <div>
+            <span className="text-dark-300">Rotations</span>
+            <p className="text-white font-mono">
+              {(challengeTracking.totalRotations / Math.PI * 180).toFixed(0)}°
+            </p>
+          </div>
+          <div>
+            <span className="text-dark-300">Battery</span>
+            <p className="text-white font-mono">{robotState.batteryLevel}%</p>
+          </div>
+        </div>
+      </div>
+    );
   };
   
   return (
@@ -523,132 +640,230 @@ const ChallengeList: React.FC = () => {
       </div>
       
       <div className="flex-1 overflow-auto p-4">
+        <LiveStatsPanel />
+        
         {filteredChallenges.length === 0 ? (
           <div className="text-center text-dark-400 py-8">
             <p>No challenges found matching your filters.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {filteredChallenges.map((challenge) => (
-              <motion.div
-                key={challenge.id}
-                initial={false}
-                animate={{ height: expandedChallenge === challenge.id ? 'auto' : 'auto' }}
-                className={`card cursor-pointer border-l-4 ${
-                  challenge.unlocked 
-                    ? `border-l-${getDifficultyColor(challenge.difficulty)}-500` 
-                    : 'border-l-dark-500'
-                } ${challenge.unlocked ? '' : 'opacity-70'}`}
-                onClick={() => handleChallengeClick(challenge)}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <div className={`p-1.5 rounded-md bg-${getDifficultyColor(challenge.difficulty)}-900 border border-${getDifficultyColor(challenge.difficulty)}-700 mr-2 text-${getDifficultyColor(challenge.difficulty)}-400`}>
-                        {getCategoryIcon(challenge.category)}
-                      </div>
-                      <h3 className="text-lg font-semibold text-white">{challenge.title}</h3>
-                    </div>
-                    
-                    <p className="text-dark-300 text-sm mb-3">{challenge.description}</p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <div className={`badge bg-${getDifficultyColor(challenge.difficulty)}-900 text-${getDifficultyColor(challenge.difficulty)}-400 border border-${getDifficultyColor(challenge.difficulty)}-700`}>
-                        {challenge.difficulty}
-                      </div>
-                      <div className="badge bg-dark-700 text-dark-300 border border-dark-600">
-                        {challenge.estimatedTime} min
-                      </div>
-                      <div className="badge bg-dark-700 text-dark-300 border border-dark-600">
-                        {challenge.robotType}
-                      </div>
-                    </div>
-                    
-                    {expandedChallenge === challenge.id && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="mt-4 space-y-4"
-                      >
-                        <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
-                          <h4 className="text-white font-medium mb-2">Learning Objectives</h4>
-                          <ul className="space-y-2">
-                            {challenge.objectives.map((objective) => (
-                              <li key={objective.id} className="flex items-start">
-                                <div className={`mt-1 w-4 h-4 rounded-full mr-2 flex items-center justify-center ${
-                                  objective.completed 
-                                    ? 'bg-success-500 text-white' 
-                                    : 'bg-dark-600'
-                                }`}>
-                                  {objective.completed && <CheckCircle size={12} />}
-                                </div>
-                                <div>
-                                  <p className="text-white text-sm">{objective.description}</p>
-                                  {objective.theory && (
-                                    <p className="text-dark-300 text-sm mt-1">
-                                      {objective.theory.split('\n')[0]}...
-                                    </p>
-                                  )}
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
+            {filteredChallenges.map((challenge) => {
+              const progress = getObjectiveProgress(challenge);
+              return (
+                <motion.div
+                  key={challenge.id}
+                  initial={false}
+                  animate={{ height: expandedChallenge === challenge.id ? 'auto' : 'auto' }}
+                  className={`card cursor-pointer border-l-4 ${
+                    challenge.unlocked 
+                      ? `border-l-${getDifficultyColor(challenge.difficulty)}-500` 
+                      : 'border-l-dark-500'
+                  } ${challenge.unlocked ? '' : 'opacity-70'} ${
+                    challenge.completed ? 'bg-success-900/20 border-success-500' : ''
+                  }`}
+                  onClick={() => handleChallengeClick(challenge)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <div className={`p-1.5 rounded-md bg-${getDifficultyColor(challenge.difficulty)}-900 border border-${getDifficultyColor(challenge.difficulty)}-700 mr-2 text-${getDifficultyColor(challenge.difficulty)}-400`}>
+                          {getCategoryIcon(challenge.category)}
                         </div>
-                        
-                        {challenge.theory && (
-                          <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
-                            <h4 className="text-white font-medium mb-2">Learning Materials</h4>
-                            {challenge.theory.sections.map((section, index) => (
-                              <div key={index} className="mb-4 last:mb-0">
-                                <h5 className="text-primary-400 font-medium mb-1">{section.title}</h5>
-                                <p className="text-dark-300 text-sm whitespace-pre-wrap">{section.content}</p>
-                                {section.examples && (
-                                  <div className="mt-2 space-y-2">
-                                    {section.examples.map((example, i) => (
-                                      <div key={i} className="bg-dark-800 rounded p-2 border border-dark-500">
-                                        <p className="text-white text-sm font-medium mb-1">{example.title}</p>
-                                        <pre className="text-primary-400 text-xs overflow-x-auto p-2 bg-dark-900 rounded">
-                                          {example.code}
-                                        </pre>
-                                        <p className="text-dark-300 text-xs mt-1">{example.explanation}</p>
+                        <h3 className="text-lg font-semibold text-white">{challenge.title}</h3>
+                        {challenge.completed && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="ml-2 text-success-400"
+                          >
+                            <Trophy size={16} />
+                          </motion.div>
+                        )}
+                      </div>
+                      
+                      <p className="text-dark-300 text-sm mb-3">{challenge.description}</p>
+                      
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <div className={`badge bg-${getDifficultyColor(challenge.difficulty)}-900 text-${getDifficultyColor(challenge.difficulty)}-400 border border-${getDifficultyColor(challenge.difficulty)}-700`}>
+                          {challenge.difficulty}
+                        </div>
+                        <div className="badge bg-dark-700 text-dark-300 border border-dark-600 flex items-center">
+                          <Clock size={12} className="mr-1" />
+                          {challenge.estimatedTime} min
+                        </div>
+                        <div className="badge bg-dark-700 text-dark-300 border border-dark-600">
+                          {challenge.robotType}
+                        </div>
+                        {progress.completed > 0 && (
+                          <div className="badge bg-primary-900 text-primary-400 border border-primary-700">
+                            {progress.completed}/{progress.total} completed
+                          </div>
+                        )}
+                      </div>
+
+                      {challenge.unlocked && <ObjectiveProgressBar challenge={challenge} />}
+                      
+                      <AnimatePresence>
+                        {expandedChallenge === challenge.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-4 space-y-4"
+                          >
+                            <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
+                              <h4 className="text-white font-medium mb-2">Learning Objectives</h4>
+                              <ul className="space-y-2">
+                                {challenge.objectives.map((objective) => (
+                                  <motion.li 
+                                    key={objective.id} 
+                                    className="flex items-start"
+                                    animate={objective.completed ? { backgroundColor: 'rgba(34, 197, 94, 0.1)' } : {}}
+                                    transition={{ duration: 0.3 }}
+                                  >
+                                    <div className={`mt-1 w-4 h-4 rounded-full mr-2 flex items-center justify-center transition-colors duration-300 ${
+                                      objective.completed 
+                                        ? 'bg-success-500 text-white' 
+                                        : 'bg-dark-600'
+                                    }`}>
+                                      <AnimatePresence>
+                                        {objective.completed && (
+                                          <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            exit={{ scale: 0 }}
+                                          >
+                                            <CheckCircle size={12} />
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className={`text-sm transition-colors duration-300 ${
+                                        objective.completed ? 'text-success-300' : 'text-white'
+                                      }`}>
+                                        {objective.description}
+                                      </p>
+                                      {objective.theory && (
+                                        <p className="text-dark-300 text-sm mt-1">
+                                          {objective.theory.split('\n')[0]}...
+                                        </p>
+                                      )}
+                                      {objective.completed && (
+                                        <motion.p
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          className="text-success-400 text-xs mt-1 font-medium"
+                                        >
+                                          ✓ Completed!
+                                        </motion.p>
+                                      )}
+                                    </div>
+                                  </motion.li>
+                                ))}
+                              </ul>
+                            </div>
+                            
+                            {challenge.theory && (
+                              <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
+                                <h4 className="text-white font-medium mb-2">Learning Materials</h4>
+                                {challenge.theory.sections.map((section, index) => (
+                                  <div key={index} className="mb-4 last:mb-0">
+                                    <h5 className="text-primary-400 font-medium mb-1">{section.title}</h5>
+                                    <p className="text-dark-300 text-sm whitespace-pre-wrap">{section.content}</p>
+                                    {section.examples
+
+
+                                      && (
+                                      <div className="mt-2 space-y-2">
+                                        {section.examples.map((example, exampleIndex) => (
+                                          <div key={exampleIndex} className="bg-dark-800 rounded p-3 border border-dark-500">
+                                            <h6 className="text-white text-xs font-medium mb-1">{example.title}</h6>
+                                            <code className="text-primary-300 text-xs block mb-1 font-mono">
+                                              {example.code}
+                                            </code>
+                                            <p className="text-dark-400 text-xs">{example.explanation}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                
+                                {challenge.theory.quiz && (
+                                  <div className="mt-4 bg-dark-800 rounded-lg p-3 border border-dark-500">
+                                    <h5 className="text-warning-400 font-medium mb-2 flex items-center">
+                                      <Star size={14} className="mr-1" />
+                                      Quick Quiz
+                                    </h5>
+                                    {challenge.theory.quiz.map((question, qIndex) => (
+                                      <div key={qIndex} className="mb-3 last:mb-0">
+                                        <p className="text-white text-sm mb-2">{question.question}</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                          {question.options.map((option, optIndex) => (
+                                            <button
+                                              key={optIndex}
+                                              className={`text-xs p-2 rounded border text-left transition-colors ${
+                                                option === question.correctAnswer
+                                                  ? 'bg-success-900/30 border-success-600 text-success-300'
+                                                  : 'bg-dark-700 border-dark-600 text-dark-300 hover:border-dark-500'
+                                              }`}
+                                            >
+                                              {option}
+                                            </button>
+                                          ))}
+                                        </div>
+                                        <p className="text-primary-400 text-xs mt-2">{question.explanation}</p>
                                       </div>
                                     ))}
                                   </div>
                                 )}
                               </div>
-                            ))}
-                          </div>
+                            )}
+                            
+                            <div className="flex gap-2">
+                              <button
+                                className="btn-primary flex items-center"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/simulator?challenge=${challenge.id}`);
+                                }}
+                              >
+                                <Play size={16} className="mr-2" />
+                                Start Challenge
+                              </button>
+                              {challenge.hints && challenge.hints.length > 0 && (
+                                <button className="btn-secondary text-sm">
+                                  View Hints ({challenge.hints.length})
+                                </button>
+                              )}
+                            </div>
+                          </motion.div>
                         )}
-                        
-                        <button 
-                          className="w-full btn-primary flex items-center justify-center space-x-2"
-                          onClick={() => navigate(`/simulator?challenge=${challenge.id}`)}
-                        >
-                          <Play size={16} />
-                          <span>Start Challenge</span>
-                        </button>
-                      </motion.div>
-                    )}
+                      </AnimatePresence>
+                    </div>
+                    
+                    <div className="flex flex-col items-end space-y-2">
+                      {!challenge.unlocked && (
+                        <div className="flex items-center text-dark-400 text-sm">
+                          <LockKeyhole size={16} className="mr-1" />
+                          Locked
+                        </div>
+                      )}
+                      <div className="text-right">
+                        <ChevronRight 
+                          size={20} 
+                          className={`text-dark-400 transition-transform duration-200 ${
+                            expandedChallenge === challenge.id ? 'rotate-90' : ''
+                          }`} 
+                        />
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="ml-4">
-                    {challenge.completed ? (
-                      <div className="p-2 rounded-full bg-success-900 border border-success-700 text-success-400">
-                        <Trophy size={18} />
-                      </div>
-                    ) : !challenge.unlocked ? (
-                      <div className="p-2 rounded-full bg-dark-700 border border-dark-600 text-dark-400">
-                        <LockKeyhole size={18} />
-                      </div>
-                    ) : (
-                      <div className="p-2 rounded-full bg-primary-900 border border-primary-700 text-primary-400">
-                        <ChevronRight size={18} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
