@@ -1,44 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronDown, Trophy, LockKeyhole, Star, Book, Tag, Play, CheckCircle, Clock, Target, Award, HelpCircle, Eye, BookOpen, Code, Lightbulb, X } from 'lucide-react';
+import { ChallengeCategory, DifficultyLevel, Challenge } from '@/types/challenge.types';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from '@/hooks/useNavigation';
+import { useRobotStore } from '@/store/robotStore';
 
-// Mock types (you'll need to import these from your actual types file)
-const ChallengeCategory = {
-  INTRO: 'intro',
-  WAREHOUSE: 'warehouse',
-  SURGERY: 'surgery',
-  SEARCH_RESCUE: 'search_rescue',
-  MANUFACTURING: 'manufacturing'
-};
-
-const DifficultyLevel = {
-  BEGINNER: 'beginner',
-  INTERMEDIATE: 'intermediate',
-  ADVANCED: 'advanced',
-  EXPERT: 'expert'
-};
-
-// Mock robot store (replace with your actual store)
-const useRobotStore = () => ({
-  challengeTracking: {
-    completedChallenges: ['intro-1'],
-    completedObjectives: ['obj1'],
-    totalDistanceMoved: 15.3,
-    totalRotations: Math.PI * 2.5
-  },
-  getChallengeStatus: (id) => id === 'intro-1',
-  getObjectiveStatus: (id) => id === 'obj1',
-  performance: {},
-  robotState: {
-    position: { x: 2.5, z: 3.2 },
-    batteryLevel: 85
-  }
-});
-
-// Mock navigation hook
-const useNavigate = () => (path) => console.log('Navigate to:', path);
-
-// Enhanced challenge data
-const challenges = [
+// Enhanced challenge data with learning content
+const challenges: Challenge[] = [
   {
     id: 'intro-1',
     title: 'Hello Robot',
@@ -51,18 +19,20 @@ const challenges = [
         id: 'obj1', 
         description: 'Understand basic robot movement commands',
         completionCriteria: 'theory_complete',
-        completed: true,
-        theory: `Robot movement is controlled through basic commands that specify:
-- Direction (forward, backward, left, right)
-- Speed (usually as a percentage or m/s)
-- Duration (in milliseconds or seconds)
-
-Example command:
-robot.move({
-  direction: "forward",
-  speed: 0.5,  // 50% speed
-  duration: 2000  // 2 seconds
-});`
+        completed: false,
+        theory: `
+          Robot movement is controlled through basic commands that specify:
+          - Direction (forward, backward, left, right)
+          - Speed (usually as a percentage or m/s)
+          - Duration (in milliseconds or seconds)
+          
+          Example command:
+          robot.move({
+            direction: "forward",
+            speed: 0.5,  // 50% speed
+            duration: 2000  // 2 seconds
+          });
+        `
       },
       { 
         id: 'obj2', 
@@ -104,7 +74,8 @@ robot.move({
 // Hint: Use await robot.wait()
 
 // Finally, rotate the robot 90 degrees right
-// Use robot.rotate() with appropriate parameters`
+// Use robot.rotate() with appropriate parameters
+`
     },
     theory: {
       sections: [
@@ -112,7 +83,7 @@ robot.move({
           title: 'Understanding Robot Movement',
           content: `Robots move through space using a coordinate system:
 - X axis: Left/Right movement
-- Y axis: Up/Down movement  
+- Y axis: Up/Down movement
 - Z axis: Forward/Backward movement
 
 When you command a robot to move, you're changing its position along these axes.`,
@@ -159,7 +130,7 @@ robot.move({ direction: "forward", speed: 0.5, duration: 2000 });`,
     robotType: 'mobile',
     environmentId: 'tutorial-room',
     unlocked: true,
-    completed: true,
+    completed: false,
     nextChallengeIds: ['intro-2'],
   },
   {
@@ -171,20 +142,22 @@ robot.move({ direction: "forward", speed: 0.5, duration: 2000 });`,
     estimatedTime: 20,
     objectives: [
       {
-        id: 'obj4',
+        id: 'obj1',
         description: 'Understand different types of sensors',
         completionCriteria: 'theory_complete',
         completed: false,
-        theory: `Robots use various sensors to perceive their environment:
-1. Distance Sensors (Ultrasonic, Infrared)
-2. Cameras (RGB, Depth)
-3. Touch Sensors
-4. Gyroscopes
-
-Each sensor provides specific data about the environment.`
+        theory: `
+          Robots use various sensors to perceive their environment:
+          1. Distance Sensors (Ultrasonic, Infrared)
+          2. Cameras (RGB, Depth)
+          3. Touch Sensors
+          4. Gyroscopes
+          
+          Each sensor provides specific data about the environment.
+        `
       },
       {
-        id: 'obj5',
+        id: 'obj2',
         description: 'Read the ultrasonic sensor',
         completionCriteria: 'sensor_read_complete',
         completed: false,
@@ -193,11 +166,22 @@ Each sensor provides specific data about the environment.`
           'The sensor returns distance in meters',
           'Values less than 1 indicate nearby obstacles'
         ]
+      },
+      {
+        id: 'obj3',
+        description: 'Navigate using sensor data',
+        completionCriteria: 'navigation_complete',
+        completed: false,
+        hints: [
+          'Check sensor readings in a loop',
+          'Use conditional statements to make decisions',
+          'Maintain a safe distance from obstacles'
+        ]
       }
     ],
     hints: [
-      { id: 'hint3', text: 'Sensors return promises, use await to get readings', unlockCost: 5 },
-      { id: 'hint4', text: 'Combine movement and sensor data for smart navigation', unlockCost: 10 },
+      { id: 'hint1', text: 'Sensors return promises, use await to get readings', unlockCost: 5 },
+      { id: 'hint2', text: 'Combine movement and sensor data for smart navigation', unlockCost: 10 },
     ],
     startingCode: {
       natural_language: 'Move forward until you detect an obstacle, then stop',
@@ -211,8 +195,9 @@ console.log("Distance to obstacle:", distance, "meters");
 // Now, let's move forward while checking the sensor
 // Add your code here to:
 // 1. Move forward
-// 2. Continuously check the sensor  
-// 3. Stop when an obstacle is detected`
+// 2. Continuously check the sensor
+// 3. Stop when an obstacle is detected
+`
     },
     theory: {
       sections: [
@@ -226,6 +211,33 @@ console.log("Distance to obstacle:", distance, "meters");
 
 Each sensor type has specific uses and limitations.`,
           video: 'https://example.com/robot-sensors-intro',
+        },
+        {
+          title: 'Using the Ultrasonic Sensor',
+          content: `The ultrasonic sensor measures distance using sound waves:
+- Returns distance in meters
+- Updates several times per second
+- Works best for obstacles 0.02m to 4m away
+- May have difficulty with soft or angled surfaces`,
+          examples: [
+            {
+              title: 'Reading Distance',
+              code: 'const distance = await robot.getSensor("ultrasonic");',
+              explanation: 'Gets the current distance reading in meters'
+            },
+            {
+              title: 'Continuous Monitoring',
+              code: `while (true) {
+  const distance = await robot.getSensor("ultrasonic");
+  if (distance < 0.5) {  // If closer than 0.5 meters
+    await robot.stop();
+    break;
+  }
+  await robot.wait(100);  // Wait 100ms before next reading
+}`,
+              explanation: 'Continuously monitors distance and stops when too close to an obstacle'
+            }
+          ]
         }
       ],
       quiz: [
@@ -234,6 +246,17 @@ Each sensor type has specific uses and limitations.`,
           options: ['Centimeters', 'Meters', 'Feet', 'Inches'],
           correctAnswer: 'Meters',
           explanation: 'The ultrasonic sensor returns distance measurements in meters.'
+        },
+        {
+          question: 'Why should we wait between sensor readings?',
+          options: [
+            'To save battery',
+            'To allow the sensor to update',
+            'To prevent program crashes',
+            'To slow the robot down'
+          ],
+          correctAnswer: 'To allow the sensor to update',
+          explanation: 'Sensors need time to take new readings. Waiting ensures we get fresh data.'
         }
       ]
     },
@@ -242,30 +265,222 @@ Each sensor type has specific uses and limitations.`,
     unlocked: true,
     completed: false,
     nextChallengeIds: ['warehouse-1'],
+  },
+  {
+    id: 'warehouse-1',
+    title: 'Warehouse Navigation',
+    description: 'Learn to navigate a robot through a warehouse environment while avoiding obstacles.',
+    category: ChallengeCategory.WAREHOUSE,
+    difficulty: DifficultyLevel.INTERMEDIATE,
+    estimatedTime: 25,
+    objectives: [
+      {
+        id: 'obj1',
+        description: 'Plan an efficient path to the goal',
+        completionCriteria: 'planning_complete',
+        completed: false,
+        theory: `
+          Path planning involves:
+          1. Identifying the goal location
+          2. Detecting obstacles
+          3. Finding an efficient route
+          4. Maintaining safe distances
+          
+          We'll use sensors and algorithms to navigate safely.
+        `
+      },
+      {
+        id: 'obj2',
+        description: 'Navigate to the pickup area',
+        completionCriteria: 'reached_pickup',
+        completed: false,
+        hints: [
+          'Use the map to identify the pickup area',
+          'Keep track of your position',
+          'Use sensors to avoid obstacles'
+        ]
+      },
+      {
+        id: 'obj3',
+        description: 'Pick up the package',
+        completionCriteria: 'package_grabbed',
+        completed: false,
+        hints: [
+          'Position the robot correctly',
+          'Use the grab() command',
+          'Verify successful pickup'
+        ]
+      }
+    ],
+    hints: [
+      { id: 'hint1', text: 'Break down the navigation into smaller steps', unlockCost: 10 },
+      { id: 'hint2', text: 'Use markers or waypoints for complex paths', unlockCost: 15 },
+    ],
+    startingCode: {
+      natural_language: 'Navigate to the pickup area, avoiding obstacles, and grab the package',
+      block: '[]',
+      code: `// Welcome to warehouse navigation!
+// This challenge combines movement and sensor usage
+
+// First, let's plan our path
+// The pickup area is at coordinates (5, 0, 8)
+
+// We'll need to:
+// 1. Navigate around obstacles
+// 2. Reach the pickup area
+// 3. Grab the package
+
+// Add your code here
+`
+    },
+    theory: {
+      sections: [
+        {
+          title: 'Warehouse Navigation Basics',
+          content: `Warehouse robots need to:
+- Follow efficient paths
+- Avoid collisions
+- Handle dynamic obstacles
+- Maintain precise positioning
+
+This requires combining multiple skills and sensors.`,
+          video: 'https://example.com/warehouse-navigation',
+        },
+        {
+          title: 'Path Planning Strategies',
+          content: `Effective path planning involves:
+1. Breaking down the path into segments
+2. Continuous obstacle monitoring
+3. Dynamic path adjustment
+4. Position verification`,
+          examples: [
+            {
+              title: 'Basic Navigation',
+              code: `// Move to a specific coordinate
+async function moveToPosition(x, z) {
+  // Calculate angle to target
+  const angle = Math.atan2(z - robot.position.z, x - robot.position.x);
+  
+  // Rotate to face target
+  await robot.rotateTo(angle);
+  
+  // Move to target
+  while (Math.abs(x - robot.position.x) > 0.1 || 
+         Math.abs(z - robot.position.z) > 0.1) {
+    const distance = await robot.getSensor("ultrasonic");
+    if (distance < 1) {
+      // Obstacle detected, handle it
+      await handleObstacle();
+    } else {
+      await robot.move({ direction: "forward", speed: 0.5, duration: 100 });
+    }
+    await robot.wait(50);
+  }
+}`,
+              explanation: 'A basic function to move to specific coordinates while avoiding obstacles'
+            }
+          ]
+        }
+      ],
+      quiz: [
+        {
+          question: 'What should you do when detecting an obstacle?',
+          options: [
+            'Ignore it and continue',
+            'Stop and wait',
+            'Find an alternative path',
+            'Reverse direction'
+          ],
+          correctAnswer: 'Find an alternative path',
+          explanation: 'When an obstacle is detected, the robot should plan and follow an alternative path to reach its goal.'
+        },
+        {
+          question: 'Why is position verification important?',
+          options: [
+            'To save battery',
+            'To maintain accurate navigation',
+            'To avoid collisions',
+            'To increase speed'
+          ],
+          correctAnswer: 'To maintain accurate navigation',
+          explanation: 'Regular position verification ensures the robot stays on course and reaches its intended destination.'
+        }
+      ]
+    },
+    robotType: 'mobile',
+    environmentId: 'warehouse',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['warehouse-2'],
   }
 ];
 
-const ChallengesPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
-  const [expandedChallenge, setExpandedChallenge] = useState(null);
-  const [realtimeChallenges, setRealtimeChallenges] = useState(challenges);
-  const [activeModal, setActiveModal] = useState(null);
-  const [selectedHints, setSelectedHints] = useState([]);
-  const [currentQuizAnswer, setCurrentQuizAnswer] = useState({});
-  const [showQuizResults, setShowQuizResults] = useState({});
+const ChallengesPage: React.FC = () => {
+  const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory | 'all'>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'all'>('all');
+  const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
+  const [realtimeChallenges, setRealtimeChallenges] = useState<Challenge[]>(challenges);
+  const [activeModal, setActiveModal] = useState<{ type: string; data: any } | null>(null);
+  const [selectedHints, setSelectedHints] = useState<string[]>([]);
+  const [currentQuizAnswer, setCurrentQuizAnswer] = useState<Record<number, string>>({});
+  const [showQuizResults, setShowQuizResults] = useState<Record<number, { correct: boolean; selected: string }>>({});
   
   const navigate = useNavigate();
+  
+  // Get robot store state and functions
   const { 
     challengeTracking, 
     getChallengeStatus, 
     getObjectiveStatus,
     performance,
-    robotState
+    robotState,
+    setCurrentChallenge,
   } = useRobotStore();
+  
+  // Real-time objective completion listener
+  useEffect(() => {
+    const handleObjectiveCompleted = (event: CustomEvent) => {
+      const { objectiveId, challengeId } = event.detail;
+      
+      setRealtimeChallenges(prev => 
+        prev.map(challenge => 
+          challenge.id === challengeId 
+            ? {
+                ...challenge,
+                objectives: challenge.objectives.map(obj => 
+                  obj.id === objectiveId 
+                    ? { ...obj, completed: true }
+                    : obj
+                )
+              }
+            : challenge
+        )
+      );
+    };
+
+    window.addEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+    };
+  }, []);
+
+  // Update challenge completion status based on robot store
+  useEffect(() => {
+    setRealtimeChallenges(prev => 
+      prev.map(challenge => ({
+        ...challenge,
+        completed: getChallengeStatus(challenge.id),
+        objectives: challenge.objectives.map(obj => ({
+          ...obj,
+          completed: getObjectiveStatus(obj.id)
+        }))
+      }))
+    );
+  }, [challengeTracking.completedChallenges, challengeTracking.completedObjectives, getChallengeStatus, getObjectiveStatus]);
 
   // Modal handlers
-  const openModal = (type, data = null) => {
+  const openModal = (type: string, data: any = null) => {
     setActiveModal({ type, data });
   };
 
@@ -276,13 +491,13 @@ const ChallengesPage = () => {
     setShowQuizResults({});
   };
 
-  const handleHintUnlock = (hint) => {
+  const handleHintUnlock = (hint: any) => {
     if (hint.unlockCost === 0 || window.confirm(`Unlock this hint for ${hint.unlockCost} points?`)) {
       setSelectedHints(prev => [...prev, hint.id]);
     }
   };
 
-  const handleQuizAnswer = (questionIndex, answer, correctAnswer) => {
+  const handleQuizAnswer = (questionIndex: number, answer: string, correctAnswer: string) => {
     setCurrentQuizAnswer(prev => ({
       ...prev,
       [questionIndex]: answer
@@ -321,7 +536,7 @@ const ChallengesPage = () => {
     { value: DifficultyLevel.EXPERT, label: 'Expert' },
   ];
   
-  const getDifficultyColor = (difficulty) => {
+  const getDifficultyColor = (difficulty: DifficultyLevel) => {
     switch (difficulty) {
       case DifficultyLevel.BEGINNER: return 'green';
       case DifficultyLevel.INTERMEDIATE: return 'blue';
@@ -331,7 +546,7 @@ const ChallengesPage = () => {
     }
   };
   
-  const getCategoryIcon = (category) => {
+  const getCategoryIcon = (category: ChallengeCategory) => {
     switch (category) {
       case ChallengeCategory.INTRO: return <Book size={16} />;
       case ChallengeCategory.WAREHOUSE: return <Tag size={16} />;
@@ -342,19 +557,26 @@ const ChallengesPage = () => {
     }
   };
 
-  const getObjectiveProgress = (challenge) => {
+  const getObjectiveProgress = (challenge: Challenge) => {
     const completed = challenge.objectives.filter(obj => obj.completed).length;
     const total = challenge.objectives.length;
     return { completed, total, percentage: Math.round((completed / total) * 100) };
   };
 
-  const handleChallengeClick = (challenge) => {
+  const handleChallengeClick = (challenge: Challenge) => {
     if (!challenge.unlocked) return;
     setExpandedChallenge(expandedChallenge === challenge.id ? null : challenge.id);
   };
 
+  const handleStartChallenge = (challenge: Challenge) => {
+    // Set the current challenge in the robot store
+    setCurrentChallenge(challenge.id);
+    // Navigate to simulator with challenge parameter
+    navigate(`/simulator?challenge=${challenge.id}`);
+  };
+
   // Modal Components
-  const TheoryModal = ({ challenge }) => (
+  const TheoryModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
@@ -403,7 +625,7 @@ const ChallengesPage = () => {
     </div>
   );
 
-  const QuizModal = ({ challenge }) => (
+  const QuizModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
@@ -448,7 +670,7 @@ const ChallengesPage = () => {
                       key={optIndex}
                       className={buttonClass}
                       onClick={() => handleQuizAnswer(qIndex, option, question.correctAnswer)}
-                      disabled={showResult}
+                      disabled={!!showResult}
                     >
                       {option}
                     </button>
@@ -467,7 +689,7 @@ const ChallengesPage = () => {
     </div>
   );
 
-  const HintsModal = ({ challenge }) => (
+  const HintsModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
@@ -522,7 +744,7 @@ const ChallengesPage = () => {
     </div>
   );
 
-  const CodeModal = ({ challenge }) => (
+  const CodeModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
@@ -552,7 +774,7 @@ const ChallengesPage = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(challenge.startingCode?.code);
+                  navigator.clipboard.writeText(challenge.startingCode?.code || '');
                   alert('Code copied to clipboard!');
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
@@ -562,7 +784,7 @@ const ChallengesPage = () => {
               <button
                 onClick={() => {
                   closeModal();
-                  navigate(`/simulator?challenge=${challenge.id}`);
+                  handleStartChallenge(challenge);
                 }}
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center"
               >
@@ -575,6 +797,64 @@ const ChallengesPage = () => {
       </div>
     </div>
   );
+
+  const ObjectiveProgressBar: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
+    const progress = getObjectiveProgress(challenge);
+    
+    return (
+      <div className="mt-2">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs text-gray-400">Progress</span>
+          <span className="text-xs text-gray-400">{progress.completed}/{progress.total}</span>
+        </div>
+        <div className="w-full bg-gray-700 rounded-full h-2">
+          <motion.div
+            className="bg-blue-500 h-2 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress.percentage}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const LiveStatsPanel: React.FC = () => {
+    if (!robotState) return null;
+
+    return (
+      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 mb-4">
+        <h3 className="text-white font-medium mb-3 flex items-center">
+          <Target size={16} className="mr-2" />
+          Live Robot Status
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="text-gray-400">Position</span>
+            <p className="text-white font-mono">
+              ({robotState.position.x.toFixed(1)}, {robotState.position.z.toFixed(1)})
+            </p>
+          </div>
+          <div>
+            <span className="text-gray-400">Distance</span>
+            <p className="text-white font-mono">
+              {challengeTracking.totalDistanceMoved.toFixed(1)}m
+            </p>
+          </div>
+          <div>
+            <span className="text-gray-400">Rotations</span>
+            <p className="text-white font-mono">
+              {(challengeTracking.totalRotations / Math.PI * 180).toFixed(0)}°
+            </p>
+          </div>
+          <div>
+            <span className="text-gray-400">Battery</span>
+            <p className="text-white font-mono">{robotState.batteryLevel}%</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 p-4">
@@ -592,7 +872,7 @@ const ChallengesPage = () => {
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-900 border border-blue-700 text-blue-400 mb-1">
                 <Award size={24} />
               </div>
-              <span className="text-sm text-gray-300">1/2</span>
+              <span className="text-sm text-gray-300">{challengeTracking.completedChallenges.size}/{challenges.length}</span>
               <span className="text-xs text-gray-500">Completed</span>
             </div>
             
@@ -600,16 +880,16 @@ const ChallengesPage = () => {
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-900 border border-yellow-700 text-yellow-400 mb-1">
                 <Trophy size={24} />
               </div>
-              <span className="text-sm text-gray-300">150</span>
-              <span className="text-xs text-gray-500">Points</span>
+              <span className="text-sm text-gray-300">{challengeTracking.completedObjectives.size}</span>
+              <span className="text-xs text-gray-500">Objectives</span>
             </div>
             
             <div className="flex flex-col items-center">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-900 border border-purple-700 text-purple-400 mb-1">
                 <Star size={24} />
               </div>
-              <span className="text-sm text-gray-300">4</span>
-              <span className="text-xs text-gray-500">Badges</span>
+              <span className="text-sm text-gray-300">{challengeTracking.totalDistanceMoved.toFixed(1)}m</span>
+              <span className="text-xs text-gray-500">Distance</span>
             </div>
           </div>
         </div>
@@ -622,7 +902,7 @@ const ChallengesPage = () => {
               <select
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => setSelectedCategory(e.target.value as any)}
               >
                 {categories.map(category => (
                   <option key={category.value} value={category.value}>{category.label}</option>
@@ -635,7 +915,7 @@ const ChallengesPage = () => {
               <select
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value)}
+                onChange={(e) => setSelectedDifficulty(e.target.value as any)}
               >
                 {difficulties.map(difficulty => (
                   <option key={difficulty.value} value={difficulty.value}>{difficulty.label}</option>
@@ -646,38 +926,7 @@ const ChallengesPage = () => {
         </div>
 
         {/* Live Stats */}
-        {robotState && (
-          <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 mb-6">
-            <h3 className="text-white font-medium mb-3 flex items-center">
-              <Target size={16} className="mr-2" />
-              Live Robot Status
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-gray-400">Position</span>
-                <p className="text-white font-mono">
-                  ({robotState.position.x.toFixed(1)}, {robotState.position.z.toFixed(1)})
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-400">Distance</span>
-                <p className="text-white font-mono">
-                  {challengeTracking.totalDistanceMoved.toFixed(1)}m
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-400">Rotations</span>
-                <p className="text-white font-mono">
-                  {(challengeTracking.totalRotations / Math.PI * 180).toFixed(0)}°
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-400">Battery</span>
-                <p className="text-white font-mono">{robotState.batteryLevel}%</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <LiveStatsPanel />
 
         {/* Challenge List */}
         <div className="space-y-4">
@@ -722,6 +971,8 @@ const ChallengesPage = () => {
                         {progress.completed}/{progress.total} objectives
                       </span>
                     </div>
+
+                    {challenge.unlocked && <ObjectiveProgressBar challenge={challenge} />}
                   </div>
                   
                   <div className="flex flex-col items-end ml-4">
@@ -730,7 +981,7 @@ const ChallengesPage = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/simulator?challenge=${challenge.id}`);
+                            handleStartChallenge(challenge);
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center text-sm"
                         >
@@ -743,17 +994,6 @@ const ChallengesPage = () => {
                     <div className="flex items-center text-gray-400">
                       {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                     </div>
-                    
-                    {progress.total > 0 && (
-                      <div className="w-24 bg-slate-700 rounded-full h-2 mt-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            challenge.completed ? 'bg-green-500' : 'bg-blue-500'
-                          }`}
-                          style={{ width: `${progress.percentage}%` }}
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -958,7 +1198,7 @@ const ChallengesPage = () => {
                 <div className="bg-slate-700 p-4 rounded">
                   <h3 className="text-white font-medium mb-2">What you'll learn:</h3>
                   <ul className="text-gray-300 space-y-1">
-                    {activeModal.data.objectives.map((obj, index) => (
+                    {activeModal.data.objectives.map((obj: any, index: number) => (
                       <li key={obj.id} className="flex items-start">
                         <span className="text-blue-400 mr-2">•</span>
                         {obj.description}
@@ -971,7 +1211,7 @@ const ChallengesPage = () => {
                   <button
                     onClick={() => {
                       closeModal();
-                      navigate(`/simulator?challenge=${activeModal.data.id}`);
+                      handleStartChallenge(activeModal.data);
                     }}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center"
                   >
