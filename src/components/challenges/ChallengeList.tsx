@@ -3,7 +3,7 @@ import { ChevronRight, Trophy, LockKeyhole, Star, Book, Tag, Play, CheckCircle, 
 import { ChallengeCategory, DifficultyLevel, Challenge } from '@/types/challenge.types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from '@/hooks/useNavigation';
-import { useRobotStore } from '@/store/robotStore'; // Import the robot store
+import { useRobotStore } from '@/store/robotStore';
 
 // Enhanced challenge data with learning content
 const challenges: Challenge[] = [
@@ -428,7 +428,8 @@ const ChallengeList: React.FC = () => {
     getChallengeStatus, 
     getObjectiveStatus,
     performance,
-    robotState
+    robotState,
+    setCurrentChallenge,
   } = useRobotStore();
   
   // Real-time objective completion listener
@@ -535,7 +536,7 @@ const ChallengeList: React.FC = () => {
 
   const handleChallengeClick = (challenge: Challenge) => {
     if (!challenge.unlocked) return;
-    
+    setCurrentChallenge(challenge.id);
     if (expandedChallenge === challenge.id) {
       navigate(`/simulator?challenge=${challenge.id}`);
     } else {
@@ -772,10 +773,7 @@ const ChallengeList: React.FC = () => {
                                   <div key={index} className="mb-4 last:mb-0">
                                     <h5 className="text-primary-400 font-medium mb-1">{section.title}</h5>
                                     <p className="text-dark-300 text-sm whitespace-pre-wrap">{section.content}</p>
-                                    {section.examples
-
-
-                                      && (
+                                    {section.examples && (
                                       <div className="mt-2 space-y-2">
                                         {section.examples.map((example, exampleIndex) => (
                                           <div key={exampleIndex} className="bg-dark-800 rounded p-3 border border-dark-500">
