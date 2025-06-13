@@ -257,35 +257,58 @@ const AboutPage: React.FC = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.2, duration: 0.8 }}
                 >
-                  <div className={`bg-dark-700/50 rounded-3xl p-8 border border-${founder.color}-500/20 hover:border-${founder.color}-500/40 transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-${founder.color}-500/10 backdrop-blur-sm h-full flex flex-col`}>
+                  <div className={`bg-dark-700/50 rounded-3xl p-8 border border-${founder.color}-500/20 hover:border-${founder.color}-500/40 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden`}
+                       style={{
+                         boxShadow: `0 0 0 1px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.2), 0 0 20px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.1)`,
+                         transition: 'all 0.5s ease'
+                       }}
+                       onMouseEnter={(e) => {
+                         e.currentTarget.style.boxShadow = `0 0 0 1px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.4), 0 0 40px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.3), 0 0 80px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.1)`;
+                       }}
+                       onMouseLeave={(e) => {
+                         e.currentTarget.style.boxShadow = `0 0 0 1px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.2), 0 0 20px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.1)`;
+                       }}
+                  >
+                    {/* Animated background glow */}
+                    <div className={`absolute inset-0 bg-gradient-to-br from-${founder.color}-500/5 via-transparent to-${founder.color}-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`} />
+                    
                     {/* Header */}
-                    <div className="text-center mb-6">
-                      <div className={`text-6xl mb-4 bg-${founder.color}-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto border border-${founder.color}-500/30`}>
+                    <div className="text-center mb-6 relative z-10">
+                      <div className={`text-6xl mb-4 bg-${founder.color}-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto border border-${founder.color}-500/30 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}
+                           style={{
+                             boxShadow: `0 0 20px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.2)`
+                           }}>
                         {founder.emoji}
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-2">{founder.name}</h3>
-                      <p className={`text-${founder.color}-400 font-medium mb-4`}>{founder.role}</p>
+                      <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-white transition-colors duration-300">{founder.name}</h3>
+                      <p className={`text-${founder.color}-400 font-medium mb-4 group-hover:text-${founder.color}-300 transition-colors duration-300`}>{founder.role}</p>
                       
                       {/* Social Links */}
                       <div className="flex justify-center space-x-3">
                         <a 
                           href={founder.linkedin}
-                          className={`bg-${founder.color}-500/10 hover:bg-${founder.color}-500/20 p-2 rounded-lg transition-colors border border-${founder.color}-500/30 hover:border-${founder.color}-500/50`}
+                          className={`bg-${founder.color}-500/10 hover:bg-${founder.color}-500/20 p-2 rounded-lg transition-all duration-300 border border-${founder.color}-500/30 hover:border-${founder.color}-500/50 hover:shadow-lg`}
+                          style={{
+                            boxShadow: `0 0 10px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.1)`
+                          }}
                         >
-                          <Linkedin size={18} className={`text-${founder.color}-400`} />
+                          <Linkedin size={18} className={`text-${founder.color}-400 hover:text-${founder.color}-300 transition-colors duration-300`} />
                         </a>
                         <a 
                           href="#"
-                          className={`bg-${founder.color}-500/10 hover:bg-${founder.color}-500/20 p-2 rounded-lg transition-colors border border-${founder.color}-500/30 hover:border-${founder.color}-500/50`}
+                          className={`bg-${founder.color}-500/10 hover:bg-${founder.color}-500/20 p-2 rounded-lg transition-all duration-300 border border-${founder.color}-500/30 hover:border-${founder.color}-500/50 hover:shadow-lg`}
+                          style={{
+                            boxShadow: `0 0 10px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.1)`
+                          }}
                         >
-                          <Github size={18} className={`text-${founder.color}-400`} />
+                          <Github size={18} className={`text-${founder.color}-400 hover:text-${founder.color}-300 transition-colors duration-300`} />
                         </a>
                       </div>
                     </div>
 
                     {/* Description */}
-                    <div className="flex-1 mb-6">
-                      <p className="text-dark-300 leading-relaxed mb-6">
+                    <div className="flex-1 mb-6 relative z-10">
+                      <p className="text-dark-300 leading-relaxed mb-6 group-hover:text-dark-200 transition-colors duration-300">
                         {founder.description}
                       </p>
 
@@ -294,7 +317,10 @@ const AboutPage: React.FC = () => {
                         {founder.expertise.map((skill) => (
                           <span 
                             key={skill}
-                            className={`px-3 py-1 rounded-full text-xs font-medium bg-${founder.color}-500/10 text-${founder.color}-400 border border-${founder.color}-500/30`}
+                            className={`px-3 py-1 rounded-full text-xs font-medium bg-${founder.color}-500/10 text-${founder.color}-400 border border-${founder.color}-500/30 hover:bg-${founder.color}-500/20 hover:border-${founder.color}-500/50 transition-all duration-300`}
+                            style={{
+                              boxShadow: `0 0 5px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.1)`
+                            }}
                           >
                             {skill}
                           </span>
@@ -303,9 +329,12 @@ const AboutPage: React.FC = () => {
                     </div>
 
                     {/* Quote */}
-                    <div className={`bg-${founder.color}-500/5 rounded-2xl p-6 border border-${founder.color}-500/20 relative`}>
-                      <Quote size={24} className={`text-${founder.color}-400 mb-3`} />
-                      <blockquote className="text-white font-medium italic text-lg leading-relaxed">
+                    <div className={`bg-${founder.color}-500/5 rounded-2xl p-6 border border-${founder.color}-500/20 relative z-10 group-hover:bg-${founder.color}-500/10 group-hover:border-${founder.color}-500/30 transition-all duration-300`}
+                         style={{
+                           boxShadow: `inset 0 0 20px rgba(${founder.color === 'primary' ? '59, 130, 246' : '14, 165, 233'}, 0.1)`
+                         }}>
+                      <Quote size={24} className={`text-${founder.color}-400 mb-3 group-hover:text-${founder.color}-300 transition-colors duration-300`} />
+                      <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300">
                         "{founder.quote}"
                       </blockquote>
                     </div>
