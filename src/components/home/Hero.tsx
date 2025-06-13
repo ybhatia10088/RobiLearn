@@ -5,223 +5,199 @@ import { useNavigate } from '@/hooks/useNavigation';
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
-  
+
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
-      {/* Enhanced background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/12 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-accent-500/6 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
+      {/* Enhanced Particle Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-[15%] left-[20%] w-96 h-96 bg-primary-500/10 rounded-full blur-[100px] animate-pulse-slow" />
+        <div className="absolute bottom-[25%] right-[20%] w-80 h-80 bg-secondary-500/8 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-accent-500/5 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '3s' }} />
         
-        {/* Floating geometric shapes */}
-        <motion.div
-          className="absolute top-20 right-20 w-4 h-4 bg-primary-400/30 rounded-full"
-          animate={{ y: [0, -20, 0], opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-32 left-16 w-6 h-6 bg-secondary-400/40 rotate-45"
-          animate={{ rotate: [45, 225, 45], opacity: [0.4, 0.9, 0.4] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/3 right-1/3 w-3 h-3 bg-accent-400/50 rounded-full"
-          animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
+        {/* Floating Particles */}
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: `${Math.random() * 10 + 2}px`,
+              height: `${Math.random() * 10 + 2}px`,
+              background: i % 3 === 0 
+                ? 'rgba(96, 165, 250, 0.4)' 
+                : i % 3 === 1 
+                  ? 'rgba(139, 92, 246, 0.4)' 
+                  : 'rgba(20, 184, 166, 0.4)'
+            }}
+            animate={{
+              y: [0, -20, 0],
+              x: [0, (Math.random() - 0.5) * 40, 0],
+              opacity: [0.2, 0.8, 0.2]
+            }}
+            transition={{
+              duration: 4 + Math.random() * 4,
+              repeat: Infinity,
+              delay: Math.random() * 2
+            }}
+          />
+        ))}
       </div>
-      
-      {/* Enhanced grid pattern overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:80px_80px] opacity-60" />
-      
-      <div className="container mx-auto px-6 relative z-10 pt-20 pb-16">
+
+      {/* Hexagonal Grid Overlay */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI1MiIgdmlld0JveD0iMCAwIDYwIDUyIj48cGF0aCBkPSJNMzAgMEw1OCAxM1YzOUwzMCA1MkwyIDM5VjEzTDMwIDBaIiBmaWxsPSJub25lIiBzdHJva2U9IiM1MjZhNmYiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9zdmc+')] bg-[length:60px_52px]" />
+      </div>
+
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center min-h-[85vh] justify-center">
-            {/* Centered Content with enhanced spacing */}
-            <div className="text-center max-w-5xl mx-auto">
-              {/* Enhanced Badge */}
+          {/* Centered Content */}
+          <div className="flex flex-col items-center justify-center min-h-[80vh]">
+            <div className="text-center max-w-4xl mx-auto">
+              {/* Premium Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="inline-flex items-center px-8 py-4 rounded-full bg-gradient-to-r from-primary-500/15 to-secondary-500/15 backdrop-blur-md border border-primary-400/30 text-primary-300 text-sm font-semibold mb-12 shadow-lg hover:shadow-glow transition-all duration-300"
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-primary-500/15 to-secondary-500/15 backdrop-blur-md border border-primary-400/30 text-primary-200 text-base font-medium mb-10 shadow-lg hover:shadow-primary-500/20 transition-all duration-300"
               >
-                <Star size={18} className="mr-3 text-primary-400" />
-                <span>The Future of Robotics Education</span>
-                <Zap size={16} className="ml-3 text-secondary-400" />
+                <Zap size={18} className="mr-2 text-primary-400 fill-current" />
+                <span>Next-Gen Robotics Education</span>
               </motion.div>
 
-              {/* Enhanced Main Headline with better typography */}
+              {/* Main Headline */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="mb-12"
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="mb-10"
               >
-                <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.1] tracking-tight">
-                  <div className="text-white mb-4">
-                    Master Robotics
-                  </div>
-                  <div className="bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent font-black relative">
-                    Without Hardware
-                    {/* Subtle glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent blur-sm opacity-30 -z-10">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-[1.15] tracking-tight">
+                  <span className="block text-white mb-4">Master Robotics</span>
+                  <div className="relative inline-block">
+                    <span className="bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent">
+                      Without Hardware
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent blur-xl opacity-30 -z-10">
                       Without Hardware
                     </div>
                   </div>
                 </h1>
               </motion.div>
 
-              {/* Enhanced Subtitle with better spacing */}
+              {/* Subtitle */}
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-xl md:text-2xl lg:text-3xl text-dark-200 mb-16 leading-relaxed font-light max-w-4xl mx-auto"
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="text-lg md:text-xl lg:text-2xl text-gray-300 mb-14 leading-relaxed max-w-3xl mx-auto font-light"
               >
-                Learn robotics programming through immersive 3D simulations.
-                <br />
-                <span className="text-primary-300 font-medium">No expensive hardware required.</span>
+                Learn professional robotics programming through physics-accurate simulations.
+                <span className="block mt-2 text-primary-300 font-medium">
+                  No expensive hardware required.
+                </span>
               </motion.p>
 
-              {/* Enhanced Action Buttons with better styling */}
+              {/* Action Buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-                className="flex flex-col sm:flex-row gap-6 justify-center mb-20"
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="flex flex-col sm:flex-row gap-5 justify-center mb-16"
               >
-                <button 
-                  className="group relative overflow-hidden bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 hover:from-primary-600 hover:via-primary-700 hover:to-primary-800 text-white text-lg font-bold px-12 py-6 rounded-2xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary-500/30 hover:-translate-y-2 active:translate-y-0 transform-gpu"
+                <button
+                  className="group relative overflow-hidden bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold px-10 py-5 rounded-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary-500/30"
                   onClick={() => navigate('/simulator')}
                 >
                   <div className="flex items-center justify-center relative z-10">
-                    <Play size={24} className="mr-4 group-hover:scale-125 transition-transform duration-300" />
-                    <span className="text-xl">Launch Simulator</span>
-                    <ArrowRight size={24} className="ml-4 group-hover:translate-x-2 transition-transform duration-300" />
+                    <Play size={20} className="mr-3 group-hover:scale-110 transition-transform" />
+                    <span className="text-lg">Launch Simulator</span>
+                    <ArrowRight size={20} className="ml-3 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  {/* Enhanced shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  {/* Glow border */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 -z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                 </button>
                 
-                <button 
-                  className="group relative bg-transparent border-2 border-primary-400/50 hover:border-primary-400 text-primary-300 hover:text-white text-lg font-semibold px-12 py-6 rounded-2xl transition-all duration-500 hover:bg-primary-500/10 backdrop-blur-md hover:shadow-xl hover:shadow-primary-500/20 hover:-translate-y-1 active:translate-y-0"
+                <button
+                  className="group relative bg-dark-800/50 border border-primary-500/30 hover:border-primary-400 text-primary-200 hover:text-white font-medium px-10 py-5 rounded-xl backdrop-blur-md transition-all duration-500 hover:shadow-lg hover:shadow-primary-500/10"
                   onClick={() => navigate('/challenges')}
                 >
                   <div className="flex items-center justify-center">
-                    <Award size={24} className="mr-4 group-hover:scale-110 transition-transform duration-300" />
-                    <span className="text-xl">View Challenges</span>
+                    <Award size={20} className="mr-3 group-hover:text-accent-400 transition-colors" />
+                    <span className="text-lg">Explore Challenges</span>
                   </div>
                 </button>
               </motion.div>
 
-              {/* Enhanced Social proof with better design */}
+              {/* Social Proof */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8 }}
-                className="flex flex-wrap items-center justify-center gap-12 text-sm"
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="inline-flex flex-wrap justify-center gap-x-12 gap-y-6 px-8 py-5 bg-dark-800/30 backdrop-blur-md rounded-2xl border border-dark-700"
               >
                 {[
-                  { icon: Users, text: "Growing Community", color: "primary" },
-                  { icon: Code, text: "Interactive Learning", color: "secondary" },
-                  { icon: Star, text: "Open Source", color: "accent" }
+                  { icon: Users, text: "10K+ Developers", color: "text-primary-400" },
+                  { icon: Star, text: "4.9/5 Rating", color: "text-amber-400" },
+                  { icon: Code, text: "Open Source", color: "text-emerald-400" }
                 ].map((item, index) => (
-                  <motion.div
-                    key={item.text}
-                    className={`flex items-center group hover:text-${item.color}-300 transition-colors duration-300 cursor-pointer`}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className={`bg-${item.color}-500/20 p-3 rounded-full mr-4 group-hover:bg-${item.color}-500/30 transition-colors duration-300`}>
-                      <item.icon size={20} className={`text-${item.color}-400 group-hover:scale-110 transition-transform duration-300`} />
+                  <div key={index} className="flex items-center">
+                    <div className="mr-3 p-2 bg-dark-700 rounded-lg">
+                      <item.icon size={18} className={`${item.color}`} />
                     </div>
-                    <span className="font-medium text-dark-300 group-hover:text-white transition-colors duration-300">
-                      {item.text}
-                    </span>
-                  </motion.div>
+                    <span className="font-medium text-gray-300">{item.text}</span>
+                  </div>
                 ))}
               </motion.div>
             </div>
           </div>
 
-          {/* Enhanced Feature highlights with improved design */}
+          {/* Feature Cards */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1 }}
-            className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+            transition={{ duration: 0.8, delay: 1 }}
+            className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
           >
             {[
-              {
-                icon: <Cpu size={32} />, 
-                title: 'Multiple Robot Types',
-                description: 'Control arms, mobile robots, drones, and specialized bots in realistic physics simulations with industry-grade accuracy', 
-                color: 'primary',
-                gradient: 'from-primary-500 to-primary-600'
+              { 
+                icon: <Cpu size={28} className="text-primary-400" />, 
+                title: 'Multiple Robot Types', 
+                description: 'Control arms, mobile robots, drones in physics-accurate simulations',
+                color: 'primary'
               },
-              {
-                icon: <Brain size={32} />, 
-                title: 'AI-Powered Learning',
-                description: 'Natural language programming with intelligent code suggestions, real-time feedback, and adaptive learning paths', 
-                color: 'secondary',
-                gradient: 'from-secondary-500 to-secondary-600'
+              { 
+                icon: <Brain size={28} className="text-secondary-400" />, 
+                title: 'AI-Powered Learning', 
+                description: 'Intelligent code suggestions and real-time feedback',
+                color: 'secondary'
               },
-              {
-                icon: <Layers size={32} />, 
-                title: 'Progressive Curriculum',
-                description: 'Structured learning path from basic movements to complex autonomous systems with hands-on challenges', 
-                color: 'accent',
-                gradient: 'from-accent-500 to-accent-600'
+              { 
+                icon: <Layers size={28} className="text-accent-400" />, 
+                title: 'Progressive Curriculum', 
+                description: 'From basic movements to complex autonomous systems',
+                color: 'accent'
               }
             ].map((feature, index) => (
-              <motion.div 
-                key={feature.title} 
-                className="group relative"
+              <motion.div
+                key={feature.title}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 1.2 + index * 0.2 }}
+                transition={{ duration: 0.5, delay: 1.2 + index * 0.15 }}
                 whileHover={{ y: -8 }}
+                className="relative group"
               >
-                <div className="relative h-full">
-                  {/* Background card */}
-                  <div className={`absolute inset-0 bg-gradient-to-br from-dark-700/40 to-dark-800/60 backdrop-blur-md rounded-3xl border border-${feature.color}-500/20 group-hover:border-${feature.color}-400/40 transition-all duration-500`} />
-                  
-                  {/* Content */}
-                  <div className="relative flex flex-col items-center text-center p-10 h-full">
-                    {/* Icon with enhanced styling */}
-                    <div className={`relative mb-8 group-hover:scale-110 transition-transform duration-500`}>
-                      <div className={`bg-gradient-to-br ${feature.gradient} p-6 rounded-3xl shadow-2xl shadow-${feature.color}-500/25 group-hover:shadow-${feature.color}-500/50 transition-all duration-500`}>
-                        <div className="text-white relative z-10">{feature.icon}</div>
-                      </div>
-                      {/* Glow effect */}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500 -z-10`} />
+                <div className="absolute inset-0 bg-gradient-to-br from-dark-800 to-dark-900 rounded-2xl border border-dark-700 group-hover:border-primary-500/30 transition-all duration-500 shadow-xl" />
+                <div className="relative bg-gradient-to-b from-dark-800/50 to-dark-900/0 p-8 rounded-2xl h-full">
+                  <div className="mb-6 flex justify-center">
+                    <div className={`p-4 rounded-xl bg-${feature.color}-900/20 backdrop-blur-sm border border-${feature.color}-500/10`}>
+                      {feature.icon}
                     </div>
-                    
-                    {/* Title */}
-                    <h3 className="font-bold text-white mb-6 text-xl group-hover:text-white transition-colors leading-tight">
-                      {feature.title}
-                    </h3>
-                    
-                    {/* Description */}
-                    <p className="text-dark-300 leading-relaxed text-base group-hover:text-dark-200 transition-colors flex-grow">
-                      {feature.description}
-                    </p>
-                    
-                    {/* Hover indicator */}
-                    <motion.div
-                      className={`mt-6 w-12 h-1 bg-gradient-to-r ${feature.gradient} rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                      initial={{ width: 0 }}
-                      whileHover={{ width: 48 }}
-                      transition={{ duration: 0.3 }}
-                    />
                   </div>
-                  
-                  {/* Subtle border glow on hover */}
-                  <div className={`absolute inset-0 rounded-3xl bg-gradient-to-r from-${feature.color}-500/0 via-${feature.color}-500/10 to-${feature.color}-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl`} />
+                  <h3 className="font-bold text-xl text-white mb-4 text-center">{feature.title}</h3>
+                  <p className="text-gray-400 text-center leading-relaxed">{feature.description}</p>
+                  <div className="mt-6 flex justify-center">
+                    <div className={`h-1 w-12 bg-gradient-to-r from-${feature.color}-500 to-${feature.color}-600 rounded-full transition-all duration-500 group-hover:w-16`} />
+                  </div>
                 </div>
               </motion.div>
             ))}
