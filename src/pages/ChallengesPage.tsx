@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Layout from '@/components/layout/Layout';
 import { ChevronRight, ChevronDown, Trophy, LockKeyhole, Star, Book, Tag, Play, CheckCircle, Clock, Target, Award, HelpCircle, Eye, BookOpen, Code, Lightbulb, X } from 'lucide-react';
 import { ChallengeCategory, DifficultyLevel, Challenge } from '@/types/challenge.types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -514,6 +515,16 @@ const ChallengesPage: React.FC = () => {
     }, 500);
   };
 
+  const handleStartChallenge = (challenge: Challenge) => {
+    if (!challenge.unlocked) return;
+    
+    // Set the current challenge in the robot store
+    setCurrentChallenge(challenge.id);
+    
+    // Navigate to simulator with challenge parameter
+    navigate(`/simulator?challenge=${challenge.id}`);
+  };
+  
   const filteredChallenges = realtimeChallenges.filter(challenge => 
     (selectedCategory === 'all' || challenge.category === selectedCategory) &&
     (selectedDifficulty === 'all' || challenge.difficulty === selectedDifficulty)
@@ -538,22 +549,33 @@ const ChallengesPage: React.FC = () => {
   
   const getDifficultyColor = (difficulty: DifficultyLevel) => {
     switch (difficulty) {
-      case DifficultyLevel.BEGINNER: return 'green';
-      case DifficultyLevel.INTERMEDIATE: return 'blue';
-      case DifficultyLevel.ADVANCED: return 'yellow';
-      case DifficultyLevel.EXPERT: return 'red';
-      default: return 'blue';
+      case DifficultyLevel.BEGINNER:
+        return 'success';
+      case DifficultyLevel.INTERMEDIATE:
+        return 'primary';
+      case DifficultyLevel.ADVANCED:
+        return 'warning';
+      case DifficultyLevel.EXPERT:
+        return 'error';
+      default:
+        return 'primary';
     }
   };
   
   const getCategoryIcon = (category: ChallengeCategory) => {
     switch (category) {
-      case ChallengeCategory.INTRO: return <Book size={16} />;
-      case ChallengeCategory.WAREHOUSE: return <Tag size={16} />;
-      case ChallengeCategory.SURGERY: return <Star size={16} />;
-      case ChallengeCategory.SEARCH_RESCUE: return <Trophy size={16} />;
-      case ChallengeCategory.MANUFACTURING: return <Tag size={16} />;
-      default: return <Book size={16} />;
+      case ChallengeCategory.INTRO:
+        return <Book size={16} />;
+      case ChallengeCategory.WAREHOUSE:
+        return <Tag size={16} />;
+      case ChallengeCategory.SURGERY:
+        return <Star size={16} />;
+      case ChallengeCategory.SEARCH_RESCUE:
+        return <Trophy size={16} />;
+      case ChallengeCategory.MANUFACTURING:
+        return <Tag size={16} />;
+      default:
+        return <Book size={16} />;
     }
   };
 
@@ -568,43 +590,94 @@ const ChallengesPage: React.FC = () => {
     setExpandedChallenge(expandedChallenge === challenge.id ? null : challenge.id);
   };
 
-  const handleStartChallenge = (challenge: Challenge) => {
-    // Set the current challenge in the robot store
-    setCurrentChallenge(challenge.id);
-    // Navigate to simulator with challenge parameter
-    navigate(`/simulator?challenge=${challenge.id}`);
+  const ObjectiveProgressBar: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
+    const progress = getObjectiveProgress(challenge);
+    
+    return (
+      <div className="mt-2">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs text-dark-300">Progress</span>
+          <span className="text-xs text-dark-300">{progress.completed}/{progress.total}</span>
+        </div>
+        <div className="w-full bg-dark-600 rounded-full h-2">
+          <motion.div
+            className="bg-primary-500 h-2 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress.percentage}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const LiveStatsPanel: React.FC = () => {
+    if (!robotState) return null;
+
+    return (
+      <div className="bg-dark-700 rounded-lg p-4 border border-dark-600 mb-4">
+        <h3 className="text-white font-medium mb-3 flex items-center">
+          <Target size={16} className="mr-2" />
+          Live Robot Status
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="text-dark-300">Position</span>
+            <p className="text-white font-mono">
+              ({robotState.position.x.toFixed(1)}, {robotState.position.z.toFixed(1)})
+            </p>
+          </div>
+          <div>
+            <span className="text-dark-300">Distance</span>
+            <p className="text-white font-mono">
+              {challengeTracking.totalDistanceMoved.toFixed(1)}m
+            </p>
+          </div>
+          <div>
+            <span className="text-dark-300">Rotations</span>
+            <p className="text-white font-mono">
+              {(challengeTracking.totalRotations / Math.PI * 180).toFixed(0)}°
+            </p>
+          </div>
+          <div>
+            <span className="text-dark-300">Battery</span>
+            <p className="text-white font-mono">{robotState.batteryLevel}%</p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Modal Components
   const TheoryModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-dark-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-white flex items-center">
               <BookOpen className="mr-2" />
               Learning Materials - {challenge.title}
             </h2>
-            <button onClick={closeModal} className="text-gray-400 hover:text-white">
+            <button onClick={closeModal} className="text-dark-400 hover:text-white">
               <X size={24} />
             </button>
           </div>
           
           {challenge.theory?.sections.map((section, index) => (
-            <div key={index} className="mb-6 p-4 bg-slate-700 rounded-lg">
-              <h3 className="text-xl font-semibold text-blue-400 mb-3">{section.title}</h3>
-              <div className="text-gray-300 whitespace-pre-wrap mb-4">{section.content}</div>
+            <div key={index} className="mb-6 p-4 bg-dark-700 rounded-lg">
+              <h3 className="text-xl font-semibold text-primary-400 mb-3">{section.title}</h3>
+              <div className="text-dark-300 whitespace-pre-wrap mb-4">{section.content}</div>
               
               {section.examples && (
                 <div className="space-y-3">
-                  <h4 className="text-lg font-medium text-green-400">Examples:</h4>
+                  <h4 className="text-lg font-medium text-success-400">Examples:</h4>
                   {section.examples.map((example, exampleIndex) => (
-                    <div key={exampleIndex} className="bg-slate-800 rounded p-3 border border-slate-600">
+                    <div key={exampleIndex} className="bg-dark-800 rounded p-3 border border-dark-600">
                       <h5 className="text-white font-medium mb-2">{example.title}</h5>
-                      <pre className="text-green-300 text-sm mb-2 overflow-x-auto">
+                      <pre className="text-success-300 text-sm mb-2 overflow-x-auto">
                         <code>{example.code}</code>
                       </pre>
-                      <p className="text-gray-400 text-sm">{example.explanation}</p>
+                      <p className="text-dark-400 text-sm">{example.explanation}</p>
                     </div>
                   ))}
                 </div>
@@ -612,7 +685,7 @@ const ChallengesPage: React.FC = () => {
               
               {section.video && (
                 <div className="mt-4">
-                  <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center">
+                  <button className="bg-error-600 hover:bg-error-700 text-white px-4 py-2 rounded flex items-center">
                     <Play className="mr-2" size={16} />
                     Watch Video Tutorial
                   </button>
@@ -627,20 +700,20 @@ const ChallengesPage: React.FC = () => {
 
   const QuizModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-dark-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-white flex items-center">
               <Star className="mr-2" />
               Knowledge Quiz - {challenge.title}
             </h2>
-            <button onClick={closeModal} className="text-gray-400 hover:text-white">
+            <button onClick={closeModal} className="text-dark-400 hover:text-white">
               <X size={24} />
             </button>
           </div>
           
           {challenge.theory?.quiz?.map((question, qIndex) => (
-            <div key={qIndex} className="mb-6 p-4 bg-slate-700 rounded-lg">
+            <div key={qIndex} className="mb-6 p-4 bg-dark-700 rounded-lg">
               <p className="text-white text-lg mb-4">{question.question}</p>
               <div className="grid grid-cols-1 gap-2">
                 {question.options.map((option, optIndex) => {
@@ -651,18 +724,18 @@ const ChallengesPage: React.FC = () => {
                   let buttonClass = "p-3 rounded border text-left transition-colors ";
                   if (showResult) {
                     if (isSelected && isCorrect) {
-                      buttonClass += "bg-green-600 border-green-500 text-white";
+                      buttonClass += "bg-success-600 border-success-500 text-white";
                     } else if (isSelected && !isCorrect) {
-                      buttonClass += "bg-red-600 border-red-500 text-white";
+                      buttonClass += "bg-error-600 border-error-500 text-white";
                     } else if (isCorrect) {
-                      buttonClass += "bg-green-600 border-green-500 text-white";
+                      buttonClass += "bg-success-600 border-success-500 text-white";
                     } else {
-                      buttonClass += "bg-slate-600 border-slate-500 text-gray-300";
+                      buttonClass += "bg-dark-600 border-dark-500 text-dark-300";
                     }
                   } else {
                     buttonClass += isSelected 
-                      ? "bg-blue-600 border-blue-500 text-white"
-                      : "bg-slate-600 border-slate-500 text-gray-300 hover:border-slate-400";
+                      ? "bg-primary-600 border-primary-500 text-white"
+                      : "bg-dark-600 border-dark-500 text-dark-300 hover:border-dark-400";
                   }
                   
                   return (
@@ -678,8 +751,8 @@ const ChallengesPage: React.FC = () => {
                 })}
               </div>
               {showQuizResults[qIndex] && (
-                <div className="mt-3 p-3 bg-blue-900 border border-blue-600 rounded">
-                  <p className="text-blue-300 text-sm">{question.explanation}</p>
+                <div className="mt-3 p-3 bg-primary-900 border border-primary-600 rounded">
+                  <p className="text-primary-300 text-sm">{question.explanation}</p>
                 </div>
               )}
             </div>
@@ -691,34 +764,34 @@ const ChallengesPage: React.FC = () => {
 
   const HintsModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-dark-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-white flex items-center">
               <Lightbulb className="mr-2" />
               Hints - {challenge.title}
             </h2>
-            <button onClick={closeModal} className="text-gray-400 hover:text-white">
+            <button onClick={closeModal} className="text-dark-400 hover:text-white">
               <X size={24} />
             </button>
           </div>
           
           <div className="space-y-4">
             {challenge.hints?.map((hint, index) => (
-              <div key={hint.id} className="p-4 bg-slate-700 rounded-lg border border-slate-600">
+              <div key={hint.id} className="p-4 bg-dark-700 rounded-lg border border-dark-600">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="text-white font-medium mb-2">Hint #{index + 1}</h3>
                     {selectedHints.includes(hint.id) ? (
-                      <p className="text-gray-300">{hint.text}</p>
+                      <p className="text-dark-300">{hint.text}</p>
                     ) : (
-                      <p className="text-gray-500 italic">Click to unlock this hint</p>
+                      <p className="text-dark-500 italic">Click to unlock this hint</p>
                     )}
                   </div>
                   {!selectedHints.includes(hint.id) && (
                     <button
                       onClick={() => handleHintUnlock(hint)}
-                      className="ml-4 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm flex items-center"
+                      className="ml-4 bg-warning-600 hover:bg-warning-700 text-white px-3 py-1 rounded text-sm flex items-center"
                     >
                       <HelpCircle size={14} className="mr-1" />
                       {hint.unlockCost === 0 ? 'Free' : `${hint.unlockCost} pts`}
@@ -730,11 +803,11 @@ const ChallengesPage: React.FC = () => {
             
             {challenge.objectives?.map((objective) => 
               objective.hints?.map((hint, hintIndex) => (
-                <div key={`${objective.id}-${hintIndex}`} className="p-4 bg-slate-700 rounded-lg border border-slate-600">
+                <div key={`${objective.id}-${hintIndex}`} className="p-4 bg-dark-700 rounded-lg border border-dark-600">
                   <h3 className="text-white font-medium mb-2">
                     {objective.description} - Hint #{hintIndex + 1}
                   </h3>
-                  <p className="text-gray-300">{hint}</p>
+                  <p className="text-dark-300">{hint}</p>
                 </div>
               ))
             )}
@@ -746,27 +819,27 @@ const ChallengesPage: React.FC = () => {
 
   const CodeModal = ({ challenge }: { challenge: Challenge }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-dark-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-white flex items-center">
               <Code className="mr-2" />
               Starting Code - {challenge.title}
             </h2>
-            <button onClick={closeModal} className="text-gray-400 hover:text-white">
+            <button onClick={closeModal} className="text-dark-400 hover:text-white">
               <X size={24} />
             </button>
           </div>
           
           <div className="space-y-4">
-            <div className="p-4 bg-slate-700 rounded-lg">
-              <h3 className="text-green-400 font-medium mb-2">Natural Language Description:</h3>
-              <p className="text-gray-300">{challenge.startingCode?.natural_language}</p>
+            <div className="p-4 bg-dark-700 rounded-lg">
+              <h3 className="text-success-400 font-medium mb-2">Natural Language Description:</h3>
+              <p className="text-dark-300">{challenge.startingCode?.natural_language}</p>
             </div>
             
-            <div className="p-4 bg-slate-700 rounded-lg">
-              <h3 className="text-blue-400 font-medium mb-2">Starting Code:</h3>
-              <pre className="text-gray-300 text-sm overflow-x-auto bg-slate-800 p-3 rounded border">
+            <div className="p-4 bg-dark-700 rounded-lg">
+              <h3 className="text-primary-400 font-medium mb-2">Starting Code:</h3>
+              <pre className="text-dark-300 text-sm overflow-x-auto bg-dark-800 p-3 rounded border">
                 <code>{challenge.startingCode?.code}</code>
               </pre>
             </div>
@@ -777,7 +850,7 @@ const ChallengesPage: React.FC = () => {
                   navigator.clipboard.writeText(challenge.startingCode?.code || '');
                   alert('Code copied to clipboard!');
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded"
               >
                 Copy Code
               </button>
@@ -786,7 +859,7 @@ const ChallengesPage: React.FC = () => {
                   closeModal();
                   handleStartChallenge(challenge);
                 }}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center"
+                className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded flex items-center"
               >
                 <Play className="mr-2" size={16} />
                 Open in Simulator
@@ -797,110 +870,20 @@ const ChallengesPage: React.FC = () => {
       </div>
     </div>
   );
-
-  const ObjectiveProgressBar: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
-    const progress = getObjectiveProgress(challenge);
-    
-    return (
-      <div className="mt-2">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-gray-400">Progress</span>
-          <span className="text-xs text-gray-400">{progress.completed}/{progress.total}</span>
-        </div>
-        <div className="w-full bg-gray-700 rounded-full h-2">
-          <motion.div
-            className="bg-blue-500 h-2 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress.percentage}%` }}
-            transition={{ duration: 0.5 }}
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const LiveStatsPanel: React.FC = () => {
-    if (!robotState) return null;
-
-    return (
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 mb-4">
-        <h3 className="text-white font-medium mb-3 flex items-center">
-          <Target size={16} className="mr-2" />
-          Live Robot Status
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-gray-400">Position</span>
-            <p className="text-white font-mono">
-              ({robotState.position.x.toFixed(1)}, {robotState.position.z.toFixed(1)})
-            </p>
-          </div>
-          <div>
-            <span className="text-gray-400">Distance</span>
-            <p className="text-white font-mono">
-              {challengeTracking.totalDistanceMoved.toFixed(1)}m
-            </p>
-          </div>
-          <div>
-            <span className="text-gray-400">Rotations</span>
-            <p className="text-white font-mono">
-              {(challengeTracking.totalRotations / Math.PI * 180).toFixed(0)}°
-            </p>
-          </div>
-          <div>
-            <span className="text-gray-400">Battery</span>
-            <p className="text-white font-mono">{robotState.batteryLevel}%</p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
+  
   return (
-    <div className="min-h-screen bg-slate-900 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Learning Challenges</h1>
-            <p className="text-gray-400">
-              Progress through our robotics challenges from beginner to expert level
-            </p>
-          </div>
+    <Layout>
+      <div className="bg-dark-800 rounded-lg border border-dark-600 h-full flex flex-col">
+        <div className="border-b border-dark-600 p-4">
+          <h2 className="text-xl font-semibold text-white mb-4">Robotics Challenges</h2>
           
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-900 border border-blue-700 text-blue-400 mb-1">
-                <Award size={24} />
-              </div>
-              <span className="text-sm text-gray-300">{challengeTracking.completedChallenges.size}/{challenges.length}</span>
-              <span className="text-xs text-gray-500">Completed</span>
-            </div>
-            
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-900 border border-yellow-700 text-yellow-400 mb-1">
-                <Trophy size={24} />
-              </div>
-              <span className="text-sm text-gray-300">{challengeTracking.completedObjectives.size}</span>
-              <span className="text-xs text-gray-500">Objectives</span>
-            </div>
-            
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-900 border border-purple-700 text-purple-400 mb-1">
-                <Star size={24} />
-              </div>
-              <span className="text-sm text-gray-300">{challengeTracking.totalDistanceMoved.toFixed(1)}m</span>
-              <span className="text-xs text-gray-500">Distance</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
+              <label className="block text-sm font-medium text-dark-300 mb-1">
+                Category
+              </label>
               <select
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value as any)}
               >
@@ -911,9 +894,11 @@ const ChallengesPage: React.FC = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Difficulty</label>
+              <label className="block text-sm font-medium text-dark-300 mb-1">
+                Difficulty
+              </label>
               <select
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value as any)}
               >
@@ -924,234 +909,233 @@ const ChallengesPage: React.FC = () => {
             </div>
           </div>
         </div>
+        
+        <div className="flex-1 overflow-auto p-4">
+          <LiveStatsPanel />
+          
+          {filteredChallenges.length === 0 ? (
+            <div className="text-center text-dark-400 py-8">
+              <p>No challenges found matching your filters.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredChallenges.map((challenge) => {
+                const progress = getObjectiveProgress(challenge);
+                return (
+                  <motion.div
+                    key={challenge.id}
+                    initial={false}
+                    animate={{ height: expandedChallenge === challenge.id ? 'auto' : 'auto' }}
+                    className={`card cursor-pointer border-l-4 ${
+                      challenge.unlocked 
+                        ? `border-l-${getDifficultyColor(challenge.difficulty)}-500` 
+                        : 'border-l-dark-500'
+                    } ${challenge.unlocked ? '' : 'opacity-70'} ${
+                      challenge.completed ? 'bg-success-900/20 border-success-500' : ''
+                    }`}
+                    onClick={() => handleChallengeClick(challenge)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <div className={`p-1.5 rounded-md bg-${getDifficultyColor(challenge.difficulty)}-900 border border-${getDifficultyColor(challenge.difficulty)}-700 mr-2 text-${getDifficultyColor(challenge.difficulty)}-400`}>
+                            {getCategoryIcon(challenge.category)}
+                          </div>
+                          <h3 className="text-lg font-semibold text-white">{challenge.title}</h3>
+                          {challenge.completed && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="ml-2 text-success-400"
+                            >
+                              <Trophy size={16} />
+                            </motion.div>
+                          )}
+                        </div>
+                        
+                        <p className="text-dark-300 text-sm mb-3">{challenge.description}</p>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <div className={`badge bg-${getDifficultyColor(challenge.difficulty)}-900 text-${getDifficultyColor(challenge.difficulty)}-400 border border-${getDifficultyColor(challenge.difficulty)}-700`}>
+                            {challenge.difficulty}
+                          </div>
+                          <div className="badge bg-dark-700 text-dark-300 border border-dark-600 flex items-center">
+                            <Clock size={12} className="mr-1" />
+                            {challenge.estimatedTime} min
+                          </div>
+                          <div className="badge bg-dark-700 text-dark-300 border border-dark-600">
+                            {challenge.robotType}
+                          </div>
+                          {progress.completed > 0 && (
+                            <div className="badge bg-primary-900 text-primary-400 border border-primary-700">
+                              {progress.completed}/{progress.total} completed
+                            </div>
+                          )}
+                        </div>
 
-        {/* Live Stats */}
-        <LiveStatsPanel />
-
-        {/* Challenge List */}
-        <div className="space-y-4">
-          {filteredChallenges.map((challenge) => {
-            const progress = getObjectiveProgress(challenge);
-            const isExpanded = expandedChallenge === challenge.id;
-            
-            return (
-              <div
-                key={challenge.id}
-                className={`bg-slate-800 rounded-lg border border-slate-700 p-6 cursor-pointer transition-all ${
-                  challenge.unlocked ? 'hover:border-slate-600' : 'opacity-70'
-                } ${challenge.completed ? 'border-green-500 bg-green-900/10' : ''}`}
-                onClick={() => handleChallengeClick(challenge)}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <div className={`p-1.5 rounded-md bg-${getDifficultyColor(challenge.difficulty)}-900 border border-${getDifficultyColor(challenge.difficulty)}-700 mr-2 text-${getDifficultyColor(challenge.difficulty)}-400`}>
-                        {getCategoryIcon(challenge.category)}
-                      </div>
-                      <h3 className="text-xl font-semibold text-white">{challenge.title}</h3>
-                      {challenge.completed && (
-                        <CheckCircle className="ml-2 text-green-400" size={20} />
-                      )}
-                      {!challenge.unlocked && (
-                        <LockKeyhole className="ml-2 text-gray-500" size={16} />
-                      )}
-                    </div>
-                    
-                    <p className="text-gray-400 mb-3">{challenge.description}</p>
-                    
-                    <div className="flex items-center space-x-4 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-medium bg-${getDifficultyColor(challenge.difficulty)}-900 text-${getDifficultyColor(challenge.difficulty)}-400 border border-${getDifficultyColor(challenge.difficulty)}-700`}>
-                        {challenge.difficulty.charAt(0).toUpperCase() + challenge.difficulty.slice(1)}
-                      </span>
-                      <span className="text-gray-500 flex items-center">
-                        <Clock size={14} className="mr-1" />
-                        {challenge.estimatedTime} min
-                      </span>
-                      <span className="text-gray-500">
-                        {progress.completed}/{progress.total} objectives
-                      </span>
-                    </div>
-
-                    {challenge.unlocked && <ObjectiveProgressBar challenge={challenge} />}
-                  </div>
-                  
-                  <div className="flex flex-col items-end ml-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      {challenge.unlocked && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStartChallenge(challenge);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center text-sm"
-                        >
-                          <Play size={14} className="mr-1" />
-                          Start
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center text-gray-400">
-                      {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expanded Content */}
-                {isExpanded && (
-                  <div className="mt-6 pt-6 border-t border-slate-700">
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-3 mb-6">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openModal('theory', challenge);
-                        }}
-                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                      >
-                        <BookOpen size={14} className="mr-2" />
-                        Theory
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openModal('quiz', challenge);
-                        }}
-                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                      >
-                        <Star size={14} className="mr-2" />
-                        Quiz
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openModal('hints', challenge);
-                        }}
-                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                      >
-                        <Lightbulb size={14} className="mr-2" />
-                        Hints ({challenge.hints?.length || 0})
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openModal('code', challenge);
-                        }}
-                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                      >
-                        <Code size={14} className="mr-2" />
-                        View Code
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openModal('preview', challenge);
-                        }}
-                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded flex items-center text-sm"
-                      >
-                        <Eye size={14} className="mr-2" />
-                        Preview
-                      </button>
-                    </div>
-
-                    {/* Objectives */}
-                    <div>
-                      <h4 className="text-white font-medium mb-3 flex items-center">
-                        <Target size={16} className="mr-2" />
-                        Objectives
-                      </h4>
-                      <div className="space-y-3">
-                        {challenge.objectives.map((objective, index) => (
-                          <div
-                            key={objective.id}
-                            className={`p-4 rounded-lg border ${
-                              objective.completed
-                                ? 'bg-green-900/20 border-green-700'
-                                : 'bg-slate-700 border-slate-600'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center mb-2">
-                                  <span className="text-sm font-medium text-gray-400 mr-3">
-                                    #{index + 1}
-                                  </span>
-                                  <p className="text-white">{objective.description}</p>
-                                  {objective.completed && (
-                                    <CheckCircle className="ml-2 text-green-400" size={16} />
+                        {challenge.unlocked && <ObjectiveProgressBar challenge={challenge} />}
+                        
+                        <AnimatePresence>
+                          {expandedChallenge === challenge.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="mt-4 space-y-4"
+                            >
+                              <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
+                                <h4 className="text-white font-medium mb-2">Learning Objectives</h4>
+                                <ul className="space-y-2">
+                                  {challenge.objectives.map((objective) => (
+                                    <motion.li 
+                                      key={objective.id} 
+                                      className="flex items-start"
+                                      animate={objective.completed ? { backgroundColor: 'rgba(34, 197, 94, 0.1)' } : {}}
+                                      transition={{ duration: 0.3 }}
+                                    >
+                                      <div className={`mt-1 w-4 h-4 rounded-full mr-2 flex items-center justify-center transition-colors duration-300 ${
+                                        objective.completed 
+                                          ? 'bg-success-500 text-white' 
+                                          : 'bg-dark-600'
+                                      }`}>
+                                        <AnimatePresence>
+                                          {objective.completed && (
+                                            <motion.div
+                                              initial={{ scale: 0 }}
+                                              animate={{ scale: 1 }}
+                                              exit={{ scale: 0 }}
+                                            >
+                                              <CheckCircle size={12} />
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className={`text-sm transition-colors duration-300 ${
+                                          objective.completed ? 'text-success-300' : 'text-white'
+                                        }`}>
+                                          {objective.description}
+                                        </p>
+                                        {objective.theory && (
+                                          <p className="text-dark-300 text-sm mt-1">
+                                            {objective.theory.split('\n')[0]}...
+                                          </p>
+                                        )}
+                                        {objective.completed && (
+                                          <motion.p
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="text-success-400 text-xs mt-1 font-medium"
+                                          >
+                                            ✓ Completed!
+                                          </motion.p>
+                                        )}
+                                      </div>
+                                    </motion.li>
+                                  ))}
+                                </ul>
+                              </div>
+                              
+                              {challenge.theory && (
+                                <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
+                                  <h4 className="text-white font-medium mb-2">Learning Materials</h4>
+                                  {challenge.theory.sections.map((section, index) => (
+                                    <div key={index} className="mb-4 last:mb-0">
+                                      <h5 className="text-primary-400 font-medium mb-1">{section.title}</h5>
+                                      <p className="text-dark-300 text-sm whitespace-pre-wrap">{section.content}</p>
+                                      {section.examples && (
+                                        <div className="mt-2 space-y-2">
+                                          {section.examples.map((example, exampleIndex) => (
+                                            <div key={exampleIndex} className="bg-dark-800 rounded p-3 border border-dark-500">
+                                              <h6 className="text-white text-xs font-medium mb-1">{example.title}</h6>
+                                              <code className="text-primary-300 text-xs block mb-1 font-mono">
+                                                {example.code}
+                                              </code>
+                                              <p className="text-dark-400 text-xs">{example.explanation}</p>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                  
+                                  {challenge.theory.quiz && (
+                                    <div className="mt-4 bg-dark-800 rounded-lg p-3 border border-dark-500">
+                                      <h5 className="text-warning-400 font-medium mb-2 flex items-center">
+                                        <Star size={14} className="mr-1" />
+                                        Quick Quiz
+                                      </h5>
+                                      {challenge.theory.quiz.map((question, qIndex) => (
+                                        <div key={qIndex} className="mb-3 last:mb-0">
+                                          <p className="text-white text-sm mb-2">{question.question}</p>
+                                          <div className="grid grid-cols-2 gap-2">
+                                            {question.options.map((option, optIndex) => (
+                                              <button
+                                                key={optIndex}
+                                                className={`text-xs p-2 rounded border text-left transition-colors ${
+                                                  option === question.correctAnswer
+                                                    ? 'bg-success-900/30 border-success-600 text-success-300'
+                                                    : 'bg-dark-700 border-dark-600 text-dark-300 hover:border-dark-500'
+                                                }`}
+                                              >
+                                                {option}
+                                              </button>
+                                            ))}
+                                          </div>
+                                          <p className="text-primary-400 text-xs mt-2">{question.explanation}</p>
+                                        </div>
+                                      ))}
+                                    </div>
                                   )}
                                 </div>
-                                
-                                {objective.theory && (
-                                  <div className="mt-2 p-3 bg-slate-800 rounded border border-slate-600">
-                                    <h5 className="text-blue-400 text-sm font-medium mb-2">Theory:</h5>
-                                    <pre className="text-gray-300 text-xs whitespace-pre-wrap overflow-x-auto">
-                                      {objective.theory}
-                                    </pre>
-                                  </div>
-                                )}
-                                
-                                {objective.hints && objective.hints.length > 0 && (
-                                  <div className="mt-2">
-                                    <details className="group">
-                                      <summary className="text-yellow-400 text-sm cursor-pointer hover:text-yellow-300">
-                                        💡 Show hints ({objective.hints.length})
-                                      </summary>
-                                      <div className="mt-2 space-y-1">
-                                        {objective.hints.map((hint, hintIndex) => (
-                                          <div key={hintIndex} className="text-gray-400 text-sm pl-4 border-l-2 border-yellow-500">
-                                            {hint}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </details>
-                                  </div>
+                              )}
+                              
+                              <div className="flex gap-2">
+                                <button
+                                  className="btn-primary flex items-center"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartChallenge(challenge);
+                                  }}
+                                >
+                                  <Play size={16} className="mr-2" />
+                                  Start Challenge
+                                </button>
+                                {challenge.hints && challenge.hints.length > 0 && (
+                                  <button 
+                                    className="btn-secondary text-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openModal('hints', challenge);
+                                    }}
+                                  >
+                                    View Hints ({challenge.hints.length})
+                                  </button>
                                 )}
                               </div>
-                            </div>
-                          </div>
-                        ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    </div>
-
-                    {/* Next Challenges Preview */}
-                    {challenge.nextChallengeIds && challenge.nextChallengeIds.length > 0 && (
-                      <div className="mt-6 pt-4 border-t border-slate-700">
-                        <h4 className="text-white font-medium mb-3">Next Challenges:</h4>
-                        <div className="flex space-x-3">
-                          {challenge.nextChallengeIds.map((nextId) => {
-                            const nextChallenge = challenges.find(c => c.id === nextId);
-                            return nextChallenge ? (
-                              <div key={nextId} className="bg-slate-700 rounded p-3 text-sm">
-                                <p className="text-white font-medium">{nextChallenge.title}</p>
-                                <p className="text-gray-400 text-xs mt-1">{nextChallenge.category}</p>
-                              </div>
-                            ) : null;
-                          })}
+                      
+                      <div className="flex flex-col items-end space-y-2">
+                        {!challenge.unlocked && (
+                          <div className="flex items-center text-dark-400 text-sm">
+                            <LockKeyhole size={16} className="mr-1" />
+                            Locked
+                          </div>
+                        )}
+                        <div className="text-right">
+                          {expandedChallenge === challenge.id ? <ChevronDown size={20} className="text-dark-400" /> : <ChevronRight size={20} className="text-dark-400" />}
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* No challenges found */}
-        {filteredChallenges.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-500 mb-4">
-              <Book size={48} className="mx-auto mb-4" />
-              <p className="text-lg">No challenges found</p>
-              <p className="text-sm">Try adjusting your filters</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Modals */}
@@ -1163,44 +1147,44 @@ const ChallengesPage: React.FC = () => {
       {/* Preview Modal */}
       {activeModal?.type === 'preview' && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-dark-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white flex items-center">
                   <Eye className="mr-2" />
                   Challenge Preview - {activeModal.data.title}
                 </h2>
-                <button onClick={closeModal} className="text-gray-400 hover:text-white">
+                <button onClick={closeModal} className="text-dark-400 hover:text-white">
                   <X size={24} />
                 </button>
               </div>
               
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-slate-700 p-3 rounded">
-                    <span className="text-gray-400">Robot Type:</span>
+                  <div className="bg-dark-700 p-3 rounded">
+                    <span className="text-dark-400">Robot Type:</span>
                     <p className="text-white capitalize">{activeModal.data.robotType}</p>
                   </div>
-                  <div className="bg-slate-700 p-3 rounded">
-                    <span className="text-gray-400">Environment:</span>
+                  <div className="bg-dark-700 p-3 rounded">
+                    <span className="text-dark-400">Environment:</span>
                     <p className="text-white">{activeModal.data.environmentId}</p>
                   </div>
-                  <div className="bg-slate-700 p-3 rounded">
-                    <span className="text-gray-400">Estimated Time:</span>
+                  <div className="bg-dark-700 p-3 rounded">
+                    <span className="text-dark-400">Estimated Time:</span>
                     <p className="text-white">{activeModal.data.estimatedTime} minutes</p>
                   </div>
-                  <div className="bg-slate-700 p-3 rounded">
-                    <span className="text-gray-400">Objectives:</span>
+                  <div className="bg-dark-700 p-3 rounded">
+                    <span className="text-dark-400">Objectives:</span>
                     <p className="text-white">{activeModal.data.objectives.length} total</p>
                   </div>
                 </div>
                 
-                <div className="bg-slate-700 p-4 rounded">
+                <div className="bg-dark-700 p-4 rounded">
                   <h3 className="text-white font-medium mb-2">What you'll learn:</h3>
-                  <ul className="text-gray-300 space-y-1">
+                  <ul className="text-dark-300 space-y-1">
                     {activeModal.data.objectives.map((obj: any, index: number) => (
                       <li key={obj.id} className="flex items-start">
-                        <span className="text-blue-400 mr-2">•</span>
+                        <span className="text-primary-400 mr-2">•</span>
                         {obj.description}
                       </li>
                     ))}
@@ -1213,14 +1197,14 @@ const ChallengesPage: React.FC = () => {
                       closeModal();
                       handleStartChallenge(activeModal.data);
                     }}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center"
+                    className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded flex items-center"
                   >
                     <Play className="mr-2" size={16} />
                     Start Challenge
                   </button>
                   <button
                     onClick={() => openModal('theory', activeModal.data)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center"
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded flex items-center"
                   >
                     <BookOpen className="mr-2" size={16} />
                     Study First
@@ -1231,7 +1215,7 @@ const ChallengesPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </Layout>
   );
 };
 
