@@ -94,12 +94,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     lastRot.current = rot;
   },
   [
-    robotState.position.x,
-    robotState.position.z,
-    robotState.rotation.y,
+    robotState,
     criteriaList,
-    challenge,
-    robotState
+    challenge
   ]);
 
   
