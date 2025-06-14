@@ -276,10 +276,10 @@ const AboutPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Quote - This stays at the bottom */}
-        <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300 flex-shrink-0">
-          <Quote size={24} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300" />
-          <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300">
+        {/* Quote - This stays at the bottom with fixed height */}
+        <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300 flex-shrink-0 min-h-[140px] flex flex-col">
+          <Quote size={24} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300 flex-shrink-0" />
+          <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300 flex-1 flex items-center">
             "{founder.quote}"
           </blockquote>
         </div>
