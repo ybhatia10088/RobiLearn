@@ -238,7 +238,7 @@ const AboutPage: React.FC = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.2, duration: 0.8 }}
                 >
-                  <div className="bg-dark-700/50 rounded-3xl p-8 border-2 border-white/20 hover:border-white/40 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden">
+                  <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden">
                     {/* Animated background glow */}
                     <div className={`absolute inset-0 bg-gradient-to-br from-${founder.color}-500/5 via-transparent to-${founder.color}-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`} />
                     
