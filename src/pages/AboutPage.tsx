@@ -286,7 +286,7 @@ const AboutPage: React.FC = () => {
       </div>
     </motion.div>
   ))}
-</div>
+             </div>
             </div>
           </div>
         </section>
