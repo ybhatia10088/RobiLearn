@@ -14,6 +14,7 @@ interface JointState {
   shoulder: number;
   elbow: number;
   wrist: number;
+  altitude?: number; // Added for drone altitude control
 }
 
 interface PerformanceMetrics {
@@ -39,7 +40,6 @@ interface ChallengeTracking {
   completedChallenges: Set<string>;
   completedObjectives: Set<string>;
   currentChallengeId: string | null;
-  // Enhanced tracking for specific objectives
   maxForwardDistance: number;
   maxBackwardDistance: number;
   totalRotationAngle: number;
@@ -57,8 +57,19 @@ interface RobotStoreState {
   jointPositions: JointState;
   performance: PerformanceMetrics;
   challengeTracking: ChallengeTracking;
+  moveCommands: {
+    direction?: 'forward' | 'backward' | 'left' | 'right' | 'up' | 'down';
+    speed?: number;
+    joint?: keyof JointState;
+  } | null;
+  
+  // Actions
   selectRobot: (config: RobotConfig) => void;
-  moveRobot: (params: { direction: 'forward' | 'backward' | 'left' | 'right', speed: number, joint?: keyof JointState }) => void;
+  moveRobot: (params: { 
+    direction: 'forward' | 'backward' | 'left' | 'right' | 'up' | 'down', 
+    speed: number, 
+    joint?: keyof JointState 
+  }) => void;
   rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
   grabObject: () => void;
   releaseObject: () => void;
@@ -126,6 +137,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     shoulder: 0,
     elbow: 0,
     wrist: 0,
+    altitude: 0.5, // Initial drone altitude
   },
   environment: {
     id: 'warehouse',
@@ -141,9 +153,10 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     batteryUsed: 0,
   },
   challengeTracking: { ...INITIAL_CHALLENGE_TRACKING },
+  moveCommands: null,
 
   selectRobot: (config) => {
-    const initialPosition = { x: 0, y: 0, z: 0 };
+    const initialPosition = { x: 0, y: config.type === 'drone' ? 0.5 : 0, z: 0 };
     set({
       selectedRobot: config,
       robotState: {
@@ -160,7 +173,15 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         currentJointCommand: null,
       },
       isMoving: false,
+      jointPositions: {
+        base: 0,
+        shoulder: 0,
+        elbow: 0,
+        wrist: 0,
+        altitude: config.type === 'drone' ? 0.5 : 0,
+      },
       challengeTracking: { ...INITIAL_CHALLENGE_TRACKING },
+      moveCommands: null,
     });
   },
 
@@ -173,7 +194,10 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       clearInterval((window as any).robotMoveInterval);
     }
 
-    set({ isMoving: true });
+    set({ 
+      isMoving: true,
+      moveCommands: { direction, speed, joint }
+    });
 
     // Track the movement direction for challenge completion
     set((state) => {
@@ -191,10 +215,26 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         case 'right':
           newTracking.hasMovedRight = true;
           break;
+        case 'up':
+        case 'down':
+          newTracking.hasHovered = true;
+          break;
       }
       
       return { challengeTracking: newTracking };
     });
+
+    // Handle drone altitude changes
+    if (state.selectedRobot?.type === 'drone' && joint === 'altitude') {
+      const step = direction === 'up' ? 0.05 : -0.05;
+      set((state) => ({
+        jointPositions: {
+          ...state.jointPositions,
+          altitude: Math.max(0.1, Math.min(state.jointPositions.altitude + step, 4.0)),
+        },
+      }));
+      return;
+    }
 
     if (state.selectedRobot?.type === 'arm' && joint) {
       // Handle arm movement
@@ -217,7 +257,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         },
       }));
       
-      // Check objectives after joint movement
       setTimeout(() => get().checkAndCompleteObjectives(), 100);
       return;
     }
@@ -267,7 +306,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           const newTracking = { ...state.challengeTracking };
           newTracking.totalDistanceMoved += distance;
           
-          // Track maximum distances for specific objectives
           if (direction === 'forward') {
             newTracking.maxForwardDistance = Math.max(newTracking.maxForwardDistance, newPosition.z);
           } else if (direction === 'backward') {
@@ -284,7 +322,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           };
         });
         
-        // Check objectives after position update
         get().checkAndCompleteObjectives();
       }, 16);
 
@@ -318,7 +355,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         const newTracking = { ...state.challengeTracking };
         newTracking.totalDistanceMoved += distance;
         
-        // Track maximum distances for specific objectives
         if (direction === 'forward') {
           newTracking.maxForwardDistance = Math.max(newTracking.maxForwardDistance, newPosition.z);
         } else if (direction === 'backward') {
@@ -335,7 +371,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         };
       });
       
-      // Check objectives after position update
       get().checkAndCompleteObjectives();
     }, 16);
 
@@ -352,7 +387,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
 
     set({ isMoving: true });
     
-    // Track rotation direction for challenge completion
     set((state) => {
       const newTracking = { ...state.challengeTracking };
       if (direction === 'left') {
@@ -397,7 +431,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         };
       });
       
-      // Check objectives after rotation update
       get().checkAndCompleteObjectives();
     }, 16);
 
@@ -417,6 +450,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
 
     set((state) => ({
       isMoving: false,
+      moveCommands: null,
       robotState: state.robotState ? {
         ...state.robotState,
         isMoving: false,
@@ -438,7 +472,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       };
     });
     
-    // Check objectives after grabbing
     setTimeout(() => get().checkAndCompleteObjectives(), 100);
   },
 
@@ -456,16 +489,13 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       };
     });
     
-    // Check objectives after releasing
     setTimeout(() => get().checkAndCompleteObjectives(), 100);
   },
 
   readSensor: async (sensorType: string): Promise<number> => {
-    // Simulate sensor reading based on robot position and environment
     const state = get();
     if (!state.robotState) return 0;
 
-    // Update sensor tracking
     set((state) => ({
       challengeTracking: {
         ...state.challengeTracking,
@@ -474,29 +504,22 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       }
     }));
 
-    // Simulate different sensor types
     switch (sensorType) {
       case 'ultrasonic':
-        // Simulate distance sensor - return random value between 0.1 and 4.0 meters
         const distance = Math.random() * 3.9 + 0.1;
-        
-        // Mark sensor reading objective as completed
         get().markObjectiveCompleted('sensor_read_complete');
-        
         return distance;
       case 'camera':
-        return Math.random(); // Simulate camera confidence value
+        return Math.random();
       default:
         return 0;
     }
   },
 
   getSensorData: async (sensorType: string): Promise<any> => {
-    // Enhanced sensor data function for code editor
     const state = get();
     if (!state.robotState) return null;
 
-    // Update sensor tracking
     set((state) => ({
       challengeTracking: {
         ...state.challengeTracking,
@@ -505,10 +528,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       }
     }));
 
-    // Mark sensor reading objective as completed
     get().markObjectiveCompleted('sensor_read_complete');
 
-    // Simulate different sensor types with more detailed data
     switch (sensorType) {
       case 'ultrasonic':
         return {
@@ -548,16 +569,40 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     robotState: state.robotState ? {
       ...state.robotState,
       ...INITIAL_ROBOT_STATE,
+      position: { 
+        ...INITIAL_ROBOT_STATE.position,
+        y: state.selectedRobot?.type === 'drone' ? 0.5 : 0 
+      },
     } : null,
     isMoving: false,
+    jointPositions: {
+      base: 0,
+      shoulder: 0,
+      elbow: 0,
+      wrist: 0,
+      altitude: state.selectedRobot?.type === 'drone' ? 0.5 : 0,
+    },
+    moveCommands: null,
   })),
 
   resetRobotStateByType: () => set((state) => ({
     robotState: state.robotState ? {
       ...state.robotState,
       ...INITIAL_ROBOT_STATE,
+      position: { 
+        ...INITIAL_ROBOT_STATE.position,
+        y: state.selectedRobot?.type === 'drone' ? 0.5 : 0 
+      },
     } : null,
     isMoving: false,
+    jointPositions: {
+      base: 0,
+      shoulder: 0,
+      elbow: 0,
+      wrist: 0,
+      altitude: state.selectedRobot?.type === 'drone' ? 0.5 : 0,
+    },
+    moveCommands: null,
   })),
 
   startHover: () => {
@@ -575,11 +620,14 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           isMoving: true,
         } : null,
         isMoving: true,
+        jointPositions: {
+          ...state.jointPositions,
+          altitude: 1.5,
+        },
         challengeTracking: newTracking,
       };
     });
     
-    // Check objectives after hovering
     setTimeout(() => get().checkAndCompleteObjectives(), 100);
   },
 
@@ -598,11 +646,14 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           isMoving: false,
         } : null,
         isMoving: false,
+        jointPositions: {
+          ...state.jointPositions,
+          altitude: 0.1,
+        },
         challengeTracking: newTracking,
       };
     });
     
-    // Check objectives after landing
     setTimeout(() => get().checkAndCompleteObjectives(), 100);
   },
 
@@ -632,7 +683,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     }));
   },
 
-  // Enhanced challenge tracking methods
   setCurrentChallenge: (challengeId) => {
     set((state) => ({
       challengeTracking: {
@@ -646,43 +696,34 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     const state = get();
     if (!state.challengeTracking.currentChallengeId || !state.robotState) return;
 
-    // Check various objective completion criteria
     const { position, rotation } = state.robotState;
     const { challengeTracking } = state;
 
-    // Example objective checks for intro-1 challenge
     if (state.challengeTracking.currentChallengeId === 'intro-1') {
-      // Check if robot moved forward 5 meters (using max forward distance)
       if (challengeTracking.maxForwardDistance >= 5 && !challengeTracking.completedObjectives.has('obj2')) {
         console.log('🎯 Objective completed: Robot moved forward 5 meters!');
         get().markObjectiveCompleted('obj2');
       }
       
-      // Check if robot rotated 90 degrees right (approximately π/2 radians)
       if (challengeTracking.totalRotationAngle >= Math.PI/2 && !challengeTracking.completedObjectives.has('obj3')) {
         console.log('🎯 Objective completed: Robot rotated 90 degrees!');
         get().markObjectiveCompleted('obj3');
       }
 
-      // Alternative check: if robot has rotated right and total rotation is significant
       if (challengeTracking.hasRotatedRight && challengeTracking.totalRotationAngle >= Math.PI/4 && !challengeTracking.completedObjectives.has('obj3')) {
         console.log('🎯 Objective completed: Robot turned right significantly!');
         get().markObjectiveCompleted('obj3');
       }
     }
 
-    // Check intro-2 challenge objectives
     if (state.challengeTracking.currentChallengeId === 'intro-2') {
-      // Check if sensor was read
       if (challengeTracking.hasReadSensor && !challengeTracking.completedObjectives.has('obj5')) {
         console.log('🎯 Objective completed: Sensor reading completed!');
         get().markObjectiveCompleted('obj5');
       }
     }
 
-    // Check warehouse challenge objectives
     if (state.challengeTracking.currentChallengeId === 'warehouse-1') {
-      // Check if reached pickup area (coordinates 5, 0, 8)
       const targetDistance = Math.sqrt(
         Math.pow(position.x - 5, 2) + 
         Math.pow(position.z - 8, 2)
@@ -693,14 +734,12 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         get().markObjectiveCompleted('obj2');
       }
       
-      // Check if package was grabbed
       if (state.robotState.isGrabbing && !challengeTracking.completedObjectives.has('obj3')) {
         console.log('🎯 Objective completed: Package grabbed!');
         get().markObjectiveCompleted('obj3');
       }
     }
 
-    // Generic movement-based objectives
     if (challengeTracking.hasMovedForward && !challengeTracking.completedObjectives.has('move_forward_basic')) {
       console.log('🎯 Basic objective: Robot moved forward!');
       get().markObjectiveCompleted('move_forward_basic');
@@ -721,7 +760,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         newTracking.completedObjectives.add(objectiveId);
         console.log(`✅ Objective completed: ${objectiveId}`);
         
-        // Trigger UI update event
         window.dispatchEvent(new CustomEvent('objectiveCompleted', { 
           detail: { objectiveId, challengeId: state.challengeTracking.currentChallengeId } 
         }));
