@@ -49,7 +49,7 @@ const AboutPage: React.FC = () => {
     {
       icon: <Rocket size={24} />,
       title: 'Innovation Focus',
-      description: 'Pushing the boundaries of what's possible in browser-based robotics simulation and education.',
+      description: 'Pushing the boundaries of what\'s possible in browser-based robotics simulation and education.',
       color: 'success'
     }
   ];
