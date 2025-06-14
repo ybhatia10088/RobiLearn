@@ -229,6 +229,8 @@ const AboutPage: React.FC = () => {
             </motion.div>
 
 
+// Replace the founders section (around line 200-280) with this updated version:
+
 <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
   {founders.map((founder, index) => (
     <motion.div
@@ -239,7 +241,7 @@ const AboutPage: React.FC = () => {
       viewport={{ once: true }}
       transition={{ delay: index * 0.2, duration: 0.8 }}
     >
-      <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden border border-dark-600/30">
+      <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-[650px] flex flex-col relative overflow-hidden border border-dark-600/30">
         {/* Animated background glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
         
@@ -276,15 +278,16 @@ const AboutPage: React.FC = () => {
         </div>
 
         {/* Quote - This stays at the bottom with fixed height */}
-        <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300 flex-shrink-0 min-h-[140px] flex flex-col">
+        <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300 flex-shrink-0 h-[120px] flex flex-col justify-center">
           <Quote size={24} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300 flex-shrink-0" />
-          <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300 flex-1 flex items-center">
+          <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300">
             "{founder.quote}"
           </blockquote>
         </div>
       </div>
     </motion.div>
   ))}
+
              </div>
             </div>
         </section>
