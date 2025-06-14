@@ -10,7 +10,7 @@ const AboutPage: React.FC = () => {
       role: 'Co-Founder & Robotics Engineer',
       emoji: '🧠',
       description: 'Utkarsh is an undergraduate student passionate about robotics, systems design, and automation. He enjoys building projects that combine theory with practical application — especially when it comes to motion planning and simulation. With a strong interest in how robots interact with real-world environments, Utkarsh focuses on making our platform realistic and technically sound.',
-      quote: 'We wanted to make robotics feel less intimidating and more fun — like a playground for builders.',
+      quote: 'Our goal was to abstract complexity, not curiosity.',
       linkedin: '#',
       color: 'primary'
     },
