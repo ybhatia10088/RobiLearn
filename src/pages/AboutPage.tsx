@@ -276,8 +276,8 @@ const AboutPage: React.FC = () => {
         </div>
 
         {/* Quote - This stays at the bottom with fixed height */}
-        <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300 flex-shrink-0 h-[120px] flex flex-col justify-center">
-          <Quote size={24} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300 flex-shrink-0" />
+        <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300 flex-shrink-0 h-[120px]">
+          <Quote size={24} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300" />
           <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300">
             "{founder.quote}"
           </blockquote>
@@ -285,6 +285,7 @@ const AboutPage: React.FC = () => {
       </div>
     </motion.div>
   ))}
+
 
              </div>
             </div>
