@@ -228,62 +228,65 @@ const AboutPage: React.FC = () => {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
-              {founders.map((founder, index) => (
-                <motion.div
-                  key={founder.name}
-                  className="group"
-                  initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.2, duration: 0.8 }}
-                >
-                  <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden border border-dark-600/30">
-                    {/* Animated background glow */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
-                    
-                    {/* Header */}
-                    <div className="text-center mb-6 relative z-10">
-                      <div className="text-6xl mb-4 bg-primary-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto border border-primary-500/30 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                        {founder.emoji}
-                      </div>
-                      <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-white transition-colors duration-300">{founder.name}</h3>
-                      <p className="text-primary-400 font-medium mb-4 group-hover:text-primary-300 transition-colors duration-300">{founder.role}</p>
-                      
-                      {/* Social Links */}
-                      <div className="flex justify-center space-x-3">
-                        <a 
-                          href={founder.linkedin}
-                          className="bg-primary-500/10 hover:bg-primary-500/20 p-2 rounded-lg transition-all duration-300 border border-primary-500/30 hover:border-primary-500/50 hover:shadow-lg"
-                        >
-                          <Linkedin size={18} className="text-primary-400 hover:text-primary-300 transition-colors duration-300" />
-                        </a>
-                        <a 
-                          href="#"
-                          className="bg-primary-500/10 hover:bg-primary-500/20 p-2 rounded-lg transition-all duration-300 border border-primary-500/30 hover:border-primary-500/50 hover:shadow-lg"
-                        >
-                          <Github size={18} className="text-primary-400 hover:text-primary-300 transition-colors duration-300" />
-                        </a>
-                      </div>
-                    </div>
+            // Replace the founders section (around line 200-280) with this updated version:
 
-                    {/* Description */}
-                    <div className="flex-1 mb-6 relative z-10">
-                      <p className="text-dark-300 leading-relaxed mb-6 group-hover:text-dark-200 transition-colors duration-300">
-                        {founder.description}
-                      </p>
-                    </div>
+<div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+  {founders.map((founder, index) => (
+    <motion.div
+      key={founder.name}
+      className="group h-full" // Added h-full here
+      initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.2, duration: 0.8 }}
+    >
+      <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden border border-dark-600/30">
+        {/* Animated background glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
+        
+        {/* Header */}
+        <div className="text-center mb-6 relative z-10 flex-shrink-0">
+          <div className="text-6xl mb-4 bg-primary-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto border border-primary-500/30 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
+            {founder.emoji}
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-white transition-colors duration-300">{founder.name}</h3>
+          <p className="text-primary-400 font-medium mb-4 group-hover:text-primary-300 transition-colors duration-300">{founder.role}</p>
+          
+          {/* Social Links */}
+          <div className="flex justify-center space-x-3">
+            <a 
+              href={founder.linkedin}
+              className="bg-primary-500/10 hover:bg-primary-500/20 p-2 rounded-lg transition-all duration-300 border border-primary-500/30 hover:border-primary-500/50 hover:shadow-lg"
+            >
+              <Linkedin size={18} className="text-primary-400 hover:text-primary-300 transition-colors duration-300" />
+            </a>
+            <a 
+              href="#"
+              className="bg-primary-500/10 hover:bg-primary-500/20 p-2 rounded-lg transition-all duration-300 border border-primary-500/30 hover:border-primary-500/50 hover:shadow-lg"
+            >
+              <Github size={18} className="text-primary-400 hover:text-primary-300 transition-colors duration-300" />
+            </a>
+          </div>
+        </div>
 
-                    {/* Quote */}
-                    <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300">
-                      <Quote size={24} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300" />
-                      <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300">
-                        "{founder.quote}"
-                      </blockquote>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+        {/* Description - This will now expand to fill available space */}
+        <div className="flex-1 mb-6 relative z-10 flex flex-col">
+          <p className="text-dark-300 leading-relaxed mb-6 group-hover:text-dark-200 transition-colors duration-300 flex-1">
+            {founder.description}
+          </p>
+        </div>
+
+        {/* Quote - This stays at the bottom */}
+        <div className="bg-primary-500/5 rounded-2xl p-6 border-2 border-primary-500/20 relative z-10 group-hover:bg-primary-500/10 group-hover:border-primary-500/30 transition-all duration-300 flex-shrink-0">
+          <Quote size={24} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300" />
+          <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300">
+            "{founder.quote}"
+          </blockquote>
+        </div>
+      </div>
+    </motion.div>
+  ))}
+</div>
             </div>
           </div>
         </section>
