@@ -12,7 +12,6 @@ const AboutPage: React.FC = () => {
       description: 'Utkarsh is an undergraduate student passionate about robotics, systems design, and automation. He enjoys building projects that combine theory with practical application — especially when it comes to motion planning and simulation. With a strong interest in how robots interact with real-world environments, Utkarsh focuses on making our platform realistic and technically sound.',
       quote: 'We wanted to make robotics feel less intimidating and more fun — like a playground for builders.',
       linkedin: '#',
-      expertise: ['Robotics Systems', 'Motion Planning', 'Simulation Physics', 'Automation'],
       color: 'primary'
     },
     {
@@ -22,7 +21,6 @@ const AboutPage: React.FC = () => {
       description: 'Yugav is a computer science undergrad with a love for solving real-world problems through code. From web development to simulation logic, he brings the building blocks together to create a cohesive and intuitive user experience. He\'s especially passionate about educational technology and believes in learning by doing — which is exactly what this platform supports.',
       quote: 'We built the kind of tool we wished we had when we first started learning robotics.',
       linkedin: '#',
-      expertise: ['Full-Stack Development', 'Educational Technology', 'User Experience', 'System Architecture'],
       color: 'secondary'
     }
   ];
@@ -240,7 +238,7 @@ const AboutPage: React.FC = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.2, duration: 0.8 }}
                 >
-                  <div className={`bg-dark-700/50 rounded-3xl p-8 border-2 border-${founder.color}-500/20 hover:border-${founder.color}-500/40 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden`}>
+                  <div className="bg-dark-700/50 rounded-3xl p-8 border-2 border-white/20 hover:border-white/40 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm h-full flex flex-col relative overflow-hidden">
                     {/* Animated background glow */}
                     <div className={`absolute inset-0 bg-gradient-to-br from-${founder.color}-500/5 via-transparent to-${founder.color}-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`} />
                     
@@ -274,18 +272,6 @@ const AboutPage: React.FC = () => {
                       <p className="text-dark-300 leading-relaxed mb-6 group-hover:text-dark-200 transition-colors duration-300">
                         {founder.description}
                       </p>
-
-                      {/* Expertise Tags */}
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {founder.expertise.map((skill) => (
-                          <span 
-                            key={skill}
-                            className={`px-3 py-1 rounded-full text-xs font-medium bg-${founder.color}-500/10 text-${founder.color}-400 border border-${founder.color}-500/30 hover:bg-${founder.color}-500/20 hover:border-${founder.color}-500/50 transition-all duration-300`}
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
                     </div>
 
                     {/* Quote */}
