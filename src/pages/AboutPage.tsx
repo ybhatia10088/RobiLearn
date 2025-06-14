@@ -232,13 +232,13 @@ const AboutPage: React.FC = () => {
               {founders.map((founder, index) => (
                 <motion.div
                   key={founder.name}
-                  className="group"
+                  className="group h-full"
                   initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.2, duration: 0.8 }}
                 >
-                  <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm border border-dark-600/30 relative overflow-hidden">
+                  <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm border border-dark-600/30 relative overflow-hidden h-full flex flex-col">
                     {/* Animated background glow */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
                     
