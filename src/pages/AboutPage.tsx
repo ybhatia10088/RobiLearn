@@ -43,7 +43,7 @@ const AboutPage: React.FC = () => {
     {
       icon: <Users size={24} />,
       title: 'Community Driven',
-      description: 'Built by students, for students. We understand the challenges learners face because we've been there.',
+      description: 'Built by students, for students. We understand the challenges learners face because we\'ve been there.',
       color: 'secondary'
     },
     {
