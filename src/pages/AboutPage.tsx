@@ -19,7 +19,7 @@ const AboutPage: React.FC = () => {
       name: 'Yugav Bhatia',
       role: 'Co-Founder & Software Engineer',
       emoji: '⚙️',
-      description: 'Yugav is a computer science undergrad with a love for solving real-world problems through code. From web development to simulation logic, he brings the building blocks together to create a cohesive and intuitive user experience. He's especially passionate about educational technology and believes in learning by doing — which is exactly what this platform supports.',
+      description: 'Yugav is a computer science undergrad with a love for solving real-world problems through code. From web development to simulation logic, he brings the building blocks together to create a cohesive and intuitive user experience. He\'s especially passionate about educational technology and believes in learning by doing — which is exactly what this platform supports.',
       quote: 'We built the kind of tool we wished we had when we first started learning robotics.',
       linkedin: '#',
       expertise: ['Full-Stack Development', 'Educational Technology', 'User Experience', 'System Architecture'],
