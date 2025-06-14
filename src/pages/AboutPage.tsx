@@ -229,8 +229,6 @@ const AboutPage: React.FC = () => {
             </motion.div>
 
 
-// Replace the founders section (around line 200-280) with this updated version:
-
 <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
   {founders.map((founder, index) => (
     <motion.div
