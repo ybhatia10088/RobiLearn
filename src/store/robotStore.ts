@@ -336,86 +336,104 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     console.log(`✅ Rotation simulation complete`);
   },
 
-  moveRobot: ({ direction, speed, joint }) => {
-    const state = get();
-    if (!state.robotState) return;
+  // Replace the moveRobot function in your robotStore.ts with this fixed version
 
-    console.log(`🚁 moveRobot called:`, { 
-      direction, 
-      speed, 
-      joint, 
-      robotType: state.selectedRobot?.type,
-      currentPosition: state.robotState.position 
-    });
+moveRobot: ({ direction, speed, joint }) => {
+  const state = get();
+  if (!state.robotState) return;
 
-    // Clear any existing intervals
-    if ((window as any).robotMoveInterval) {
-      clearInterval((window as any).robotMoveInterval);
-      (window as any).robotMoveInterval = null;
+  console.log(`🚁 moveRobot called:`, { 
+    direction, 
+    speed, 
+    joint, 
+    robotType: state.selectedRobot?.type,
+    currentPosition: state.robotState.position 
+  });
+
+  // Clear any existing intervals
+  if ((window as any).robotMoveInterval) {
+    clearInterval((window as any).robotMoveInterval);
+    (window as any).robotMoveInterval = null;
+  }
+
+  set({ 
+    isMoving: true,
+    moveCommands: { direction, speed, joint }
+  });
+
+  // Update challenge tracking
+  set((state) => {
+    const newTracking = { ...state.challengeTracking };
+    switch (direction) {
+      case 'forward':
+        newTracking.hasMovedForward = true;
+        break;
+      case 'backward':
+        newTracking.hasMovedBackward = true;
+        break;
+      case 'left':
+        newTracking.hasMovedLeft = true;
+        break;
+      case 'right':
+        newTracking.hasMovedRight = true;
+        break;
+      case 'up':
+      case 'down':
+        newTracking.hasHovered = true;
+        break;
+    }
+    
+    return { challengeTracking: newTracking };
+  });
+
+  // Handle drone movement
+  if (state.selectedRobot?.type === 'drone') {
+    console.log(`🚁 Processing drone movement: ${direction}`);
+
+    // Handle ONLY altitude control when explicitly requested
+    if (joint === 'altitude' || (direction === 'up' || direction === 'down')) {
+      const step = direction === 'up' ? 0.1 : -0.1;
+      set((state) => {
+        const newAltitude = Math.max(0.1, Math.min(state.jointPositions.altitude + step, 4.0));
+        console.log(`🚁 Altitude change: ${state.jointPositions.altitude} -> ${newAltitude}`);
+        return {
+          jointPositions: {
+            ...state.jointPositions,
+            altitude: newAltitude,
+          },
+          robotState: state.robotState ? {
+            ...state.robotState,
+            position: {
+              ...state.robotState.position,
+              y: newAltitude
+            }
+          } : null
+        };
+      });
+      
+      // Only return early if this was ONLY an altitude command
+      if (joint === 'altitude' && !['forward', 'backward', 'left', 'right'].includes(direction)) {
+        return;
+      }
     }
 
-    set({ 
-      isMoving: true,
-      moveCommands: { direction, speed, joint }
-    });
-
-    // Update challenge tracking
-    set((state) => {
-      const newTracking = { ...state.challengeTracking };
-      switch (direction) {
-        case 'forward':
-          newTracking.hasMovedForward = true;
-          break;
-        case 'backward':
-          newTracking.hasMovedBackward = true;
-          break;
-        case 'left':
-          newTracking.hasMovedLeft = true;
-          break;
-        case 'right':
-          newTracking.hasMovedRight = true;
-          break;
-        case 'up':
-        case 'down':
-          newTracking.hasHovered = true;
-          break;
-      }
+    // Handle horizontal movement for drones
+    if (['forward', 'backward', 'left', 'right'].includes(direction)) {
+      const moveStep = 0.15 * speed; // Increased step for better visibility
       
-      return { challengeTracking: newTracking };
-    });
+      console.log(`🚁 Setting up horizontal movement interval for direction: ${direction}`);
 
-    // Handle drone movement
-    if (state.selectedRobot?.type === 'drone') {
-      console.log(`🚁 Processing drone movement: ${direction}`);
+      // Create movement interval for drone
+      const moveInterval = setInterval(() => {
+        const currentState = get();
+        if (!currentState.robotState || !currentState.isMoving) {
+          console.log(`🚁 Stopping movement interval - isMoving: ${currentState.isMoving}`);
+          clearInterval(moveInterval);
+          (window as any).robotMoveInterval = null;
+          return;
+        }
 
-      // Handle altitude control first
-      if (joint === 'altitude' || direction === 'up' || direction === 'down') {
-        const step = direction === 'up' ? 0.1 : -0.1;
-        set((state) => {
-          const newAltitude = Math.max(0.1, Math.min(state.jointPositions.altitude + step, 4.0));
-          console.log(`🚁 Altitude change: ${state.jointPositions.altitude} -> ${newAltitude}`);
-          return {
-            jointPositions: {
-              ...state.jointPositions,
-              altitude: newAltitude,
-            },
-            robotState: state.robotState ? {
-              ...state.robotState,
-              position: {
-                ...state.robotState.position,
-                y: newAltitude
-              }
-            } : null
-          };
-        });
-        
-        if (joint === 'altitude') return; // Only return for explicit altitude control
-      }
-
-      // Handle horizontal movement for drones
-      if (['forward', 'backward', 'left', 'right'].includes(direction)) {
-        const moveStep = 0.15 * speed; // Increased step for better visibility
-        const angle = state.robotState.rotation.y;
+        const angle = currentState.robotState.rotation.y;
         let deltaX = 0;
         let deltaZ = 0;
 
@@ -423,115 +441,36 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           case 'forward':
             deltaX = Math.sin(angle) * moveStep;
             deltaZ = Math.cos(angle) * moveStep;
-            console.log(`🚁 Forward movement: deltaX=${deltaX}, deltaZ=${deltaZ}`);
+            console.log(`🚁 Forward movement: deltaX=${deltaX.toFixed(3)}, deltaZ=${deltaZ.toFixed(3)}`);
             break;
           case 'backward':
             deltaX = -Math.sin(angle) * moveStep;
             deltaZ = -Math.cos(angle) * moveStep;
-            console.log(`🚁 Backward movement: deltaX=${deltaX}, deltaZ=${deltaZ}`);
+            console.log(`🚁 Backward movement: deltaX=${deltaX.toFixed(3)}, deltaZ=${deltaZ.toFixed(3)}`);
             break;
           case 'left':
             deltaX = -Math.cos(angle) * moveStep;
             deltaZ = Math.sin(angle) * moveStep;
-            console.log(`🚁 Left movement: deltaX=${deltaX}, deltaZ=${deltaZ}`);
+            console.log(`🚁 Left movement: deltaX=${deltaX.toFixed(3)}, deltaZ=${deltaZ.toFixed(3)}`);
             break;
           case 'right':
             deltaX = Math.cos(angle) * moveStep;
             deltaZ = -Math.sin(angle) * moveStep;
-            console.log(`🚁 Right movement: deltaX=${deltaX}, deltaZ=${deltaZ}`);
+            console.log(`🚁 Right movement: deltaX=${deltaX.toFixed(3)}, deltaZ=${deltaZ.toFixed(3)}`);
             break;
-        }
-
-        // Create movement interval for drone
-        const moveInterval = setInterval(() => {
-          const currentState = get();
-          if (!currentState.robotState || !currentState.isMoving) {
-            clearInterval(moveInterval);
-            (window as any).robotMoveInterval = null;
-            return;
-          }
-
-          const newPosition = {
-            x: currentState.robotState.position.x + deltaX,
-            y: currentState.jointPositions.altitude, // Use current altitude
-            z: currentState.robotState.position.z + deltaZ,
-          };
-
-          console.log(`🚁 Drone position update:`, {
-            from: currentState.robotState.position,
-            to: newPosition,
-            delta: { deltaX, deltaZ }
-          });
-
-          const distance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
-          
-          set((state) => {
-            const newTracking = { ...state.challengeTracking };
-            newTracking.totalDistanceMoved += distance;
-            
-            if (direction === 'forward') {
-              newTracking.maxForwardDistance = Math.max(newTracking.maxForwardDistance, newPosition.z);
-            } else if (direction === 'backward') {
-              newTracking.maxBackwardDistance = Math.max(newTracking.maxBackwardDistance, Math.abs(newPosition.z));
-            }
-            
-            return {
-              robotState: {
-                ...currentState.robotState,
-                position: newPosition,
-                isMoving: true,
-              },
-              challengeTracking: newTracking,
-            };
-          });
-          
-          get().checkAndCompleteObjectives();
-        }, 50); // Slower interval for better control
-
-        (window as any).robotMoveInterval = moveInterval;
-        return;
-      }
-    }
-
-    // Handle explorer movement
-    if (state.selectedRobot?.type === 'explorer') {
-      const moveStep = 0.12 * speed;
-      const angle = state.robotState.rotation.y;
-      let deltaX = 0;
-      let deltaZ = 0;
-
-      switch (direction) {
-        case 'forward':
-          deltaX = Math.sin(angle) * moveStep;
-          deltaZ = Math.cos(angle) * moveStep;
-          break;
-        case 'backward':
-          deltaX = -Math.sin(angle) * moveStep;
-          deltaZ = -Math.cos(angle) * moveStep;
-          break;
-        case 'left':
-          deltaX = -Math.cos(angle) * moveStep;
-          deltaZ = Math.sin(angle) * moveStep;
-          break;
-        case 'right':
-          deltaX = Math.cos(angle) * moveStep;
-          deltaZ = -Math.sin(angle) * moveStep;
-          break;
-      }
-
-      const moveInterval = setInterval(() => {
-        const currentState = get();
-        if (!currentState.robotState || !currentState.isMoving) {
-          clearInterval(moveInterval);
-          (window as any).robotMoveInterval = null;
-          return;
         }
 
         const newPosition = {
           x: currentState.robotState.position.x + deltaX,
-          y: currentState.robotState.position.y,
+          y: currentState.robotState.position.y, // Keep current Y position
           z: currentState.robotState.position.z + deltaZ,
         };
+
+        console.log(`🚁 Drone position update:`, {
+          from: currentState.robotState.position,
+          to: newPosition,
+          delta: { deltaX, deltaZ }
+        });
 
         const distance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
         
@@ -547,7 +486,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           
           return {
             robotState: {
-              ...currentState.robotState,
+              ...state.robotState!,
               position: newPosition,
               isMoving: true,
             },
@@ -556,19 +495,21 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         });
         
         get().checkAndCompleteObjectives();
-      }, 16);
+      }, 50); // 50ms interval for smooth movement
 
       (window as any).robotMoveInterval = moveInterval;
+      console.log(`🚁 Movement interval started for ${direction} direction`);
       return;
     }
+  }
 
-    // Handle other robot types (humanoid, spider, tank)
-    const moveStep = 0.1 * speed;
+  // Handle explorer movement (existing code)
+  if (state.selectedRobot?.type === 'explorer') {
+    const moveStep = 0.12 * speed;
     const angle = state.robotState.rotation.y;
-    
     let deltaX = 0;
     let deltaZ = 0;
-    
+
     switch (direction) {
       case 'forward':
         deltaX = Math.sin(angle) * moveStep;
@@ -616,7 +557,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         
         return {
           robotState: {
-            ...currentState.robotState,
+            ...currentState.robotState!,
             position: newPosition,
             isMoving: true,
           },
@@ -628,7 +569,76 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     }, 16);
 
     (window as any).robotMoveInterval = moveInterval;
-  },
+    return;
+  }
+
+  // Handle other robot types (humanoid, spider, tank) - existing code
+  const moveStep = 0.1 * speed;
+  const angle = state.robotState.rotation.y;
+  
+  let deltaX = 0;
+  let deltaZ = 0;
+  
+  switch (direction) {
+    case 'forward':
+      deltaX = Math.sin(angle) * moveStep;
+      deltaZ = Math.cos(angle) * moveStep;
+      break;
+    case 'backward':
+      deltaX = -Math.sin(angle) * moveStep;
+      deltaZ = -Math.cos(angle) * moveStep;
+      break;
+    case 'left':
+      deltaX = -Math.cos(angle) * moveStep;
+      deltaZ = Math.sin(angle) * moveStep;
+      break;
+    case 'right':
+      deltaX = Math.cos(angle) * moveStep;
+      deltaZ = -Math.sin(angle) * moveStep;
+      break;
+  }
+
+  const moveInterval = setInterval(() => {
+    const currentState = get();
+    if (!currentState.robotState || !currentState.isMoving) {
+      clearInterval(moveInterval);
+      (window as any).robotMoveInterval = null;
+      return;
+    }
+
+    const newPosition = {
+      x: currentState.robotState.position.x + deltaX,
+      y: currentState.robotState.position.y,
+      z: currentState.robotState.position.z + deltaZ,
+    };
+
+    const distance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+    
+    set((state) => {
+      const newTracking = { ...state.challengeTracking };
+      newTracking.totalDistanceMoved += distance;
+      
+      if (direction === 'forward') {
+        newTracking.maxForwardDistance = Math.max(newTracking.maxForwardDistance, newPosition.z);
+      } else if (direction === 'backward') {
+        newTracking.maxBackwardDistance = Math.max(newTracking.maxBackwardDistance, Math.abs(newPosition.z));
+      }
+      
+      return {
+        robotState: {
+          ...currentState.robotState!,
+          position: newPosition,
+          isMoving: true,
+        },
+        challengeTracking: newTracking,
+      };
+    });
+    
+    get().checkAndCompleteObjectives();
+  }, 16);
+
+  (window as any).robotMoveInterval = moveInterval;
+},
 
   rotateRobot: ({ direction, speed }) => {
     const state = get();
