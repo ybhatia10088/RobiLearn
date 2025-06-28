@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from '@/hooks/useNavigation';
 import { useRobotStore } from '@/store/robotStore';
 
-// Enhanced challenge data with learning content
+// Enhanced challenge data with proper completion tracking
 const challenges: Challenge[] = [
   {
     id: 'intro-1',
@@ -17,27 +17,25 @@ const challenges: Challenge[] = [
     objectives: [
       { 
         id: 'obj1', 
-        description: 'Understand basic robot movement commands',
+        description: 'Study basic robot movement commands',
         completionCriteria: 'theory_complete',
         completed: false,
-        theory: `
-          Robot movement is controlled through basic commands that specify:
-          - Direction (forward, backward, left, right)
-          - Speed (usually as a percentage or m/s)
-          - Duration (in milliseconds or seconds)
-          
-          Example command:
-          robot.move({
-            direction: "forward",
-            speed: 0.5,  // 50% speed
-            duration: 2000  // 2 seconds
-          });
-        `
+        theory: `Robot movement is controlled through basic commands that specify:
+- Direction (forward, backward, left, right)
+- Speed (usually as a percentage or m/s)
+- Duration (in milliseconds or seconds)
+
+Example command:
+robot.move({
+  direction: "forward",
+  speed: 0.5,  // 50% speed
+  duration: 2000  // 2 seconds
+});`
       },
       { 
         id: 'obj2', 
         description: 'Move the robot forward 5 meters',
-        completionCriteria: 'robot.position.z > 5',
+        completionCriteria: 'distance_forward_5m',
         completed: false,
         hints: [
           'Use robot.move() with the "forward" direction',
@@ -48,7 +46,7 @@ const challenges: Challenge[] = [
       { 
         id: 'obj3', 
         description: 'Rotate the robot 90 degrees right',
-        completionCriteria: 'robot.rotation.y === Math.PI/2',
+        completionCriteria: 'rotation_90_degrees',
         completed: false,
         hints: [
           'Use robot.rotate() with the "right" direction',
@@ -74,8 +72,7 @@ const challenges: Challenge[] = [
 // Hint: Use await robot.wait()
 
 // Finally, rotate the robot 90 degrees right
-// Use robot.rotate() with appropriate parameters
-`
+// Use robot.rotate() with appropriate parameters`
     },
     theory: {
       sections: [
@@ -142,22 +139,20 @@ robot.move({ direction: "forward", speed: 0.5, duration: 2000 });`,
     estimatedTime: 20,
     objectives: [
       {
-        id: 'obj1',
-        description: 'Understand different types of sensors',
+        id: 'obj4',
+        description: 'Study different types of sensors',
         completionCriteria: 'theory_complete',
         completed: false,
-        theory: `
-          Robots use various sensors to perceive their environment:
-          1. Distance Sensors (Ultrasonic, Infrared)
-          2. Cameras (RGB, Depth)
-          3. Touch Sensors
-          4. Gyroscopes
-          
-          Each sensor provides specific data about the environment.
-        `
+        theory: `Robots use various sensors to perceive their environment:
+1. Distance Sensors (Ultrasonic, Infrared)
+2. Cameras (RGB, Depth)
+3. Touch Sensors
+4. Gyroscopes
+
+Each sensor provides specific data about the environment.`
       },
       {
-        id: 'obj2',
+        id: 'obj5',
         description: 'Read the ultrasonic sensor',
         completionCriteria: 'sensor_read_complete',
         completed: false,
@@ -166,22 +161,11 @@ robot.move({ direction: "forward", speed: 0.5, duration: 2000 });`,
           'The sensor returns distance in meters',
           'Values less than 1 indicate nearby obstacles'
         ]
-      },
-      {
-        id: 'obj3',
-        description: 'Navigate using sensor data',
-        completionCriteria: 'navigation_complete',
-        completed: false,
-        hints: [
-          'Check sensor readings in a loop',
-          'Use conditional statements to make decisions',
-          'Maintain a safe distance from obstacles'
-        ]
       }
     ],
     hints: [
-      { id: 'hint1', text: 'Sensors return promises, use await to get readings', unlockCost: 5 },
-      { id: 'hint2', text: 'Combine movement and sensor data for smart navigation', unlockCost: 10 },
+      { id: 'hint3', text: 'Sensors return promises, use await to get readings', unlockCost: 5 },
+      { id: 'hint4', text: 'Combine movement and sensor data for smart navigation', unlockCost: 10 },
     ],
     startingCode: {
       natural_language: 'Move forward until you detect an obstacle, then stop',
@@ -196,8 +180,7 @@ console.log("Distance to obstacle:", distance, "meters");
 // Add your code here to:
 // 1. Move forward
 // 2. Continuously check the sensor
-// 3. Stop when an obstacle is detected
-`
+// 3. Stop when an obstacle is detected`
     },
     theory: {
       sections: [
@@ -211,33 +194,6 @@ console.log("Distance to obstacle:", distance, "meters");
 
 Each sensor type has specific uses and limitations.`,
           video: 'https://example.com/robot-sensors-intro',
-        },
-        {
-          title: 'Using the Ultrasonic Sensor',
-          content: `The ultrasonic sensor measures distance using sound waves:
-- Returns distance in meters
-- Updates several times per second
-- Works best for obstacles 0.02m to 4m away
-- May have difficulty with soft or angled surfaces`,
-          examples: [
-            {
-              title: 'Reading Distance',
-              code: 'const distance = await robot.getSensor("ultrasonic");',
-              explanation: 'Gets the current distance reading in meters'
-            },
-            {
-              title: 'Continuous Monitoring',
-              code: `while (true) {
-  const distance = await robot.getSensor("ultrasonic");
-  if (distance < 0.5) {  // If closer than 0.5 meters
-    await robot.stop();
-    break;
-  }
-  await robot.wait(100);  // Wait 100ms before next reading
-}`,
-              explanation: 'Continuously monitors distance and stops when too close to an obstacle'
-            }
-          ]
         }
       ],
       quiz: [
@@ -246,17 +202,6 @@ Each sensor type has specific uses and limitations.`,
           options: ['Centimeters', 'Meters', 'Feet', 'Inches'],
           correctAnswer: 'Meters',
           explanation: 'The ultrasonic sensor returns distance measurements in meters.'
-        },
-        {
-          question: 'Why should we wait between sensor readings?',
-          options: [
-            'To save battery',
-            'To allow the sensor to update',
-            'To prevent program crashes',
-            'To slow the robot down'
-          ],
-          correctAnswer: 'To allow the sensor to update',
-          explanation: 'Sensors need time to take new readings. Waiting ensures we get fresh data.'
         }
       ]
     },
@@ -264,156 +209,186 @@ Each sensor type has specific uses and limitations.`,
     environmentId: 'sensor-course',
     unlocked: true,
     completed: false,
-    nextChallengeIds: ['warehouse-1'],
+    nextChallengeIds: ['patrol-1'],
   },
   {
-    id: 'warehouse-1',
-    title: 'Warehouse Navigation',
-    description: 'Learn to navigate a robot through a warehouse environment while avoiding obstacles.',
-    category: ChallengeCategory.WAREHOUSE,
-    difficulty: DifficultyLevel.INTERMEDIATE,
-    estimatedTime: 25,
-    objectives: [
-      {
-        id: 'obj1',
-        description: 'Plan an efficient path to the goal',
-        completionCriteria: 'planning_complete',
-        completed: false,
-        theory: `
-          Path planning involves:
-          1. Identifying the goal location
-          2. Detecting obstacles
-          3. Finding an efficient route
-          4. Maintaining safe distances
-          
-          We'll use sensors and algorithms to navigate safely.
-        `
-      },
-      {
-        id: 'obj2',
-        description: 'Navigate to the pickup area',
-        completionCriteria: 'reached_pickup',
-        completed: false,
-        hints: [
-          'Use the map to identify the pickup area',
-          'Keep track of your position',
-          'Use sensors to avoid obstacles'
-        ]
-      },
-      {
-        id: 'obj3',
-        description: 'Pick up the package',
-        completionCriteria: 'package_grabbed',
-        completed: false,
-        hints: [
-          'Position the robot correctly',
-          'Use the grab() command',
-          'Verify successful pickup'
-        ]
-      }
-    ],
-    hints: [
-      { id: 'hint1', text: 'Break down the navigation into smaller steps', unlockCost: 10 },
-      { id: 'hint2', text: 'Use markers or waypoints for complex paths', unlockCost: 15 },
-    ],
-    startingCode: {
-      natural_language: 'Navigate to the pickup area, avoiding obstacles, and grab the package',
-      block: '[]',
-      code: `// Welcome to warehouse navigation!
-// This challenge combines movement and sensor usage
-
-// First, let's plan our path
-// The pickup area is at coordinates (5, 0, 8)
-
-// We'll need to:
-// 1. Navigate around obstacles
-// 2. Reach the pickup area
-// 3. Grab the package
-
-// Add your code here
-`
+  id: 'patrol-1',
+  title: 'Security Patrol Route',
+  description: 'Program the robot to follow a patrol route with multiple waypoints and turns.',
+  category: ChallengeCategory.INTRO,
+  difficulty: DifficultyLevel.INTERMEDIATE,
+  estimatedTime: 20,
+  objectives: [
+    {
+      id: 'obj1',
+      description: 'Understand waypoint navigation',
+      completionCriteria: 'theory_complete',
+      completed: false,
+      theory: `
+        Waypoint navigation involves:
+        - Planning a route with multiple stops
+        - Precise turning between waypoints
+        - Maintaining consistent speed
+        - Position verification at each point
+      `
     },
-    theory: {
-      sections: [
-        {
-          title: 'Warehouse Navigation Basics',
-          content: `Warehouse robots need to:
-- Follow efficient paths
-- Avoid collisions
-- Handle dynamic obstacles
-- Maintain precise positioning
-
-This requires combining multiple skills and sensors.`,
-          video: 'https://example.com/warehouse-navigation',
-        },
-        {
-          title: 'Path Planning Strategies',
-          content: `Effective path planning involves:
-1. Breaking down the path into segments
-2. Continuous obstacle monitoring
-3. Dynamic path adjustment
-4. Position verification`,
-          examples: [
-            {
-              title: 'Basic Navigation',
-              code: `// Move to a specific coordinate
-async function moveToPosition(x, z) {
-  // Calculate angle to target
-  const angle = Math.atan2(z - robot.position.z, x - robot.position.x);
-  
-  // Rotate to face target
-  await robot.rotateTo(angle);
-  
-  // Move to target
-  while (Math.abs(x - robot.position.x) > 0.1 || 
-         Math.abs(z - robot.position.z) > 0.1) {
-    const distance = await robot.getSensor("ultrasonic");
-    if (distance < 1) {
-      // Obstacle detected, handle it
-      await handleObstacle();
-    } else {
-      await robot.move({ direction: "forward", speed: 0.5, duration: 100 });
-    }
-    await robot.wait(50);
-  }
-}`,
-              explanation: 'A basic function to move to specific coordinates while avoiding obstacles'
-            }
-          ]
-        }
-      ],
-      quiz: [
-        {
-          question: 'What should you do when detecting an obstacle?',
-          options: [
-            'Ignore it and continue',
-            'Stop and wait',
-            'Find an alternative path',
-            'Reverse direction'
-          ],
-          correctAnswer: 'Find an alternative path',
-          explanation: 'When an obstacle is detected, the robot should plan and follow an alternative path to reach its goal.'
-        },
-        {
-          question: 'Why is position verification important?',
-          options: [
-            'To save battery',
-            'To maintain accurate navigation',
-            'To avoid collisions',
-            'To increase speed'
-          ],
-          correctAnswer: 'To maintain accurate navigation',
-          explanation: 'Regular position verification ensures the robot stays on course and reaches its intended destination.'
-        }
+    {
+      id: 'obj2',
+      description: 'Visit all 4 patrol waypoints in sequence',
+      completionCriteria: 'waypoints_completed',
+      completed: false,
+      hints: [
+        'Move to (3, 0), then (3, 3), then (0, 3), then back to (0, 0)',
+        'Make precise 90-degree turns at each corner',
+        'Verify position at each waypoint'
       ]
-    },
-    robotType: 'mobile',
-    environmentId: 'warehouse',
-    unlocked: false,
-    completed: false,
-    nextChallengeIds: ['warehouse-2'],
-  }
+    }
+  ],
+  startingCode: {
+    natural_language: 'Follow a square patrol route visiting 4 waypoints',
+    block: '[]',
+    code: `// Security Patrol Mission
+const waypoints = [
+  {x: 3, z: 0}, {x: 3, z: 3}, {x: 0, z: 3}, {x: 0, z: 0}
 ];
+// Add your patrol logic here`
+  },
+  robotType: 'mobile',
+  environmentId: 'warehouse',
+  unlocked: false,
+  completed: false,
+  nextChallengeIds: ['circle-1'],
+},
+{
+  id: 'circle-1',
+  title: 'Perfect Circle',
+  description: 'Master curved movement by making the robot travel in a perfect circle.',
+  category: ChallengeCategory.INTRO,
+  difficulty: DifficultyLevel.INTERMEDIATE,
+  estimatedTime: 25,
+  objectives: [
+    {
+      id: 'obj1',
+      description: 'Understand circular motion mechanics',
+      completionCriteria: 'theory_complete',
+      completed: false,
+      theory: `
+        Circular movement requires:
+        - Continuous small turns while moving forward
+        - Consistent speed and turn rate
+        - Radius control through turn/speed ratio
+      `
+    },
+    {
+      id: 'obj2',
+      description: 'Complete one full circle with 2m radius',
+      completionCriteria: 'circle_completed',
+      completed: false,
+      hints: [
+        'Use small, frequent turns while moving forward',
+        'Keep the turn rate consistent'
+      ]
+    }
+  ],
+  startingCode: {
+    natural_language: 'Move in a perfect circle',
+    block: '[]',
+    code: `// Circle motion: small forward + small turn = circular path
+for (let i = 0; i < 360; i += 5) {
+  // Move forward small amount + turn right 5 degrees
+}`
+  },
+  robotType: 'mobile',
+  environmentId: 'warehouse',
+  unlocked: false,
+  completed: false,
+  nextChallengeIds: ['grid-1'],
+},
+{
+  id: 'grid-1',
+  title: 'Grid Navigation Master',
+  description: 'Navigate efficiently through a grid system using coordinate-based movement.',
+  category: ChallengeCategory.INTRO,
+  difficulty: DifficultyLevel.INTERMEDIATE,
+  estimatedTime: 20,
+  objectives: [
+    {
+      id: 'obj1',
+      description: 'Understand grid coordinate systems',
+      completionCriteria: 'theory_complete',
+      completed: false,
+      theory: `
+        Grid navigation involves:
+        - Understanding X,Z coordinate system
+        - Moving in cardinal directions (N,S,E,W)
+        - Calculating optimal paths
+      `
+    },
+    {
+      id: 'obj2',
+      description: 'Visit 5 specific grid points in sequence',
+      completionCriteria: 'grid_points_visited',
+      completed: false,
+      hints: [
+        'Points: (2,2) -> (6,2) -> (6,6) -> (2,6) -> (4,4)',
+        'Move in straight lines between points'
+      ]
+    }
+  ],
+  startingCode: {
+    natural_language: 'Navigate through specific grid points',
+    block: '[]',
+    code: `// Visit: (2,2) -> (6,2) -> (6,6) -> (2,6) -> (4,4)
+const gridPoints = [{x: 2, z: 2}, {x: 6, z: 2}, {x: 6, z: 6}, {x: 2, z: 6}, {x: 4, z: 4}];`
+  },
+  robotType: 'mobile',
+  environmentId: 'warehouse',
+  unlocked: false,
+  completed: false,
+  nextChallengeIds: ['spiral-1'],
+},
+{
+  id: 'spiral-1',
+  title: 'Spiral Search Pattern',
+  description: 'Program the robot to move in an expanding spiral pattern.',
+  category: ChallengeCategory.SEARCH_RESCUE,
+  difficulty: DifficultyLevel.ADVANCED,
+  estimatedTime: 25,
+  objectives: [
+    {
+      id: 'obj1',
+      description: 'Understand spiral movement algorithms',
+      completionCriteria: 'theory_complete',
+      completed: false,
+      theory: `
+        Spiral patterns: 1 step, turn, 1 step, turn, 2 steps, turn, 2 steps, turn, 3 steps...
+      `
+    },
+    {
+      id: 'obj2',
+      description: 'Execute a 5-layer expanding spiral',
+      completionCriteria: 'spiral_completed',
+      completed: false,
+      hints: [
+        'Pattern: Right 1, Up 1, Left 2, Down 2, Right 3...',
+        'Increase step count every 2 direction changes'
+      ]
+    }
+  ],
+  startingCode: {
+    natural_language: 'Create an expanding spiral pattern',
+    block: '[]',
+    code: `// Spiral: 1,1,2,2,3,3,4,4,5,5
+const directions = ['right', 'up', 'left', 'down'];`
+  },
+  robotType: 'mobile',
+  environmentId: 'warehouse',
+  unlocked: false,
+  completed: false,
+  nextChallengeIds: ['drone-1'],
+}
+  };
+
 
 const ChallengeList: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory | 'all'>('all');
@@ -422,7 +397,6 @@ const ChallengeList: React.FC = () => {
   const [realtimeChallenges, setRealtimeChallenges] = useState<Challenge[]>(challenges);
   const navigate = useNavigate();
   
-  // Get robot store state and functions
   const { 
     challengeTracking, 
     getChallengeStatus, 
@@ -430,9 +404,10 @@ const ChallengeList: React.FC = () => {
     performance,
     robotState,
     setCurrentChallenge,
+    markTheoryViewed
   } = useRobotStore();
   
-  // Real-time objective completion listener
+  // Real-time objective and challenge completion listeners
   useEffect(() => {
     const handleObjectiveCompleted = (event: CustomEvent) => {
       const { objectiveId, challengeId } = event.detail;
@@ -453,10 +428,24 @@ const ChallengeList: React.FC = () => {
       );
     };
 
+    const handleChallengeCompleted = (event: CustomEvent) => {
+      const { challengeId } = event.detail;
+      
+      setRealtimeChallenges(prev => 
+        prev.map(challenge => 
+          challenge.id === challengeId 
+            ? { ...challenge, completed: true }
+            : challenge
+        )
+      );
+    };
+
     window.addEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+    window.addEventListener('challengeCompleted', handleChallengeCompleted as EventListener);
     
     return () => {
       window.removeEventListener('objectiveCompleted', handleObjectiveCompleted as EventListener);
+      window.removeEventListener('challengeCompleted', handleChallengeCompleted as EventListener);
     };
   }, []);
 
@@ -466,6 +455,10 @@ const ChallengeList: React.FC = () => {
       prev.map(challenge => ({
         ...challenge,
         completed: getChallengeStatus(challenge.id),
+        // Dynamic unlocking logic: intro-1 is always unlocked, others unlock when previous is complete
+        unlocked: challenge.id === 'intro-1' || 
+                 (challenge.id === 'intro-2' && getChallengeStatus('intro-1')) ||
+                 (challenge.id === 'warehouse-1' && getChallengeStatus('intro-2')),
         objectives: challenge.objectives.map(obj => ({
           ...obj,
           completed: getObjectiveStatus(obj.id)
@@ -498,33 +491,22 @@ const ChallengeList: React.FC = () => {
   
   const getDifficultyColor = (difficulty: DifficultyLevel) => {
     switch (difficulty) {
-      case DifficultyLevel.BEGINNER:
-        return 'success';
-      case DifficultyLevel.INTERMEDIATE:
-        return 'primary';
-      case DifficultyLevel.ADVANCED:
-        return 'warning';
-      case DifficultyLevel.EXPERT:
-        return 'error';
-      default:
-        return 'primary';
+      case DifficultyLevel.BEGINNER: return 'success';
+      case DifficultyLevel.INTERMEDIATE: return 'primary';
+      case DifficultyLevel.ADVANCED: return 'warning';
+      case DifficultyLevel.EXPERT: return 'error';
+      default: return 'primary';
     }
   };
   
   const getCategoryIcon = (category: ChallengeCategory) => {
     switch (category) {
-      case ChallengeCategory.INTRO:
-        return <Book size={16} />;
-      case ChallengeCategory.WAREHOUSE:
-        return <Tag size={16} />;
-      case ChallengeCategory.SURGERY:
-        return <Star size={16} />;
-      case ChallengeCategory.SEARCH_RESCUE:
-        return <Trophy size={16} />;
-      case ChallengeCategory.MANUFACTURING:
-        return <Tag size={16} />;
-      default:
-        return <Book size={16} />;
+      case ChallengeCategory.INTRO: return <Book size={16} />;
+      case ChallengeCategory.WAREHOUSE: return <Tag size={16} />;
+      case ChallengeCategory.SURGERY: return <Star size={16} />;
+      case ChallengeCategory.SEARCH_RESCUE: return <Trophy size={16} />;
+      case ChallengeCategory.MANUFACTURING: return <Tag size={16} />;
+      default: return <Book size={16} />;
     }
   };
 
@@ -555,7 +537,9 @@ const ChallengeList: React.FC = () => {
         </div>
         <div className="w-full bg-dark-600 rounded-full h-2">
           <motion.div
-            className="bg-primary-500 h-2 rounded-full"
+            className={`h-2 rounded-full transition-all ${
+              challenge.completed ? 'bg-success-500' : 'bg-primary-500'
+            }`}
             initial={{ width: 0 }}
             animate={{ width: `${progress.percentage}%` }}
             transition={{ duration: 0.5 }}
@@ -601,6 +585,40 @@ const ChallengeList: React.FC = () => {
       </div>
     );
   };
+
+  // Enhanced Progress Summary Panel
+  const ProgressSummaryPanel: React.FC = () => {
+    const completedChallengesCount = Array.from(challengeTracking.completedChallenges).length;
+    const totalChallenges = challenges.length;
+    const completedObjectivesCount = Array.from(challengeTracking.completedObjectives).length;
+    const totalObjectives = challenges.reduce((sum, challenge) => sum + challenge.objectives.length, 0);
+
+    return (
+      <div className="bg-dark-700 rounded-lg p-4 border border-dark-600 mb-4">
+        <h3 className="text-white font-medium mb-3 flex items-center">
+          <Trophy size={16} className="mr-2" />
+          Your Progress
+        </h3>
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-primary-400">{completedChallengesCount}</div>
+            <div className="text-dark-300">Challenges</div>
+            <div className="text-xs text-dark-500">of {totalChallenges} total</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-success-400">{completedObjectivesCount}</div>
+            <div className="text-dark-300">Objectives</div>
+            <div className="text-xs text-dark-500">of {totalObjectives} total</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-warning-400">{challengeTracking.totalDistanceMoved.toFixed(1)}m</div>
+            <div className="text-dark-300">Distance</div>
+            <div className="text-xs text-dark-500">traveled</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
   
   return (
     <div className="bg-dark-800 rounded-lg border border-dark-600 h-full flex flex-col">
@@ -641,6 +659,7 @@ const ChallengeList: React.FC = () => {
       </div>
       
       <div className="flex-1 overflow-auto p-4">
+        <ProgressSummaryPanel />
         <LiveStatsPanel />
         
         {filteredChallenges.length === 0 ? (
