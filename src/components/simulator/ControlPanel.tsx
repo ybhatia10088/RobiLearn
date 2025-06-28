@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRobotStore } from '@/store/robotStore';
-import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Grab, Hand, Book, Zap, Target, Radar } from 'lucide-react';
+import { Notebook as Robot, Cpu, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Book, Zap, Target, Radar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Challenge } from '@/types/challenge.types';
 
@@ -16,8 +16,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     selectRobot, 
     moveRobot, 
     rotateRobot, 
-    grabObject, 
-    releaseObject,
     stopRobot,
     landDrone,
     startHover
@@ -27,12 +25,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
   const [activeSensorTab, setActiveSensorTab] = useState('camera');
   const [isPressed, setIsPressed] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
-  const [isBoosting, setIsBoosting] = useState(false);
   
   // Enhanced robot models with better descriptions and using the available spider model
   const availableRobots = [
     { id: 'mobile1', name: 'Explorer Bot', type: 'mobile', description: 'All-terrain mobile robot for exploration and navigation', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
-    { id: 'arm1', name: 'Precision Arm', type: 'arm', description: 'Industrial robot arm for precise manipulation tasks', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
     { id: 'drone1', name: 'Sky Scanner', type: 'drone', description: 'Aerial drone for surveillance and mapping', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
     { id: 'spider1', name: 'Spider Walker', type: 'spider', description: 'Six-legged robot for rough terrain navigation', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
     { id: 'tank1', name: 'Heavy Mover', type: 'tank', description: 'Tracked robot for heavy-duty operations', model: '/models/spider-model/source/spiedy_sfabblend.glb' },
@@ -66,18 +62,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     stopRobot();
   };
   
-  // Arm joint control function
-  const handleArmJoint = (joint: string, direction: string) => {
-    if (!selectedRobot) return;
-    console.log(`Moving ${joint} ${direction}`);
-    
-    moveRobot({ 
-      direction: direction as 'forward' | 'backward', 
-      speed: speed / 100,
-      joint: joint
-    });
-  };
-  
   const handleRobotSelect = (robotId: string) => {
     const robot = availableRobots.find(r => r.id === robotId);
     if (robot) {
@@ -106,74 +90,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     }
   };
 
-  const handleDroneBoost = () => {
-    if (!selectedRobot || selectedRobot.type !== 'drone') return;
-    setIsBoosting(!isBoosting);
-    
-    if (!isBoosting) {
-      // Activate boost mode
-      moveRobot({ 
-        direction: 'forward',
-        speed: 1.0,
-        joint: 'boost'
-      });
-    } else {
-      // Deactivate boost mode
-      stopRobot();
-    }
-  };
-
-  // Special action handlers for different robot types
-  const handleSpecialAction1 = () => {
-    if (!selectedRobot) return;
-    
-    switch (selectedRobot.type) {
-      case 'spider':
-        console.log('Spider climbing action');
-        // Trigger climb animation
-        break;
-      case 'humanoid':
-        console.log('Humanoid waving action');
-        // Trigger wave gesture
-        break;
-      case 'tank':
-        console.log('Tank special weapon action');
-        break;
-      case 'drone':
-        handleDroneBoost();
-        break;
-      default:
-        console.log('Special action 1');
-    }
-  };
-
-  const handleSpecialAction2 = () => {
-    if (!selectedRobot) return;
-    
-    switch (selectedRobot.type) {
-      case 'spider':
-        console.log('Spider scanning action');
-        // Trigger scan animation
-        break;
-      case 'humanoid':
-        console.log('Humanoid gesture action');
-        // Trigger custom gesture
-        break;
-      case 'tank':
-        console.log('Tank defensive action');
-        break;
-      case 'drone':
-        handleDroneHover();
-        break;
-      default:
-        console.log('Special action 2');
-    }
-  };
-
   const getRobotIcon = (type: string) => {
     switch (type) {
       case 'mobile': return <Robot size={20} className="text-primary-400" />;
-      case 'arm': return <Grab size={20} className="text-secondary-400" />;
       case 'drone': return <Zap size={20} className="text-accent-400" />;
       case 'spider': return <Target size={20} className="text-purple-400" />;
       case 'tank': return <Radar size={20} className="text-green-400" />;
@@ -186,91 +105,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
     if (!selectedRobot) return null;
 
     switch (selectedRobot.type) {
-      case 'arm':
-        return (
-          <div className="space-y-4">
-            {/* Base Rotation */}
-            <div>
-              <label className="block text-xs font-medium text-dark-300 mb-2">Base Rotation</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('base', 'left')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={() => handleArmJoint('base', 'left')}
-                  onTouchEnd={handleMoveEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowLeft size={16} />
-                </button>
-                <div className="flex items-center justify-center text-xs text-dark-400">Base</div>
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('base', 'right')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={() => handleArmJoint('base', 'right')}
-                  onTouchEnd={handleMoveEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Wrist */}
-            <div>
-              <label className="block text-xs font-medium text-dark-300 mb-2">Wrist (No 360°)</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('wrist', 'left')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={() => handleArmJoint('wrist', 'left')}
-                  onTouchEnd={handleMoveEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowLeft size={16} />
-                </button>
-                <div className="flex items-center justify-center text-xs text-dark-400">Wrist</div>
-                <button 
-                  className="btn bg-dark-700 hover:bg-dark-600 text-white py-3 flex items-center justify-center"
-                  onMouseDown={() => handleArmJoint('wrist', 'right')}
-                  onMouseUp={handleMoveEnd}
-                  onMouseLeave={handleMoveEnd}
-                  onTouchStart={() => handleArmJoint('wrist', 'right')}
-                  onTouchEnd={handleMoveEnd}
-                  disabled={!selectedRobot}
-                >
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Gripper Controls */}
-            <div className="flex space-x-2">
-              <button 
-                className="btn bg-success-600 hover:bg-success-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                onClick={grabObject}
-                disabled={!selectedRobot}
-              >
-                <Grab size={18} className="mr-2" />
-                <span>Grab</span>
-              </button>
-              <button 
-                className="btn bg-warning-600 hover:bg-warning-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                onClick={releaseObject}
-                disabled={!selectedRobot}
-              >
-                <Hand size={18} className="mr-2" />
-                <span>Release</span>
-              </button>
-            </div>
-          </div>
-        );
-
       case 'drone':
         return (
           <div>
@@ -356,7 +190,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
               </button>
             </div>
 
-            {/* Drone-specific controls */}
+            {/* Drone-specific hover control */}
             <div className="flex space-x-2 mb-4">
               <button 
                 className={`btn flex-1 flex items-center justify-center transition-colors ${
@@ -370,18 +204,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <Target size={18} className="mr-2" />
                 <span>Hover {isHovering ? 'Off' : 'On'}</span>
               </button>
-              <button 
-                className={`btn flex-1 flex items-center justify-center transition-colors ${
-                  isBoosting 
-                    ? 'bg-secondary-600 hover:bg-secondary-700' 
-                    : 'bg-dark-700 hover:bg-dark-600'
-                } text-white py-2`}
-                onClick={handleDroneBoost}
-                disabled={!selectedRobot || !isHovering}
-              >
-                <Zap size={18} className="mr-2" />
-                <span>Boost {isBoosting ? 'Off' : 'On'}</span>
-              </button>
             </div>
           </div>
         );
@@ -470,38 +292,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <ArrowRight size={20} />
               </button>
             </div>
-
-            {/* Special actions for specific robot types */}
-            {(selectedRobot.type === 'spider' || selectedRobot.type === 'humanoid' || selectedRobot.type === 'tank' || selectedRobot.type === 'drone') && (
-              <div className="flex space-x-2 mb-4">
-                <button 
-                  className="btn bg-accent-600 hover:bg-accent-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                  onClick={handleSpecialAction1}
-                  disabled={!selectedRobot}
-                >
-                  <Target size={18} className="mr-2" />
-                  <span>
-                    {selectedRobot.type === 'spider' ? 'Climb' : 
-                     selectedRobot.type === 'humanoid' ? 'Wave' :
-                     selectedRobot.type === 'tank' ? 'Weapon' :
-                     selectedRobot.type === 'drone' ? 'Boost' : 'Action 1'}
-                  </span>
-                </button>
-                <button 
-                  className="btn bg-secondary-600 hover:bg-secondary-700 text-white py-2 flex-1 flex items-center justify-center transition-colors"
-                  onClick={handleSpecialAction2}
-                  disabled={!selectedRobot}
-                >
-                  <Radar size={18} className="mr-2" />
-                  <span>
-                    {selectedRobot.type === 'spider' ? 'Scan' : 
-                     selectedRobot.type === 'humanoid' ? 'Gesture' :
-                     selectedRobot.type === 'tank' ? 'Shield' :
-                     selectedRobot.type === 'drone' ? 'Hover' : 'Action 2'}
-                  </span>
-                </button>
-              </div>
-            )}
           </div>
         );
     }
@@ -588,9 +378,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
             
             {/* Dynamic Movement Controls */}
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-white mb-3">
-                {selectedRobot.type === 'arm' ? 'Arm Controls' : 'Movement Controls'}
-              </h4>
+              <h4 className="text-sm font-medium text-white mb-3">Movement Controls</h4>
               
               {getControlsForRobotType()}
             </div>
@@ -610,11 +398,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ challenge }) => {
                 <p className="text-dark-300">Status: <span className={`${isMoving ? 'text-accent-400' : 'text-white'}`}>
                   {isMoving ? 'Moving' : 'Idle'}
                 </span></p>
-                {selectedRobot.type === 'arm' && robotState?.isGrabbing && (
-                  <p className="text-dark-300">Gripper: <span className="text-primary-400">
-                    Grabbing Object
-                  </span></p>
-                )}
               </div>
             </div>
             
