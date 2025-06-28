@@ -56,7 +56,9 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     propellerSpeedActive: 30,
     droneLiftAcceleration: 0.03,
     droneMaxAltitude: 4.0,
-    droneMinAltitude: 0.15
+    droneMinAltitude: 0.15,
+    droneMovementSmoothing: 5, // For smooth position interpolation
+    droneRotationSmoothing: 4  // For smooth rotation interpolation
   };
 
   // Enhanced Drone with realistic aerodynamics
@@ -487,25 +489,57 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
     
     // Drone-specific movement and animation
     if (isDrone) {
+      console.log('🚁 Drone frame update:', {
+        targetPos: targetPos.toArray(),
+        currentPos: currentPos.toArray(),
+        robotStatePos: robotState.position,
+        isMoving: robotState.isMoving,
+        storeIsMoving
+      });
+
       // Enhanced drone physics with realistic flight dynamics
       const time = state.clock.elapsedTime;
       
+      // **CRITICAL FIX: Smooth position interpolation for XZ movement**
+      modelRef.current.position.x = THREE.MathUtils.lerp(
+        modelRef.current.position.x,
+        targetPos.x,
+        delta * PHYSICS.droneMovementSmoothing
+      );
+      
+      modelRef.current.position.z = THREE.MathUtils.lerp(
+        modelRef.current.position.z,
+        targetPos.z,
+        delta * PHYSICS.droneMovementSmoothing
+      );
+      
+      // Handle rotation smoothly
+      const targetRotY = robotState.rotation.y;
+      const currentRotY = modelRef.current.rotation.y;
+      const rotDiff = targetRotY - currentRotY;
+      const normalizedRotDiff = ((rotDiff + Math.PI) % (Math.PI * 2)) - Math.PI;
+      
+      modelRef.current.rotation.y = THREE.MathUtils.lerp(
+        modelRef.current.rotation.y,
+        modelRef.current.rotation.y + normalizedRotDiff,
+        delta * PHYSICS.droneRotationSmoothing
+      );
+      
       // Apply altitude changes
-      if (moveCommands?.joint === 'altitude') {
-        const altitudeChange = moveCommands.direction === 'up' 
-          ? PHYSICS.droneLiftAcceleration 
-          : -PHYSICS.droneLiftAcceleration;
-        droneAltitude.current = THREE.MathUtils.clamp(
-          droneAltitude.current + altitudeChange,
-          PHYSICS.droneMinAltitude,
-          PHYSICS.droneMaxAltitude
-        );
+      if (moveCommands?.joint === 'altitude' || moveCommands?.direction === 'up' || moveCommands?.direction === 'down') {
+        droneAltitude.current = targetPos.y;
       }
       
       // Smooth hovering motion with multiple oscillations for realism
       const hoverY = Math.sin(time * PHYSICS.droneHoverSpeed) * PHYSICS.droneHoverAmplitude;
       const microHover = Math.sin(time * 8) * 0.003;
-      targetPos.y += (hoverY + microHover) * 0.5;
+      const finalAltitude = (droneAltitude.current || targetPos.y) + (hoverY + microHover) * 0.5;
+      
+      modelRef.current.position.y = THREE.MathUtils.lerp(
+        modelRef.current.position.y,
+        finalAltitude,
+        delta * 3
+      );
       
       // Advanced propeller physics with realistic counter-rotation
       propellersRef.current.forEach((propeller, index) => {
@@ -564,13 +598,6 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
         );
       }
       
-      // Apply target altitude smoothly
-      modelRef.current.position.y = THREE.MathUtils.lerp(
-        modelRef.current.position.y,
-        droneAltitude.current,
-        delta * 2
-      );
-      
       // Wind effect simulation
       if (Math.random() < 0.01) {
         const windStrength = 0.002;
@@ -591,10 +618,8 @@ const RobotModel: React.FC<RobotModelProps> = ({ robotConfig }) => {
       }
 
       modelRef.current.position.copy(prevPositionRef.current);
-    }
 
-    // Rotation handling for all models
-    if (!isDrone) {
+      // Rotation handling for non-drone models
       const targetRot = robotState.rotation.y;
       const currentRot = modelRef.current.rotation.y;
       const rotDiff = targetRot - currentRot;
