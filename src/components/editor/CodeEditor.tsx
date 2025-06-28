@@ -145,6 +145,29 @@ await robot.releaseObject();
         await delay(duration, abortSignal);
         await stopRobot();
         
+        // ✨ NEW: Track objectives after movement
+        const state = useRobotStore.getState();
+        if (state.challengeTracking?.currentChallengeId) {
+          const newTracking = { ...state.challengeTracking };
+          
+          // Calculate distance moved based on speed and duration
+          const distance = (normalizedSpeed * duration) / 1000;
+          newTracking.totalDistanceMoved += distance;
+          
+          if (direction === 'forward') {
+            newTracking.hasMovedForward = true;
+            newTracking.maxForwardDistance += distance;
+            console.log(`📈 Forward distance updated: ${newTracking.maxForwardDistance.toFixed(3)}m`);
+          } else if (direction === 'backward') {
+            newTracking.hasMovedBackward = true;
+            newTracking.maxBackwardDistance += distance;
+          }
+          
+          // Update store and check objectives
+          useRobotStore.setState({ challengeTracking: newTracking });
+          setTimeout(() => state.checkAndCompleteObjectives?.(), 100);
+        }
+        
         addOutput('success', `Completed ${direction} movement`);
       },
 
@@ -168,6 +191,29 @@ await robot.releaseObject();
         await rotateRobot({ direction, speed: normalizedSpeed });
         await delay(duration, abortSignal);
         await stopRobot();
+        
+        // ✨ NEW: Track objectives after rotation
+        const state = useRobotStore.getState();
+        if (state.challengeTracking?.currentChallengeId) {
+          const newTracking = { ...state.challengeTracking };
+          
+          // Convert angle to radians and track
+          const angleInRadians = (angle * Math.PI) / 180;
+          newTracking.totalRotations += angleInRadians;
+          newTracking.totalRotationAngle += angleInRadians;
+          
+          if (direction === 'left') {
+            newTracking.hasRotatedLeft = true;
+          } else {
+            newTracking.hasRotatedRight = true;
+          }
+          
+          console.log(`🧭 Rotation updated: ${(newTracking.totalRotationAngle * 180 / Math.PI).toFixed(1)}°`);
+          
+          // Update store and check objectives
+          useRobotStore.setState({ challengeTracking: newTracking });
+          setTimeout(() => state.checkAndCompleteObjectives?.(), 100);
+        }
         
         addOutput('success', `Completed ${direction} rotation of ${angle}°`);
       },
@@ -214,8 +260,19 @@ await robot.releaseObject();
         
         // Use the enhanced sensor data function from the store
         const sensorData = await getSensorData(sensorType);
-        addOutput('success', `Sensor data: ${JSON.stringify(sensorData)}`);
         
+        // ✨ NEW: Track sensor usage for objectives
+        const state = useRobotStore.getState();
+        if (state.challengeTracking?.currentChallengeId) {
+          const newTracking = { ...state.challengeTracking };
+          newTracking.hasReadSensor = true;
+          newTracking.sensorReadings += 1;
+          
+          useRobotStore.setState({ challengeTracking: newTracking });
+          setTimeout(() => state.checkAndCompleteObjectives?.(), 100);
+        }
+        
+        addOutput('success', `Sensor data: ${JSON.stringify(sensorData)}`);
         return sensorData;
       },
 
@@ -230,8 +287,19 @@ await robot.releaseObject();
         // Use the readSensor function from the store for backward compatibility
         const { readSensor } = useRobotStore.getState();
         const reading = await readSensor(sensorType);
-        addOutput('success', `Sensor reading: ${reading}`);
         
+        // ✨ NEW: Track sensor usage for objectives
+        const state = useRobotStore.getState();
+        if (state.challengeTracking?.currentChallengeId) {
+          const newTracking = { ...state.challengeTracking };
+          newTracking.hasReadSensor = true;
+          newTracking.sensorReadings += 1;
+          
+          useRobotStore.setState({ challengeTracking: newTracking });
+          setTimeout(() => state.checkAndCompleteObjectives?.(), 100);
+        }
+        
+        addOutput('success', `Sensor reading: ${reading}`);
         return reading;
       },
 
