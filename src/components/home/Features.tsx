@@ -216,7 +216,7 @@ const Features: React.FC = () => {
               Built for Performance & Reliability
             </h3>
             <p className="text-dark-300 text-lg">
-              Enterprise-grade simulation technology trusted by educators and professionals
+              High grade simulation technology trusted by educators
             </p>
           </div>
           
@@ -249,9 +249,9 @@ const Features: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.5 }}
         >
           {[
-            { number: '1,000+', label: 'Active Students', color: 'primary' },
-            { number: '25+', label: 'Learning Modules', color: 'secondary' },
-            { number: '6', label: 'Robot Types', color: 'accent' },
+            { number: '100+', label: 'Active Students', color: 'primary' },
+            { number: '10+', label: 'Learning Modules', color: 'secondary' },
+            { number: '5', label: 'Robot Types', color: 'accent' },
             { number: '99.9%', label: 'Uptime', color: 'success' },
           ].map((stat, index) => (
             <div key={stat.label} className="text-center">
