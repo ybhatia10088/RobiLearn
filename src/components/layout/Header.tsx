@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useCurrentRoute } from '@/hooks/useNavigation';
-import { Menu, X, Notebook as Robot, Home, Award, Cpu, Info, Github, User } from 'lucide-react';
+import { Menu, X, Home, Award, Cpu, Info, Github, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type MenuItem = {
@@ -27,15 +27,18 @@ const Header: React.FC = () => {
     <header className="fixed top-0 left-0 w-full bg-dark-800/90 backdrop-blur-md border-b border-dark-600 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div 
-          className="flex items-center space-x-2 cursor-pointer"
+          className="flex items-center cursor-pointer"
           onClick={() => navigate('/')}
         >
-          <div className="bg-primary-500 p-1.5 rounded-md">
-            <Robot size={24} className="text-white" />
-          </div>
-          <h1 className="text-xl font-bold text-white">
-            <span className="text-primary-400">Robo</span>
-            <span>Sim</span>
+          <h1 className="text-2xl font-bold text-white tracking-wider" style={{ 
+            fontFamily: '"Orbitron", "Exo", "Rajdhani", sans-serif', 
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textShadow: '0 0 15px rgba(59, 130, 246, 0.4), 0 0 30px rgba(59, 130, 246, 0.2)'
+          }}>
+            ROBI<span className="text-primary-400" style={{
+              textShadow: '0 0 15px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.3)'
+            }}>LEARN</span>
           </h1>
         </div>
         
