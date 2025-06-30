@@ -1340,30 +1340,32 @@ const SimulatorPage: React.FC = () => {
 
   // Handle opening theory modal and marking theory as viewed
   const handleOpenTheoryModal = () => {
-    setShowTheoryModal(true);
+  setShowTheoryModal(true);
+};
+
+// Add this to TheoryModal component's useEffect:
+useEffect(() => {
+  if (currentChallenge) {
+    const theoryMap: Record<string, string> = {
+      'intro-1': 'movement_basics',
+      'intro-2': 'sensor_basics',
+      'patrol-1': 'waypoint_navigation',
+      'circle-1': 'circular_motion',
+      'grid-1': 'grid_navigation',
+      'spiral-1': 'spiral_algorithms',
+      'drone-1': 'drone_flight',
+      'arm-1': 'arm_kinematics',
+      'spider-1': 'multi_leg_locomotion',
+      'tank-1': 'tracked_vehicles',
+      'humanoid-1': 'bipedal_locomotion'
+    };
     
-    // Mark theory as viewed when modal is opened
-    if (currentChallenge) {
-      const theoryMap: Record<string, string> = {
-        'intro-1': 'movement_basics',
-        'intro-2': 'sensor_basics',
-        'patrol-1': 'waypoint_navigation',
-        'circle-1': 'circular_motion',
-        'grid-1': 'grid_navigation',
-        'spiral-1': 'spiral_algorithms',
-        'drone-1': 'drone_flight',
-        'arm-1': 'arm_kinematics',
-        'spider-1': 'multi_leg_locomotion',
-        'tank-1': 'tracked_vehicles',
-        'humanoid-1': 'bipedal_locomotion'
-      };
-      
-      const theoryId = theoryMap[currentChallenge.id];
-      if (theoryId) {
-        markTheoryViewed(theoryId);
-      }
+    const theoryId = theoryMap[currentChallenge.id];
+    if (theoryId) {
+      markTheoryViewed(theoryId);
     }
-  };
+  }
+}, [currentChallenge, markTheoryViewed]);
 
   // Theory Modal Component
   const TheoryModal = () => {
