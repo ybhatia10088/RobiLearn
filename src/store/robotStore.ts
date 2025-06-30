@@ -1190,7 +1190,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       sensorReadings: state.challengeTracking.sensorReadings
     };
   },
-})); Math.random();
+})); 
       default:
         return 0;
     }
