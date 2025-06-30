@@ -53,13 +53,13 @@ const AboutPage: React.FC = () => {
 
   const stats = [
     { 
-      number: '500+', 
-      label: 'Active Users', 
+      number: '100+', 
+      label: 'Early Access Users', 
       icon: <Users className="w-6 h-6" />,
       description: 'Students & Educators'
     },
     { 
-      number: '15+', 
+      number: '5+', 
       label: 'Simulation Models', 
       icon: <Bot className="w-6 h-6" />,
       description: 'Robot Types Available'
@@ -71,7 +71,7 @@ const AboutPage: React.FC = () => {
       description: 'Platform Reliability'
     },
     { 
-      number: '25+', 
+      number: '10+', 
       label: 'Challenges', 
       icon: <Award className="w-6 h-6" />,
       description: 'Learning Scenarios'
@@ -161,7 +161,7 @@ const AboutPage: React.FC = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <Building2 className="w-5 h-5 mr-3 text-blue-400" />
-              <span>Advanced Robotics Simulation Platform</span>
+              <span>Robotics Simulation Platform</span>
             </motion.div>
 
             <motion.h1 
@@ -182,8 +182,8 @@ const AboutPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8 }}
             >
-              A comprehensive browser-based robotics simulation platform designed for education, 
-              research, and rapid prototyping. <span className="text-blue-400 font-medium">No hardware required.</span>
+              A comprehensive browser based robotics simulation platform designed for education, 
+              and rapid prototyping. <span className="text-blue-400 font-medium">No hardware required.</span>
             </motion.p>
 
             {/* Enhanced capability highlights */}
