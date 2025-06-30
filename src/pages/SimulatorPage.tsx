@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type EditorTab = 'code' | 'blocks' | 'natural';
 
-// Challenge data with proper integration
+// Complete challenge data with proper integration
 const challengeData: Record<string, Challenge> = {
   'intro-1': {
     id: 'intro-1',
@@ -157,76 +157,905 @@ while (true) {
     environmentId: 'sensor-course',
     unlocked: true,
     completed: false,
-    nextChallengeIds: ['warehouse-1'],
+    nextChallengeIds: ['patrol-1'],
   },
-  'warehouse-1': {
-    id: 'warehouse-1',
-    title: 'Warehouse Navigation',
-    description: 'Navigate through a warehouse environment while avoiding obstacles.',
-    category: ChallengeCategory.WAREHOUSE,
+  'patrol-1': {
+    id: 'patrol-1',
+    title: 'Security Patrol Route',
+    description: 'Program the robot to follow a patrol route with multiple waypoints and turns.',
+    category: ChallengeCategory.INTRO,
+    difficulty: DifficultyLevel.INTERMEDIATE,
+    estimatedTime: 20,
+    objectives: [
+      {
+        id: 'obj6',
+        description: 'Understand waypoint navigation',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Waypoint navigation involves:
+- Planning a route with multiple stops
+- Precise turning between waypoints
+- Maintaining consistent speed
+- Position verification at each point`
+      },
+      {
+        id: 'obj7',
+        description: 'Visit all 4 patrol waypoints in sequence',
+        completionCriteria: 'waypoints_completed',
+        completed: false,
+        hints: [
+          'Move to (3, 0), then (3, 3), then (0, 3), then back to (0, 0)',
+          'Make precise 90-degree turns at each corner',
+          'Verify position at each waypoint'
+        ]
+      }
+    ],
+    hints: [
+      { id: 'hint5', text: 'Break the patrol into smaller movements', unlockCost: 10 },
+      { id: 'hint6', text: 'Use a loop to visit each waypoint', unlockCost: 15 },
+    ],
+    startingCode: {
+      natural_language: 'Follow a square patrol route visiting 4 waypoints',
+      block: '[]',
+      code: `// Security Patrol Mission
+// Visit waypoints: (3,0) -> (3,3) -> (0,3) -> (0,0)
+
+const waypoints = [
+  {x: 3, z: 0}, {x: 3, z: 3}, {x: 0, z: 3}, {x: 0, z: 0}
+];
+
+console.log("Starting patrol route...");
+
+for (let i = 0; i < waypoints.length; i++) {
+  const target = waypoints[i];
+  console.log(\`Moving to waypoint \${i + 1}: (\${target.x}, \${target.z})\`);
+  
+  // Move forward (adjust duration based on distance needed)
+  await robot.move({
+    direction: "forward",
+    speed: 0.4,
+    duration: 2000
+  });
+  
+  // Turn 90 degrees right at each corner
+  await robot.rotate({
+    direction: "right",
+    angle: 90
+  });
+  
+  await robot.wait(500);
+}
+
+console.log("Patrol route completed!");`
+    },
+    robotType: 'mobile',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['circle-1'],
+  },
+  'circle-1': {
+    id: 'circle-1',
+    title: 'Perfect Circle',
+    description: 'Master curved movement by making the robot travel in a perfect circle.',
+    category: ChallengeCategory.INTRO,
     difficulty: DifficultyLevel.INTERMEDIATE,
     estimatedTime: 25,
     objectives: [
       {
-        id: 'obj6',
-        description: 'Study path planning strategies',
+        id: 'obj8',
+        description: 'Understand circular motion mechanics',
         completionCriteria: 'theory_complete',
         completed: false,
-        theory: `Path planning involves:
-1. Identifying goal location
-2. Detecting obstacles  
-3. Finding efficient route
-4. Maintaining safe distances`
+        theory: `Circular movement requires:
+- Continuous small turns while moving forward
+- Consistent speed and turn rate
+- Radius control through turn/speed ratio`
       },
       {
-        id: 'obj7',
-        description: 'Navigate to the pickup area',
-        completionCriteria: 'reached_pickup',
+        id: 'obj9',
+        description: 'Complete one full circle with 2m radius',
+        completionCriteria: 'circle_completed',
         completed: false,
-      },
-      {
-        id: 'obj8',
-        description: 'Pick up the package',
-        completionCriteria: 'package_grabbed',
-        completed: false,
+        hints: [
+          'Use small, frequent turns while moving forward',
+          'Keep the turn rate consistent for a perfect circle',
+          'A full circle is 360 degrees of rotation'
+        ]
       }
     ],
     hints: [
-      { id: 'hint5', text: 'Break navigation into smaller steps', unlockCost: 10 },
-      { id: 'hint6', text: 'Use waypoints for complex paths', unlockCost: 15 },
+      { id: 'hint7', text: 'Try 5-degree turns with short forward movements', unlockCost: 10 },
+      { id: 'hint8', text: 'Use a loop to repeat the turn-move pattern', unlockCost: 15 },
     ],
     startingCode: {
-      natural_language: 'Navigate to pickup area and grab package',
+      natural_language: 'Move in a perfect circle',
       block: '[]',
-      code: `// Warehouse navigation challenge!
+      code: `// Circle Motion Challenge
+// Create a perfect circle by combining small movements and turns
 
-// Objective 1: Study path planning (completed when you read it)
-// Objective 2: Navigate to pickup area at (5, 0, 8)
-// Objective 3: Grab the package
+console.log("Starting circular motion...");
 
-// Plan your path to coordinates (5, 0, 8)
+// Method: Small forward movement + small turn = circular path
+for (let i = 0; i < 360; i += 5) {
+  // Move forward a small amount
+  await robot.move({
+    direction: "forward",
+    speed: 0.3,
+    duration: 100
+  });
+  
+  // Turn right 5 degrees
+  await robot.rotate({
+    direction: "right", 
+    angle: 5
+  });
+  
+  await robot.wait(50);
+}
+
+console.log("Circle completed!");`
+    },
+    robotType: 'mobile',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['grid-1'],
+  },
+  'grid-1': {
+    id: 'grid-1',
+    title: 'Grid Navigation Master',
+    description: 'Navigate efficiently through a grid system using coordinate-based movement.',
+    category: ChallengeCategory.INTRO,
+    difficulty: DifficultyLevel.INTERMEDIATE,
+    estimatedTime: 20,
+    objectives: [
+      {
+        id: 'obj10',
+        description: 'Understand grid coordinate systems',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Grid navigation involves:
+- Understanding X,Z coordinate system
+- Moving in cardinal directions (N,S,E,W)
+- Calculating optimal paths`
+      },
+      {
+        id: 'obj11',
+        description: 'Visit 5 specific grid points in sequence',
+        completionCriteria: 'grid_points_visited',
+        completed: false,
+        hints: [
+          'Points: (2,2) -> (6,2) -> (6,6) -> (2,6) -> (4,4)',
+          'Move in straight lines between points',
+          'Face the correct direction before moving'
+        ]
+      }
+    ],
+    startingCode: {
+      natural_language: 'Navigate through specific grid points',
+      block: '[]',
+      code: `// Grid Navigation Challenge
+// Visit points: (2,2) -> (6,2) -> (6,6) -> (2,6) -> (4,4)
+
+const gridPoints = [
+  {x: 2, z: 2}, {x: 6, z: 2}, {x: 6, z: 6}, {x: 2, z: 6}, {x: 4, z: 4}
+];
+
+console.log("Starting grid navigation...");
+
+for (let i = 0; i < gridPoints.length; i++) {
+  const target = gridPoints[i];
+  console.log(\`Moving to point \${i + 1}: (\${target.x}, \${target.z})\`);
+  
+  // Simple movement pattern (you can improve this!)
+  await robot.move({
+    direction: "forward",
+    speed: 0.4,
+    duration: 1500
+  });
+  
+  await robot.rotate({
+    direction: "right",
+    angle: 45
+  });
+  
+  await robot.wait(300);
+}
+
+console.log("Grid navigation completed!");`
+    },
+    robotType: 'mobile',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['spiral-1'],
+  },
+  'spiral-1': {
+    id: 'spiral-1',
+    title: 'Spiral Search Pattern',
+    description: 'Program the robot to move in an expanding spiral pattern.',
+    category: ChallengeCategory.SEARCH_RESCUE,
+    difficulty: DifficultyLevel.ADVANCED,
+    estimatedTime: 25,
+    objectives: [
+      {
+        id: 'obj12',
+        description: 'Understand spiral movement algorithms',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Spiral patterns follow:
+1 step, turn, 1 step, turn, 2 steps, turn, 2 steps, turn, 3 steps...`
+      },
+      {
+        id: 'obj13',
+        description: 'Execute a 5-layer expanding spiral',
+        completionCriteria: 'spiral_completed',
+        completed: false,
+        hints: [
+          'Pattern: Right 1, Up 1, Left 2, Down 2, Right 3...',
+          'Increase step count every 2 direction changes'
+        ]
+      }
+    ],
+    startingCode: {
+      natural_language: 'Create an expanding spiral pattern',
+      block: '[]',
+      code: `// Spiral Search Pattern
+// Pattern: 1,1,2,2,3,3,4,4,5,5 steps
+
+const directions = ['right', 'up', 'left', 'down'];
+let directionIndex = 0;
+let steps = 1;
+let directionChanges = 0;
+
+console.log("Starting spiral search pattern...");
+
+while (steps <= 5) {
+  const currentDirection = directions[directionIndex];
+  console.log(\`Moving \${currentDirection} for \${steps} steps\`);
+  
+  // Move in current direction for 'steps' number of times
+  for (let i = 0; i < steps; i++) {
+    await robot.move({
+      direction: currentDirection,
+      speed: 0.4,
+      duration: 500
+    });
+    await robot.wait(100);
+  }
+  
+  // Rotate to next direction
+  await robot.rotate({
+    direction: "left",
+    angle: 90
+  });
+  
+  directionIndex = (directionIndex + 1) % 4;
+  directionChanges++;
+  
+  // Increase steps every 2 direction changes
+  if (directionChanges % 2 === 0) {
+    steps++;
+  }
+}
+
+console.log("Spiral pattern completed!");`
+    },
+    robotType: 'mobile',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['drone-1'],
+  },
+  'drone-1': {
+    id: 'drone-1',
+    title: 'Drone Flight Training',
+    description: 'Master 3D movement with altitude control and hovering maneuvers.',
+    category: ChallengeCategory.SEARCH_RESCUE,
+    difficulty: DifficultyLevel.ADVANCED,
+    estimatedTime: 30,
+    objectives: [
+      {
+        id: 'obj14',
+        description: 'Learn drone flight mechanics',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Drone flight involves:
+- Vertical takeoff and landing
+- Altitude maintenance and control
+- 3D positioning (X, Y, Z coordinates)`
+      },
+      {
+        id: 'obj15',
+        description: 'Perform takeoff to 2m altitude',
+        completionCriteria: 'altitude_reached',
+        completed: false,
+        hints: [
+          'Use robot.move with direction "up"',
+          'Monitor altitude with robot.position.y'
+        ]
+      },
+      {
+        id: 'obj16',
+        description: 'Execute figure-8 flight pattern',
+        completionCriteria: 'figure8_completed',
+        completed: false,
+        hints: [
+          'Combine forward movement with alternating turns',
+          'Maintain consistent altitude throughout'
+        ]
+      }
+    ],
+    startingCode: {
+      natural_language: 'Perform drone takeoff and execute figure-8 pattern',
+      block: '[]',
+      code: `// Drone Flight Training
+console.log("Initializing drone systems...");
+
+// Takeoff to 2m altitude
+console.log("Taking off...");
 await robot.move({
-  direction: "forward",
-  speed: 0.4,
+  direction: "up",
+  speed: 0.5,
   duration: 3000
 });
 
-// Add obstacle avoidance logic here
-const distance = await robot.getSensor("ultrasonic");
-if (distance < 2) {
-  console.log("Obstacle detected, planning alternate route...");
-  // Add your navigation logic
+console.log("Altitude reached:", robot.position.y);
+
+// Hover stabilization
+await robot.wait(1000);
+
+// Figure-8 pattern (two connected circles)
+console.log("Starting figure-8 maneuver...");
+
+// First loop of figure-8
+for (let i = 0; i < 180; i += 10) {
+  await robot.move({
+    direction: "forward",
+    speed: 0.3,
+    duration: 150
+  });
+  await robot.rotate({
+    direction: "right",
+    angle: 10
+  });
 }
 
-// When you reach the pickup area:
-await robot.grab();
-console.log("Package picked up!");`
+// Cross-over movement
+await robot.move({
+  direction: "forward",
+  speed: 0.3,
+  duration: 500
+});
+
+// Second loop of figure-8 (opposite direction)
+for (let i = 0; i < 180; i += 10) {
+  await robot.move({
+    direction: "forward",
+    speed: 0.3,
+    duration: 150
+  });
+  await robot.rotate({
+    direction: "left",
+    angle: 10
+  });
+}
+
+console.log("Figure-8 completed! Landing...");
+
+// Landing sequence
+await robot.move({
+  direction: "down",
+  speed: 0.3,
+  duration: 3000
+});
+
+console.log("Landing complete!");`
     },
-    robotType: 'mobile',
-    environmentId: 'warehouse',
+    robotType: 'drone',
+    environmentId: 'tutorial-room',
     unlocked: false,
     completed: false,
-    nextChallengeIds: ['warehouse-2'],
+    nextChallengeIds: ['arm-1'],
+  },
+  'arm-1': {
+    id: 'arm-1',
+    title: 'Robotic Arm Precision',
+    description: 'Master precise joint control and coordinate manipulation tasks.',
+    category: ChallengeCategory.MANUFACTURING,
+    difficulty: DifficultyLevel.ADVANCED,
+    estimatedTime: 25,
+    objectives: [
+      {
+        id: 'obj17',
+        description: 'Understand robotic arm kinematics',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Robotic arms use multiple joints:
+- Base rotation (around Y-axis)
+- Shoulder pitch (up/down)
+- Elbow pitch (bend/extend)
+- Wrist rotation and pitch`
+      },
+      {
+        id: 'obj18',
+        description: 'Move each joint through its range',
+        completionCriteria: 'joints_exercised',
+        completed: false,
+        hints: [
+          'Use robot.move with joint parameter',
+          'Test base, shoulder, elbow, and wrist'
+        ]
+      },
+      {
+        id: 'obj19',
+        description: 'Perform pick and place sequence',
+        completionCriteria: 'pick_place_completed',
+        completed: false,
+        hints: [
+          'Position arm over object',
+          'Lower to grab height',
+          'Close gripper and lift'
+        ]
+      }
+    ],
+    startingCode: {
+      natural_language: 'Control robotic arm joints and perform pick-and-place',
+      block: '[]',
+      code: `// Robotic Arm Precision Challenge
+console.log("Initializing robotic arm...");
+
+// Exercise each joint
+console.log("Testing joint movements...");
+
+// Base rotation
+await robot.move({
+  direction: "right",
+  speed: 0.3,
+  joint: "base",
+  duration: 1000
+});
+await robot.move({
+  direction: "left", 
+  speed: 0.3,
+  joint: "base",
+  duration: 2000
+});
+
+// Shoulder movement
+await robot.move({
+  direction: "forward",
+  speed: 0.3,
+  joint: "shoulder", 
+  duration: 1000
+});
+
+// Elbow movement
+await robot.move({
+  direction: "forward",
+  speed: 0.3,
+  joint: "elbow",
+  duration: 800
+});
+
+// Wrist movement
+await robot.move({
+  direction: "right",
+  speed: 0.3,
+  joint: "wrist",
+  duration: 600
+});
+
+console.log("Joint exercise complete!");
+
+// Pick and place sequence
+console.log("Starting pick and place...");
+
+// Position over object
+await robot.move({
+  direction: "right",
+  speed: 0.2,
+  joint: "base",
+  duration: 1500
+});
+
+// Grab object
+await robot.grab();
+await robot.wait(500);
+
+// Move to target location
+await robot.move({
+  direction: "left",
+  speed: 0.2,
+  joint: "base",
+  duration: 3000
+});
+
+await robot.releaseObject();
+console.log("Pick and place completed!");`
+    },
+    robotType: 'arm',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['spider-1'],
+  },
+  'spider-1': {
+    id: 'spider-1',
+    title: 'Spider Locomotion',
+    description: 'Master multi-legged robot movement and climbing techniques.',
+    category: ChallengeCategory.SEARCH_RESCUE,
+    difficulty: DifficultyLevel.EXPERT,
+    estimatedTime: 30,
+    objectives: [
+      {
+        id: 'obj20',
+        description: 'Understand multi-legged locomotion',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Spider robots use multiple legs for:
+- Distributed weight and stability
+- Redundancy if legs are damaged
+- Climbing on various surfaces`
+      },
+      {
+        id: 'obj21',
+        description: 'Demonstrate stable walking gait',
+        completionCriteria: 'gait_demonstrated',
+        completed: false,
+        hints: [
+          'Move legs in alternating patterns',
+          'Maintain 3-point contact for stability'
+        ]
+      },
+      {
+        id: 'obj22',
+        description: 'Navigate complex terrain',
+        completionCriteria: 'terrain_navigated',
+        completed: false,
+        hints: [
+          'Adjust leg positions for obstacles',
+          'Use sensors to detect surfaces'
+        ]
+      }
+    ],
+    startingCode: {
+      natural_language: 'Demonstrate spider robot walking and climbing',
+      block: '[]',
+      code: `// Spider Locomotion Challenge
+console.log("Activating spider locomotion systems...");
+
+// Basic walking gait demonstration
+console.log("Demonstrating walking gait...");
+
+// Spider walking pattern
+for (let step = 0; step < 8; step++) {
+  console.log(\`Step \${step + 1}/8\`);
+  
+  await robot.move({
+    direction: "forward",
+    speed: 0.4,
+    duration: 800
+  });
+  
+  await robot.wait(200);
+}
+
+console.log("Straight walking completed!");
+
+// Turning demonstration
+console.log("Demonstrating turning maneuvers...");
+
+for (let turn = 0; turn < 4; turn++) {
+  await robot.rotate({
+    direction: "right",
+    angle: 90
+  });
+  
+  await robot.move({
+    direction: "forward", 
+    speed: 0.3,
+    duration: 600
+  });
+  
+  await robot.wait(300);
+}
+
+console.log("Square pattern completed!");
+
+// Complex terrain navigation
+console.log("Navigating complex terrain...");
+
+for (let i = 0; i < 6; i++) {
+  const distance = await robot.getSensor("ultrasonic");
+  console.log(\`Obstacle distance: \${distance.toFixed(2)}m\`);
+  
+  if (distance > 1.0) {
+    await robot.move({
+      direction: "forward",
+      speed: 0.3,
+      duration: 500
+    });
+  } else {
+    console.log("Obstacle detected, navigating around...");
+    
+    await robot.rotate({
+      direction: "left", 
+      angle: 45
+    });
+    
+    await robot.move({
+      direction: "forward",
+      speed: 0.3,
+      duration: 700
+    });
+    
+    await robot.rotate({
+      direction: "right",
+      angle: 90
+    });
+  }
+  
+  await robot.wait(250);
+}
+
+console.log("Spider locomotion challenge complete!");`
+    },
+    robotType: 'spider',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['tank-1'],
+  },
+  'tank-1': {
+    id: 'tank-1',
+    title: 'Tank Maneuvers',
+    description: 'Master tracked vehicle movement and tactical positioning.',
+    category: ChallengeCategory.SEARCH_RESCUE,
+    difficulty: DifficultyLevel.EXPERT,
+    estimatedTime: 25,
+    objectives: [
+      {
+        id: 'obj23',
+        description: 'Understand tracked vehicle dynamics',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Tank robots use tracks for:
+- High traction on rough surfaces
+- Ability to climb obstacles
+- Differential steering (skid steering)`
+      },
+      {
+        id: 'obj24',
+        description: 'Execute precision maneuvers',
+        completionCriteria: 'maneuvers_completed',
+        completed: false,
+        hints: [
+          'Use pivot turns for tight spaces',
+          'Tracks provide excellent grip'
+        ]
+      },
+      {
+        id: 'obj25',
+        description: 'Demonstrate tactical positioning',
+        completionCriteria: 'positioning_completed',
+        completed: false,
+        hints: [
+          'Find optimal vantage points',
+          'Use cover and concealment'
+        ]
+      }
+    ],
+    startingCode: {
+      natural_language: 'Demonstrate tank maneuvers and tactical positioning',
+      block: '[]',
+      code: `// Tank Maneuvers Challenge
+console.log("Tank systems online. Beginning maneuver training...");
+
+// Precision movement demonstration
+console.log("Demonstrating precision maneuvers...");
+
+// Forward advance
+await robot.move({
+  direction: "forward",
+  speed: 0.6,
+  duration: 2000
+});
+
+// Pivot turn (zero radius)
+console.log("Executing pivot turn...");
+await robot.rotate({
+  direction: "right",
+  angle: 90
+});
+
+// Side movement
+await robot.move({
+  direction: "forward",
+  speed: 0.5,
+  duration: 1500
+});
+
+// Reverse movement
+console.log("Tactical reverse...");
+await robot.move({
+  direction: "backward",
+  speed: 0.4,
+  duration: 1000
+});
+
+// Another pivot turn
+await robot.rotate({
+  direction: "left",
+  angle: 180
+});
+
+console.log("Basic maneuvers completed!");
+
+// Tactical positioning sequence
+console.log("Beginning tactical positioning...");
+
+const positions = [
+  { name: "Overwatch Position", x: 4, z: 2 },
+  { name: "Flanking Position", x: 2, z: 4 },
+  { name: "Cover Position", x: -2, z: 3 },
+  { name: "Rally Point", x: 0, z: 0 }
+];
+
+for (let i = 0; i < positions.length; i++) {
+  const pos = positions[i];
+  console.log(\`Moving to \${pos.name}...\`);
+  
+  // Move to position (simplified)
+  await robot.move({
+    direction: "forward",
+    speed: 0.5,
+    duration: 2000
+  });
+  
+  // 360-degree scan
+  for (let scan = 0; scan < 4; scan++) {
+    await robot.rotate({
+      direction: "right",
+      angle: 90
+    });
+    
+    const distance = await robot.getSensor("ultrasonic");
+    console.log(\`Scan \${scan + 1}: \${distance.toFixed(2)}m\`);
+    
+    await robot.wait(300);
+  }
+  
+  await robot.wait(500);
+}
+
+console.log("Tank maneuvers training complete!");`
+    },
+    robotType: 'tank',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: ['humanoid-1'],
+  },
+  'humanoid-1': {
+    id: 'humanoid-1',
+    title: 'Humanoid Walking',
+    description: 'Master bipedal locomotion and human-like movement patterns.',
+    category: ChallengeCategory.MANUFACTURING,
+    difficulty: DifficultyLevel.EXPERT,
+    estimatedTime: 35,
+    objectives: [
+      {
+        id: 'obj26',
+        description: 'Understand bipedal locomotion',
+        completionCriteria: 'theory_complete',
+        completed: false,
+        theory: `Humanoid robots simulate human movement:
+- Bipedal walking requires constant balance
+- Center of gravity management is critical
+- Gait cycles: stance and swing phases`
+      },
+      {
+        id: 'obj27',
+        description: 'Demonstrate stable walking cycle',
+        completionCriteria: 'walking_demonstrated',
+        completed: false,
+        hints: [
+          'Start with slow, deliberate steps',
+          'Maintain balance throughout cycle'
+        ]
+      },
+      {
+        id: 'obj28',
+        description: 'Perform complex movements',
+        completionCriteria: 'complex_movements',
+        completed: false,
+        hints: [
+          'Combine walking with arm gestures',
+          'Try different walking speeds'
+        ]
+      }
+    ],
+    startingCode: {
+      natural_language: 'Demonstrate humanoid walking and complex movements',
+      block: '[]',
+      code: `// Humanoid Walking Challenge
+console.log("Initializing humanoid locomotion systems...");
+
+// Basic walking demonstration
+console.log("Beginning walking cycle demonstration...");
+
+// Start walking sequence
+for (let step = 0; step < 12; step++) {
+  console.log(\`Walking step \${step + 1}/12\`);
+  
+  await robot.move({
+    direction: "forward",
+    speed: 0.5,
+    duration: 600
+  });
+  
+  await robot.wait(150);
+}
+
+console.log("Straight walking completed!");
+
+// Turning while walking
+console.log("Demonstrating walking turns...");
+
+for (let turn = 0; turn < 4; turn++) {
+  console.log(\`Turn \${turn + 1}/4\`);
+  
+  for (let step = 0; step < 3; step++) {
+    await robot.move({
+      direction: "forward",
+      speed: 0.4,
+      duration: 400
+    });
+    
+    await robot.rotate({
+      direction: "right",
+      angle: 30
+    });
+    
+    await robot.wait(100);
+  }
+}
+
+console.log("Walking turns completed!");
+
+// Different walking speeds
+const speeds = [
+  { name: "Slow walk", speed: 0.3, duration: 800 },
+  { name: "Normal walk", speed: 0.5, duration: 600 },
+  { name: "Fast walk", speed: 0.7, duration: 400 }
+];
+
+for (let i = 0; i < speeds.length; i++) {
+  const gait = speeds[i];
+  console.log(\`Demonstrating \${gait.name}...\`);
+  
+  for (let step = 0; step < 6; step++) {
+    await robot.move({
+      direction: "forward",
+      speed: gait.speed,
+      duration: gait.duration
+    });
+    
+    await robot.wait(gait.duration * 0.2);
+  }
+  
+  await robot.wait(500);
+}
+
+console.log("Humanoid locomotion demonstration complete!");`
+    },
+    robotType: 'humanoid',
+    environmentId: 'tutorial-room',
+    unlocked: false,
+    completed: false,
+    nextChallengeIds: [],
   }
 };
 
@@ -334,28 +1163,45 @@ const SimulatorPage: React.FC = () => {
     
     // Mark theory as viewed for theory-based objectives if in challenge mode
     if (currentChallenge) {
-      if (currentChallenge.id === 'intro-1') {
-        markTheoryViewed('movement_basics');
-      } else if (currentChallenge.id === 'intro-2') {
-        markTheoryViewed('sensor_basics');
-      } else if (currentChallenge.id === 'warehouse-1') {
-        markTheoryViewed('path_planning');
+      const theoryMap: Record<string, string> = {
+        'intro-1': 'movement_basics',
+        'intro-2': 'sensor_basics',
+        'patrol-1': 'waypoint_navigation',
+        'circle-1': 'circular_motion',
+        'grid-1': 'grid_navigation',
+        'spiral-1': 'spiral_algorithms',
+        'drone-1': 'drone_flight',
+        'arm-1': 'arm_kinematics',
+        'spider-1': 'multi_leg_locomotion',
+        'tank-1': 'tracked_vehicles',
+        'humanoid-1': 'bipedal_locomotion'
+      };
+      
+      const theoryId = theoryMap[currentChallenge.id];
+      if (theoryId) {
+        markTheoryViewed(theoryId);
       }
     }
     
     try {
       // Create robot API that integrates with the store and tracks objectives
       const robot = {
-        move: async (params: { direction: string; speed: number; duration: number }) => {
+        move: async (params: { direction: string; speed: number; duration: number; joint?: string }) => {
           console.log('🤖 Robot moving:', params);
           
-          // Use the same pattern as CodeEditor for consistency
           const normalizedSpeed = Math.max(0.1, Math.min(1.0, params.speed));
           
           await stopRobot();
           await new Promise(resolve => setTimeout(resolve, 100));
           
-          if (params.direction === 'forward' || params.direction === 'backward') {
+          if (params.joint) {
+            // Joint movement for arm
+            moveRobot({ 
+              direction: params.direction as any, 
+              speed: normalizedSpeed, 
+              joint: params.joint as any 
+            });
+          } else if (params.direction === 'forward' || params.direction === 'backward') {
             moveRobot({ direction: params.direction as any, speed: normalizedSpeed });
           } else {
             rotateRobot({ direction: params.direction as any, speed: normalizedSpeed });
@@ -370,24 +1216,21 @@ const SimulatorPage: React.FC = () => {
           const newTracking = { ...state.challengeTracking };
           
           // Calculate distance moved based on speed and duration
-          const distance = (normalizedSpeed * params.duration) / 1000; // rough estimation
+          const distance = (normalizedSpeed * params.duration) / 1000;
           newTracking.totalDistanceMoved += distance;
           
           if (params.direction === 'forward') {
             newTracking.hasMovedForward = true;
             newTracking.maxForwardDistance += distance;
-            console.log(`📈 Forward distance updated: ${newTracking.maxForwardDistance.toFixed(3)}m`);
           } else if (params.direction === 'backward') {
             newTracking.hasMovedBackward = true;
             newTracking.maxBackwardDistance += distance;
           }
           
-          // Update store with new tracking
           useRobotStore.setState({
             challengeTracking: newTracking
           });
           
-          // Check objectives after a short delay
           setTimeout(() => {
             state.checkAndCompleteObjectives();
           }, 100);
@@ -397,7 +1240,7 @@ const SimulatorPage: React.FC = () => {
           console.log('🔄 Robot rotating:', params);
           
           const normalizedSpeed = 0.5;
-          const duration = Math.max(300, params.angle * 10); // Estimate duration based on angle
+          const duration = Math.max(300, params.angle * 10);
           
           await stopRobot();
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -406,11 +1249,9 @@ const SimulatorPage: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, duration));
           await stopRobot();
           
-          // Update challenge tracking after rotation
           const state = useRobotStore.getState();
           const newTracking = { ...state.challengeTracking };
           
-          // Convert angle to radians and track
           const angleInRadians = (params.angle * Math.PI) / 180;
           newTracking.totalRotations += angleInRadians;
           newTracking.totalRotationAngle += angleInRadians;
@@ -421,14 +1262,10 @@ const SimulatorPage: React.FC = () => {
             newTracking.hasRotatedRight = true;
           }
           
-          console.log(`🧭 Rotation updated: ${(newTracking.totalRotationAngle * 180 / Math.PI).toFixed(1)}°`);
-          
-          // Update store with new tracking
           useRobotStore.setState({
             challengeTracking: newTracking
           });
           
-          // Check objectives after a short delay
           setTimeout(() => {
             state.checkAndCompleteObjectives();
           }, 100);
@@ -455,6 +1292,12 @@ const SimulatorPage: React.FC = () => {
         grab: async () => {
           console.log('🤏 Grabbing object');
           grabObject();
+          return Promise.resolve();
+        },
+        
+        releaseObject: async () => {
+          console.log('🤲 Releasing object');
+          // Add release object functionality to store if needed
           return Promise.resolve();
         },
         
@@ -496,8 +1339,16 @@ const SimulatorPage: React.FC = () => {
     if (currentChallenge) {
       const theoryMap: Record<string, string> = {
         'intro-1': 'movement_basics',
-        'intro-2': 'sensor_basics', 
-        'warehouse-1': 'path_planning'
+        'intro-2': 'sensor_basics',
+        'patrol-1': 'waypoint_navigation',
+        'circle-1': 'circular_motion',
+        'grid-1': 'grid_navigation',
+        'spiral-1': 'spiral_algorithms',
+        'drone-1': 'drone_flight',
+        'arm-1': 'arm_kinematics',
+        'spider-1': 'multi_leg_locomotion',
+        'tank-1': 'tracked_vehicles',
+        'humanoid-1': 'bipedal_locomotion'
       };
       
       const theoryId = theoryMap[currentChallenge.id];
