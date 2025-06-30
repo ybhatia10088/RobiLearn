@@ -1217,5 +1217,5 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           return 0; 
         default:
           return 0;
-    },
+    }
   }));
