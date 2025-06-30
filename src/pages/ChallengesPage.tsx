@@ -1477,7 +1477,7 @@ const ChallengesPage: React.FC = () => {
       const completed = getChallengeStatus(challenge.id);
       
       // Dynamic unlocking logic
-      let unlocked = challenge.unlocked; // Start with default
+      let unlocked = false;; // Start with default
 if (challenge.id === 'intro-1') {
   unlocked = true;
 } else if (challenge.id === 'intro-2') {
