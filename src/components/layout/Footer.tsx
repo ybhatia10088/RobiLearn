@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Twitter, Youtube, Mail, Phone } from 'lucide-react';
+import { Github, Twitter, Youtube, Mail, Phone, Zap } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -182,11 +182,26 @@ const Footer: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <span className="text-dark-400 text-sm">Powered by</span>
+            <div className="flex items-center space-x-6">
+              {/* Built with Bolt.new Badge */}
+              <a 
+                href="https://bolt.new" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group flex items-center space-x-2 bg-gradient-to-r from-primary-600/20 to-secondary-600/20 hover:from-primary-600/30 hover:to-secondary-600/30 px-4 py-2 rounded-lg border border-primary-500/30 hover:border-primary-400/50 transition-all duration-300 backdrop-blur-sm"
+              >
+                <Zap size={16} className="text-primary-400 group-hover:text-primary-300 transition-colors" />
+                <span className="text-sm font-medium text-primary-300 group-hover:text-primary-200 transition-colors">
+                  Built with Bolt.new
+                </span>
+              </a>
+              
               <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-secondary-500 rounded"></div>
-                <span className="text-sm font-medium text-white">Advanced AI</span>
+                <span className="text-dark-400 text-sm">Powered by</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-secondary-500 rounded"></div>
+                  <span className="text-sm font-medium text-white">Advanced AI</span>
+                </div>
               </div>
             </div>
           </div>
