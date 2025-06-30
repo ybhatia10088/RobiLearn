@@ -801,13 +801,44 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     }
   },
 
+  getSensorData: async (sensorType: string): Promise<any> => {
+    const state = get();
+    if (!state.robotState) return null;
+    
+    set((state) => ({
+      challengeTracking: {
+        ...state.challengeTracking,
+        hasReadSensor: true,
+        sensorReadings: state.challengeTracking.sensorReadings + 1,
+      }
+    }));
+    
+    get().markObjectiveCompleted('obj5');
+    
+    switch (sensorType) {
+      case 'ultrasonic':
+        return {
+          distance: Math.random() * 3.9 + 0.1,
+          unit: 'meters',
+          timestamp: Date.now()
+        };
+      case 'camera':
+        return 0; 
+      default:
+        return 0;
+    }
+  },
+
   setEnvironment: (config) => set({ environment: config }),
+  
   updateRobotPosition: (position) => set((state) => ({
     robotState: state.robotState ? { ...state.robotState, position } : null,
   })),
+  
   updateRobotRotation: (rotation) => set((state) => ({
     robotState: state.robotState ? { ...state.robotState, rotation } : null,
   })),
+  
   updateJointPosition: (joint, value) => set((state) => ({
     jointPositions: { ...state.jointPositions, [joint]: value },
   })),
@@ -1190,165 +1221,4 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       sensorReadings: state.challengeTracking.sensorReadings
     };
   },
-})); 
-
-  import { create } from 'zustand';
-import { RobotConfig, RobotState, Vector3, Quaternion } from '@/types/robot.types';
-
-interface EnvironmentConfig {
-  id: string;
-  name: string;
-  description: string;
-  temperature?: number;
-  humidity?: number;
-}
-
-interface JointState {
-  base: number;
-  shoulder: number;
-  elbow: number;
-  wrist: number;
-  altitude?: number;
-}
-
-interface PerformanceMetrics {
-  distanceTraveled: number;
-  rotations: number;
-  tasksCompleted: number;
-  batteryUsed: number;
-}
-
-interface ChallengeTracking {
-  hasMovedForward: boolean;
-  hasMovedBackward: boolean;
-  hasMovedLeft: boolean;
-  hasMovedRight: boolean;
-  hasRotatedLeft: boolean;
-  hasRotatedRight: boolean;
-  hasGrabbed: boolean;
-  hasReleased: boolean;
-  hasHovered: boolean;
-  hasLanded: boolean;
-  totalDistanceMoved: number;
-  totalRotations: number;
-  completedChallenges: Set<string>;
-  completedObjectives: Set<string>;
-  viewedTheory: Set<string>;
-  currentChallengeId: string | null;
-  maxForwardDistance: number;
-  maxBackwardDistance: number;
-  totalRotationAngle: number;
-  hasReadSensor: boolean;
-  sensorReadings: number;
-  hasReachedTarget: boolean;
-  targetPositions: Array<{ x: number, z: number, reached: boolean }>;
-  hasReachedPickupArea: boolean;
-  hasCompletedPath: boolean;
-}
-
-interface RobotStoreState {
-  selectedRobot: RobotConfig | null;
-  robotState: RobotState | null;
-  environment: EnvironmentConfig | null;
-  isMoving: boolean;
-  jointPositions: JointState;
-  performance: PerformanceMetrics;
-  challengeTracking: ChallengeTracking;
-  moveCommands: {
-    direction?: 'forward' | 'backward' | 'left' | 'right' | 'up' | 'down';
-    speed?: number;
-    joint?: keyof JointState;
-  } | null;
-  
-  // Actions
-  selectRobot: (config: RobotConfig) => void;
-  moveRobot: (params: { 
-    direction: 'forward' | 'backward' | 'left' | 'right' | 'up' | 'down', 
-    speed: number, 
-    joint?: keyof JointState 
-  }) => void;
-  rotateRobot: (params: { direction: 'left' | 'right', speed: number }) => void;
-  grabObject: () => void;
-  releaseObject: () => void;
-  stopRobot: () => void;
-  setEnvironment: (config: EnvironmentConfig) => void;
-  updateRobotPosition: (position: Vector3) => void;
-  updateRobotRotation: (rotation: Quaternion) => void;
-  updateJointPosition: (joint: keyof JointState, value: number) => void;
-  resetRobotState: () => void;
-  resetRobotStateByType: () => void;
-  landDrone: () => void;
-  startHover: () => void;
-  startExplorerAnimation: () => void;
-  stopExplorerAnimation: () => void;
-  markChallengeCompleted: (challengeId: string) => void;
-  resetChallengeTracking: () => void;
-  getChallengeStatus: (challengeId: string) => boolean;
-  setCurrentChallenge: (challengeId: string | null) => void;
-  checkAndCompleteObjectives: () => void;
-  getObjectiveStatus: (objectiveId: string) => boolean;
-  markObjectiveCompleted: (objectiveId: string) => void;
-  markTheoryViewed: (theoryId: string) => void;
-  readSensor: (sensorType: string) => Promise<number>;
-  getSensorData: (sensorType: string) => Promise<any>;
-  checkChallengeCompletion: (challengeId: string) => void;
-  simulateMovement: (direction: string, speed: number, duration: number) => Promise<void>;
-  simulateRotation: (direction: string, angle: number) => Promise<void>;
-  triggerObjectiveCheck: () => void;
-  getTrackingDebugInfo: () => any;
-}
-
-  selectRobot: (config) => {
-    const initialPosition = { x: 0, y: config.type === 'drone' ? 0.5 : 0, z: 0 };
-    set({
-      selectedRobot: config,
-      robotState: {
-        robotId: config.id,
-        type: config.type,
-        position: initialPosition,
-        rotation: { x: 0, y: 0, z: 0 },
-        jointPositions: {},
-        sensorReadings: [],
-        isMoving: false,
-        isGrabbing: false,
-        batteryLevel: 100,
-        errors: [],
-        currentJointCommand: null,
-      },
-      isMoving: false,
-      jointPositions: {
-        base: 0,
-        shoulder: 0,
-        elbow: 0,
-        wrist: 0,
-        altitude: config.type === 'drone' ? 0.5 : 0,
-      },
-      moveCommands: null,
-    });
-  },
-  getSensorData: async (sensorType: string) => {
-      const state = get();
-      if (!state.robotState) return null;
-      set((state) => ({
-        challengeTracking: {
-          ...state.challengeTracking,
-          hasReadSensor: true,
-          sensorReadings: state.challengeTracking.sensorReadings + 1,
-        }
-      }));
-      get().markObjectiveCompleted('obj5');
-      switch (sensorType) {
-        case 'ultrasonic':
-          return {
-            distance: Math.random() * 3.9 + 0.1,
-            unit: 'meters',
-            timestamp: Date.now()
-          };
-        case 'camera':
-          return 0; 
-        default:
-          return 0;
-      }
-    }
-  })
-);
+}));
