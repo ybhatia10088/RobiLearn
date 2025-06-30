@@ -1193,29 +1193,32 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
 })); 
 
   getSensorData: async (sensorType: string): Promise<any> => {
-    const state = get();
-    if (!state.robotState) return null;
-
-    set((state) => ({
-      challengeTracking: {
-        ...state.challengeTracking,
-        hasReadSensor: true,
-        sensorReadings: state.challengeTracking.sensorReadings + 1,
-      }
-    }));
-
-    get().markObjectiveCompleted('obj5');
-
-    switch (sensorType) {
-      case 'ultrasonic':
-        return {
-          distance: Math.random() * 3.9 + 0.1,
-          unit: 'meters',
-          timestamp: Date.now()
-        };
-      case 'camera':
-          return 0; 
-        default:
-          return 0;
+  const state = get();
+  if (!state.robotState) return null;
+  set((state) => ({
+    challengeTracking: {
+      ...state.challengeTracking,
+      hasReadSensor: true,
+      sensorReadings: state.challengeTracking.sensorReadings + 1,
     }
   }));
+  get().markObjectiveCompleted('obj5');
+  switch (sensorType) {
+    case 'ultrasonic':
+      return {
+        distance: Math.random() * 3.9 + 0.1,
+        unit: 'meters',
+        timestamp: Date.now()
+      };
+    case 'camera':
+      return {
+        data: null,
+        timestamp: Date.now()
+      };
+    default:
+      return {
+        data: 0,
+        timestamp: Date.now()
+      };
+  }
+},
