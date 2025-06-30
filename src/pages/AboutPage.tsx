@@ -174,7 +174,7 @@ const AboutPage: React.FC = () => {
             >
               <span className="text-white">About </span>
               <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                RoboSim
+                RobiLearn
               </span>
             </motion.h1>
 
@@ -519,7 +519,7 @@ const AboutPage: React.FC = () => {
             </h2>
             
             <p className="text-xl lg:text-2xl text-zinc-300 mb-12 leading-relaxed max-w-3xl mx-auto">
-              Join educators, students, and researchers who are already using RoboSim 
+              Join educators, students, and researchers who are already using RobiLearn 
               to advance robotics education and research.
             </p>
             
@@ -556,8 +556,6 @@ const AboutPage: React.FC = () => {
                 <Coffee className="w-5 h-5 text-zinc-500" />
                 <span className="text-zinc-500 font-medium">Powered by curiosity and countless hours of development</span>
               </div>
-            </div>
-          </motion.div>
             </div>
           </motion.div>
         </div>
