@@ -194,7 +194,7 @@ const Hero: React.FC = () => {
                   title: 'Progressive Curriculum',
                   description: 'Comprehensive learning path from basic movements to advanced autonomous systems and machine learning integration.',
                   color: 'accent',
-                  stats: '50+ Lessons'
+                  stats: '10+ Lessons'
                 }
               ].map((feature, index) => (
                 <div key={feature.title} className="group relative">
