@@ -244,6 +244,21 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     tasksCompleted: 0,
     batteryUsed: 0,
   },
+  markChallengeCompleted: (challengeId) => {
+  set((state) => {
+    const newTracking = { ...state.challengeTracking };
+    if (!newTracking.completedChallenges.has(challengeId)) {
+      newTracking.completedChallenges.add(challengeId);
+      console.log(`🏆 Challenge marked complete: ${challengeId}`);
+      
+      // Trigger unlock check for next challenges
+      window.dispatchEvent(new CustomEvent('challengeStatusChanged', { 
+        detail: { challengeId, completed: true } 
+      }));
+    }
+    return { challengeTracking: newTracking };
+  });
+},
   challengeTracking: { ...INITIAL_CHALLENGE_TRACKING },
   moveCommands: null,
 
