@@ -7,18 +7,18 @@ const AboutPage: React.FC = () => {
   const founders = [
     {
       name: 'Utkarsh Priyadarshi',
-      role: 'Co-Founder & Robotics Engineer',
+      role: 'Co-Founder',
       emoji: '🧠',
-      description: 'Utkarsh is an undergraduate student passionate about robotics, systems design, and automation. He enjoys building projects that combine theory with practical application — especially when it comes to motion planning and simulation. With a strong interest in how robots interact with real-world environments, Utkarsh focuses on making our platform realistic and technically sound.',
+      description: 'Utkarsh is an undergraduate student passionate about robotics, interpretability, and automation. He enjoys building projects that combine theory with practical application, especially when it comes to motion planning and simulation. With a strong interest in how robots interact with real world environments, Utkarsh focuses on making our platform realistic and technically sound.',
       quote: 'Our goal was to abstract complexity, not curiosity.',
       linkedin: '#',
       color: 'primary'
     },
     {
       name: 'Yugav Bhatia',
-      role: 'Co-Founder & Software Engineer',
+      role: 'Co-Founder',
       emoji: '⚙️',
-      description: 'Yugav is a computer science undergrad with a love for solving real-world problems through code. From web development to simulation logic, he brings the building blocks together to create a cohesive and intuitive user experience. He\'s especially passionate about educational technology and believes in learning by doing — which is exactly what this platform supports.',
+      description: 'Yugav is a computer science undergrad with a love for solving real world problems through code. From web development to simulation logic, he brings the building blocks together to create a cohesive and intuitive user experience. He\'s especially passionate about educational technology and believes in learning by doing, which is exactly what this platform supports.',
       quote: 'We built the kind of tool we wished we had when we first started learning robotics.',
       linkedin: '#',
       color: 'primary'
@@ -53,34 +53,29 @@ const AboutPage: React.FC = () => {
   ];
 
   const stats = [
-    { number: '10,000+', label: 'Students Reached', icon: <Users size={24} /> },
-    { number: '50+', label: 'Universities', icon: <Globe size={24} /> },
-    { number: '100+', label: 'Challenges', icon: <Award size={24} /> },
-    { number: '99.9%', label: 'Uptime', icon: <Zap size={24} /> }
-  ];
+  { number: '300+', label: 'Early Access Users', icon: <Users size={24} /> },
+  { number: '10+', label: 'Challenges Designed', icon: <Award size={24} /> },
+  { number: '99.9%', label: 'Uptime Since Launch', icon: <Zap size={24} /> },
+  { number: '5+', label: 'New Features in Development', icon: <Rocket size={24} /> }
+];
 
   const timeline = [
-    {
-      year: '2023',
-      title: 'The Question',
-      description: 'Started with a simple question: why is it so hard to get started in robotics without expensive hardware?'
-    },
-    {
-      year: '2024',
-      title: 'First Prototype',
-      description: 'Built our first browser-based robot simulator with basic movement and sensor capabilities.'
-    },
-    {
-      year: '2024',
-      title: 'Platform Launch',
-      description: 'Launched RoboSim with multiple robot types, AI-powered programming, and comprehensive challenges.'
-    },
-    {
-      year: '2025',
-      title: 'Growing Community',
-      description: 'Expanding our platform with new features, models, and challenges based on user feedback.'
-    }
-  ];
+  {
+    year: '2024',
+    title: 'The Question',
+    description: 'We asked ourselves: why is getting started with robotics still so expensive and inaccessible? That question sparked everything.'
+  },
+  {
+    year: 'Early 2025',
+    title: 'First Prototype',
+    description: 'Developed the first browser-based simulator with basic robot movement, sensors, and a vision for hands-on learning — no hardware required.'
+  },
+  {
+    year: 'Mid 2025',
+    title: 'Platform Launch',
+    description: 'Officially launched RoboSim with AI-assisted programming, multiple robot types, and a growing library of interactive challenges.'
+  }
+];
 
   return (
     <Layout>
