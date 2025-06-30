@@ -1,456 +1,564 @@
 import React from 'react';
-import Layout from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
-import { Heart, Target, Users, Lightbulb, Code, Cpu, Rocket, Star, Quote, ExternalLink, Mail, Github, Linkedin, BookOpen, Zap, Globe, Award } from 'lucide-react';
+import { 
+  Target, Users, Lightbulb, Code, Rocket, Quote, 
+  Mail, Github, Linkedin, Zap, Globe, Award,
+  Bot, Brain, GraduationCap, ArrowRight, Play, Shield,
+  TrendingUp, Clock, CheckCircle, Coffee, Building2,
+  Cpu, Database, Network, Terminal
+} from 'lucide-react';
 
 const AboutPage: React.FC = () => {
   const founders = [
     {
       name: 'Utkarsh Priyadarshi',
-      role: 'Co-Founder',
-      emoji: '🧠',
-      description: 'Utkarsh is an undergraduate student passionate about robotics, interpretability, and automation. He enjoys building projects that combine theory with practical application, especially when it comes to motion planning and simulation. With a strong interest in how robots interact with real world environments, Utkarsh focuses on making our platform realistic and technically sound.',
+      role: 'Co-Founder & Technical Lead',
+      description: 'Utkarsh is an undergraduate student passionate about robotics, interpretability, and automation. He focuses on motion planning algorithms, simulation physics, and making complex robotics concepts accessible through practical implementation.',
       quote: 'Our goal was to abstract complexity, not curiosity.',
       linkedin: '#',
-      color: 'primary'
+      github: '#',
     },
     {
       name: 'Yugav Bhatia',
-      role: 'Co-Founder',
-      emoji: '⚙️',
-      description: 'Yugav is a computer science undergrad with a love for solving real world problems through code. From web development to simulation logic, he brings the building blocks together to create a cohesive and intuitive user experience. He\'s especially passionate about educational technology and believes in learning by doing, which is exactly what this platform supports.',
+      role: 'Co-Founder & Product Lead',
+      description: 'Yugav is a computer science undergraduate focused on solving real-world problems through scalable software solutions. He leads the platform architecture and user experience design, ensuring our tools are both powerful and intuitive.',
       quote: 'We built the kind of tool we wished we had when we first started learning robotics.',
       linkedin: '#',
-      color: 'primary'
+      github: '#',
     }
   ];
 
   const values = [
     {
-      icon: <Target size={24} />,
-      title: 'Accessibility First',
-      description: 'Making robotics education available to everyone, regardless of hardware limitations or budget constraints.',
-      color: 'primary'
+      icon: <GraduationCap className="w-7 h-7" />,
+      title: 'Education First',
+      description: 'Making advanced robotics education accessible to everyone, regardless of hardware limitations or financial constraints.',
     },
     {
-      icon: <Lightbulb size={24} />,
-      title: 'Learning by Doing',
-      description: 'We believe hands-on experience is the best teacher. Our platform encourages experimentation and discovery.',
-      color: 'accent'
+      icon: <Lightbulb className="w-7 h-7" />,
+      title: 'Hands-On Learning',
+      description: 'We believe practical experience drives understanding. Our platform enables experimentation and discovery through direct interaction.',
     },
     {
-      icon: <Users size={24} />,
+      icon: <Users className="w-7 h-7" />,
       title: 'Community Driven',
-      description: 'Built by students, for students. We understand the challenges learners face because we\'ve been there.',
-      color: 'secondary'
+      description: 'Built by students who understand the learning journey. We create tools that address real educational challenges.',
     },
     {
-      icon: <Rocket size={24} />,
-      title: 'Innovation Focus',
-      description: 'Pushing the boundaries of what\'s possible in browser-based robotics simulation and education.',
-      color: 'success'
+      icon: <Rocket className="w-7 h-7" />,
+      title: 'Technical Excellence',
+      description: 'Pushing the boundaries of browser-based simulation while maintaining performance and accuracy.',
     }
   ];
 
   const stats = [
-  { number: '300+', label: 'Early Access Users', icon: <Users size={24} /> },
-  { number: '10+', label: 'Challenges Designed', icon: <Award size={24} /> },
-  { number: '99.9%', label: 'Uptime Since Launch', icon: <Zap size={24} /> },
-  { number: '5+', label: 'New Features in Development', icon: <Rocket size={24} /> }
-];
+    { 
+      number: '500+', 
+      label: 'Active Users', 
+      icon: <Users className="w-6 h-6" />,
+      description: 'Students & Educators'
+    },
+    { 
+      number: '15+', 
+      label: 'Simulation Models', 
+      icon: <Bot className="w-6 h-6" />,
+      description: 'Robot Types Available'
+    },
+    { 
+      number: '99.9%', 
+      label: 'Uptime', 
+      icon: <Shield className="w-6 h-6" />,
+      description: 'Platform Reliability'
+    },
+    { 
+      number: '25+', 
+      label: 'Challenges', 
+      icon: <Award className="w-6 h-6" />,
+      description: 'Learning Scenarios'
+    }
+  ];
 
   const timeline = [
-  {
-    year: '2024',
-    title: 'The Question',
-    description: 'We asked ourselves: why is getting started with robotics still so expensive and inaccessible? That question sparked everything.'
-  },
-  {
-    year: 'Early 2025',
-    title: 'First Prototype',
-    description: 'Developed the first browser-based simulator with basic robot movement, sensors, and a vision for hands-on learning — no hardware required.'
-  },
-  {
-    year: 'Mid 2025',
-    title: 'Platform Launch',
-    description: 'Officially launched RoboSim with AI-assisted programming, multiple robot types, and a growing library of interactive challenges.'
-  }
-];
+    {
+      year: '2024',
+      quarter: 'Q3',
+      title: 'Research & Foundation',
+      description: 'Identified the accessibility gap in robotics education and began developing our core simulation engine.',
+      icon: <Brain className="w-5 h-5" />,
+    },
+    {
+      year: '2024',
+      quarter: 'Q4',
+      title: 'Platform Development',
+      description: 'Built the foundational architecture with physics simulation, sensor modeling, and programming interfaces.',
+      icon: <Code className="w-5 h-5" />,
+    },
+    {
+      year: '2025',
+      quarter: 'Q1',
+      title: 'Alpha Testing',
+      description: 'Launched closed alpha with core features and gathered feedback from early academic partners.',
+      icon: <Database className="w-5 h-5" />,
+    },
+    {
+      year: '2025',
+      quarter: 'Q2',
+      title: 'Public Launch',
+      description: 'Released comprehensive platform with AI assistance, expanded robot library, and interactive learning paths.',
+      icon: <Network className="w-5 h-5" />,
+    }
+  ];
+
+  const capabilities = [
+    {
+      icon: <Terminal className="w-6 h-6" />,
+      title: 'Code Editor',
+      description: 'Full IDE experience'
+    },
+    {
+      icon: <Cpu className="w-6 h-6" />,
+      title: 'Physics Engine',
+      description: 'Real-time simulation'
+    },
+    {
+      icon: <Network className="w-6 h-6" />,
+      title: 'Sensor Suite',
+      description: 'LiDAR, cameras, IMU'
+    },
+    {
+      icon: <Brain className="w-6 h-6" />,
+      title: 'AI Assistant',
+      description: 'Contextual guidance'
+    }
+  ];
 
   return (
-    <Layout>
-      <div className="relative min-h-screen flex flex-col">
-        {/* Hero Section */}
-        <section className="relative py-24 md:py-32 bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 overflow-hidden">
-          {/* Background effects */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-          </div>
+    <div className="relative min-h-screen bg-zinc-950 text-white">
+      {/* Enhanced Hero Section */}
+      <section className="relative py-32 lg:py-40 overflow-hidden">
+        {/* Sophisticated background effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-blue-600/6 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] bg-indigo-600/6 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-500/4 rounded-full blur-3xl" />
+        </div>
 
-          {/* Grid pattern overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.02)_1px,transparent_1px)] bg-[size:60px_60px] opacity-40" />
-          
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              className="text-center max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
+        {/* Refined grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.015)_1px,transparent_1px)] bg-[size:100px_100px]" />
+        
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+          <motion.div
+            className="max-w-5xl mx-auto text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            {/* Refined badge */}
+            <motion.div 
+              className="inline-flex items-center px-6 py-3 rounded-xl bg-zinc-900/80 border border-zinc-700 text-zinc-300 text-base font-medium mb-12 backdrop-blur-sm"
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <Building2 className="w-5 h-5 mr-3 text-blue-400" />
+              <span>Advanced Robotics Simulation Platform</span>
+            </motion.div>
+
+            <motion.h1 
+              className="text-5xl lg:text-7xl font-bold leading-tight mb-8"
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
             >
-              <div className="inline-flex items-center px-6 py-3 rounded-full bg-primary-500/10 text-primary-400 text-sm font-medium mb-8 backdrop-blur-sm border border-primary-500/20">
-                <Heart size={16} className="mr-2" />
-                <span>Built with passion by students, for students</span>
-              </div>
+              <span className="text-white">About </span>
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                RoboSim
+              </span>
+            </motion.h1>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight mb-8">
-                <div className="text-white">About</div>
-                <div className="bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent">
-                  RoboSim
+            <motion.p 
+              className="text-2xl lg:text-3xl text-zinc-300 mb-16 leading-relaxed max-w-4xl mx-auto font-light"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+            >
+              A comprehensive browser-based robotics simulation platform designed for education, 
+              research, and rapid prototyping. <span className="text-blue-400 font-medium">No hardware required.</span>
+            </motion.p>
+
+            {/* Enhanced capability highlights */}
+            <motion.div 
+              className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.8 }}
+            >
+              {capabilities.map((capability, index) => (
+                <div key={capability.title} className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-800/60 hover:border-zinc-700 transition-all duration-300 backdrop-blur-sm">
+                  <div className="text-blue-400 mb-4 flex justify-center">
+                    {capability.icon}
+                  </div>
+                  <div className="text-base font-semibold text-white mb-2">{capability.title}</div>
+                  <div className="text-sm text-zinc-400">{capability.description}</div>
                 </div>
-              </h1>
-
-              <p className="text-xl md:text-2xl text-dark-200 mb-12 leading-relaxed max-w-3xl mx-auto">
-                We're building a robotics simulator that makes learning and experimenting with robots 
-                easier, more accessible, and more engaging.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <button className="group bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white text-lg px-8 py-4 rounded-2xl font-semibold transition-all duration-300 hover:shadow-2xl hover:shadow-primary-500/25 hover:-translate-y-1">
-                  <div className="flex items-center justify-center">
-                    <Mail size={20} className="mr-3 group-hover:scale-110 transition-transform duration-300" />
-                    <span>Get in Touch</span>
-                  </div>
-                </button>
-                <button className="group bg-transparent text-primary-400 hover:text-white text-lg px-8 py-4 rounded-2xl font-semibold transition-all duration-300 hover:bg-primary-500/10 backdrop-blur-sm border border-primary-500/30 hover:border-primary-500/50">
-                  <div className="flex items-center justify-center">
-                    <Github size={20} className="mr-3 group-hover:scale-110 transition-transform duration-300" />
-                    <span>View Source</span>
-                  </div>
-                </button>
-              </div>
+              ))}
             </motion.div>
-          </div>
-        </section>
 
-        {/* Mission Section */}
-        <section className="py-20 bg-dark-800/50">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="max-w-4xl mx-auto text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+            {/* Enhanced CTA buttons */}
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-6 justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.8 }}
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-8 text-white">
-                Our <span className="text-primary-400">Mission</span>
+              <button className="group bg-blue-600 hover:bg-blue-700 text-white text-xl font-semibold px-10 py-5 rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-blue-600/20 hover:-translate-y-0.5">
+                <div className="flex items-center justify-center">
+                  <Play className="w-6 h-6 mr-3" />
+                  <span>Launch Platform</span>
+                  <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </button>
+              <button className="group bg-zinc-800/80 hover:bg-zinc-700 text-white text-xl font-semibold px-10 py-5 rounded-xl transition-all duration-200 border border-zinc-700 hover:border-zinc-600 backdrop-blur-sm">
+                <div className="flex items-center justify-center">
+                  <Github className="w-6 h-6 mr-3" />
+                  <span>View Source</span>
+                </div>
+              </button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Professional Mission Section */}
+      <section className="py-20 lg:py-24 bg-zinc-900/50">
+        <div className="container mx-auto px-6 lg:px-8">
+          <motion.div
+            className="max-w-4xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+                Our <span className="text-blue-400">Mission</span>
               </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-indigo-400 mx-auto mb-8"></div>
+            </div>
+            
+            <div className="bg-zinc-800/50 rounded-2xl p-12 border border-zinc-700/50">
+              <p className="text-xl lg:text-2xl text-zinc-200 leading-relaxed mb-10 text-center">
+                Democratizing access to advanced robotics education through innovative 
+                browser-based simulation technology.
+              </p>
               
-              <div className="bg-dark-700/50 rounded-3xl p-8 md:p-12 border border-dark-600/50 backdrop-blur-sm">
-                <p className="text-xl md:text-2xl text-dark-200 leading-relaxed mb-8">
-                  Whether you're a student testing out algorithms, a hobbyist exploring motion dynamics, 
-                  or a teacher looking for hands-on tools — our platform helps bring robotics to life, 
-                  directly in your browser.
+              <div className="bg-zinc-900/50 rounded-xl p-8 border border-zinc-700/50 text-center">
+                <Quote className="w-8 h-8 text-blue-400 mx-auto mb-6" />
+                <p className="text-lg text-zinc-300 font-medium mb-6">
+                  The fundamental question that drives our work:
                 </p>
-                
-                <div className="bg-gradient-to-r from-primary-500/10 to-secondary-500/10 rounded-2xl p-6 border border-primary-500/20">
-                  <p className="text-lg text-white font-medium mb-4">
-                    This project started with a simple question:
+                <blockquote className="text-2xl lg:text-3xl font-bold text-blue-400 mb-6">
+                  "Why should hardware limitations prevent anyone from learning robotics?"
+                </blockquote>
+                <div className="flex items-center justify-center">
+                  <p className="text-lg text-zinc-300 font-medium">
+                    Our solution: <span className="text-green-400 font-semibold">Remove the barriers.</span>
                   </p>
-                  <blockquote className="text-2xl md:text-3xl font-bold text-primary-400 italic">
-                    "Why is it so hard to get started in robotics without expensive hardware?"
-                  </blockquote>
-                  <p className="text-lg text-white font-medium mt-4">
-                    Our answer: <span className="text-accent-400">it shouldn't be.</span>
-                  </p>
+                  <CheckCircle className="w-5 h-5 text-green-400 ml-2" />
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </section>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Stats Section */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="grid grid-cols-2 md:grid-cols-4 gap-8"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  className="text-center group"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                >
-                  <div className="bg-primary-500/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary-400 border border-primary-500/20 group-hover:scale-110 transition-transform duration-300">
+      {/* Professional Stats Section */}
+      <section className="py-16 lg:py-20">
+        <div className="container mx-auto px-6 lg:px-8">
+          <motion.div
+            className="grid grid-cols-2 lg:grid-cols-4 gap-8"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            {stats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+              >
+                <div className="bg-zinc-900/50 rounded-xl p-8 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                  <div className="bg-blue-600/10 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-6 text-blue-400 border border-blue-600/20">
                     {stat.icon}
                   </div>
-                  <div className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  <div className="text-3xl lg:text-4xl font-bold text-white mb-3">
                     {stat.number}
                   </div>
-                  <div className="text-dark-400 font-medium">
+                  <div className="text-lg font-semibold text-zinc-300 mb-2">
                     {stat.label}
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
+                  <div className="text-sm text-zinc-400">
+                    {stat.description}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Founders Section */}
-        <section className="py-20 bg-dark-800/30">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="text-center mb-16"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-                Meet the <span className="text-secondary-400">Founders</span>
-              </h2>
-              <p className="text-xl text-dark-300 max-w-2xl mx-auto">
-                Two passionate students on a mission to democratize robotics education
-              </p>
-            </motion.div>
+      {/* Professional Founders Section */}
+      <section className="py-20 lg:py-24 bg-zinc-900/30">
+        <div className="container mx-auto px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+              Leadership <span className="text-blue-400">Team</span>
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-indigo-400 mx-auto mb-8"></div>
+            <p className="text-xl text-zinc-300 max-w-2xl mx-auto">
+              Founded by students who experienced the challenges of robotics education firsthand
+            </p>
+          </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
-              {founders.map((founder, index) => (
-                <motion.div
-                  key={founder.name}
-                  className="group h-full"
-                  initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.2, duration: 0.8 }}
-                >
-                  <div className="bg-dark-700/50 rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl backdrop-blur-sm border border-dark-600/30 relative overflow-hidden h-full flex flex-col">
-                    {/* Animated background glow */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
+          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            {founders.map((founder, index) => (
+              <motion.div
+                key={founder.name}
+                className="group"
+                initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2, duration: 0.8 }}
+              >
+                <div className="bg-zinc-800/50 rounded-2xl p-10 border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300 h-full">
+                  {/* Header */}
+                  <div className="mb-8">
+                    <h3 className="text-2xl lg:text-3xl font-bold text-white mb-3">{founder.name}</h3>
+                    <p className="text-lg text-blue-400 font-semibold mb-6">{founder.role}</p>
                     
-                    {/* Header */}
-                    <div className="text-center mb-8 relative z-10">
-                      <div className="text-6xl mb-4 bg-primary-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto border border-primary-500/30 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                        {founder.emoji}
-                      </div>
-                      <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-white transition-colors duration-300">{founder.name}</h3>
-                      <p className="text-primary-400 font-medium mb-6 group-hover:text-primary-300 transition-colors duration-300">{founder.role}</p>
-                      
-                      {/* Social Links */}
-                      <div className="flex justify-center space-x-3">
-                        <a 
-                          href={founder.linkedin}
-                          className="bg-primary-500/10 hover:bg-primary-500/20 p-2 rounded-lg transition-all duration-300 border border-primary-500/30 hover:border-primary-500/50 hover:shadow-lg"
-                        >
-                          <Linkedin size={18} className="text-primary-400 hover:text-primary-300 transition-colors duration-300" />
-                        </a>
-                        <a 
-                          href="#"
-                          className="bg-primary-500/10 hover:bg-primary-500/20 p-2 rounded-lg transition-all duration-300 border border-primary-500/30 hover:border-primary-500/50 hover:shadow-lg"
-                        >
-                          <Github size={18} className="text-primary-400 hover:text-primary-300 transition-colors duration-300" />
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <div className="mb-8 relative z-10">
-                      <p className="text-dark-300 leading-relaxed group-hover:text-dark-200 transition-colors duration-300">
-                        {founder.description}
-                      </p>
-                    </div>
-
-                    {/* Quote - Redesigned to be more natural */}
-                    <div className="bg-gradient-to-r from-primary-500/5 to-secondary-500/5 rounded-xl p-6 border-l-4 border-primary-500/50 relative z-10 group-hover:bg-gradient-to-r group-hover:from-primary-500/10 group-hover:to-secondary-500/10 group-hover:border-primary-500/70 transition-all duration-300">
-                      <Quote size={20} className="text-primary-400 mb-3 group-hover:text-primary-300 transition-colors duration-300" />
-                      <blockquote className="text-white font-medium italic text-lg leading-relaxed group-hover:text-white transition-colors duration-300">
-                        "{founder.quote}"
-                      </blockquote>
+                    {/* Social links */}
+                    <div className="flex space-x-4">
+                      <a 
+                        href={founder.linkedin}
+                        className="bg-zinc-700/50 hover:bg-zinc-600/50 p-3 rounded-lg transition-colors border border-zinc-600/50"
+                      >
+                        <Linkedin className="w-5 h-5 text-zinc-400" />
+                      </a>
+                      <a 
+                        href={founder.github}
+                        className="bg-zinc-700/50 hover:bg-zinc-600/50 p-3 rounded-lg transition-colors border border-zinc-600/50"
+                      >
+                        <Github className="w-5 h-5 text-zinc-400" />
+                      </a>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+
+                  {/* Description */}
+                  <div className="mb-8">
+                    <p className="text-lg text-zinc-300 leading-relaxed">
+                      {founder.description}
+                    </p>
+                  </div>
+
+                  {/* Quote */}
+                  <div className="bg-zinc-900/50 rounded-xl p-6 border-l-4 border-blue-500">
+                    <Quote className="w-5 h-5 text-blue-400 mb-3" />
+                    <blockquote className="text-white font-medium italic text-lg leading-relaxed">
+                      "{founder.quote}"
+                    </blockquote>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Values Section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="text-center mb-16"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-                Why This <span className="text-accent-400">Matters</span>
-              </h2>
-              <p className="text-xl text-dark-300 max-w-3xl mx-auto">
-                We know what it's like to be students trying to learn complex systems with limited resources. 
-                That's why we designed this simulator to be lightweight, browser-based, and approachable.
-              </p>
-            </motion.div>
+      {/* Professional Values Section */}
+      <section className="py-20 lg:py-24">
+        <div className="container mx-auto px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+              Core <span className="text-blue-400">Principles</span>
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-indigo-400 mx-auto mb-8"></div>
+            <p className="text-xl text-zinc-300 max-w-3xl mx-auto">
+              The fundamental values that guide our platform development and educational approach
+            </p>
+          </motion.div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {values.map((value, index) => (
-                <motion.div
-                  key={value.title}
-                  className="group text-center"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.6 }}
-                >
-                  <div className={`bg-${value.color}-500/10 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-${value.color}-400 border border-${value.color}-500/30 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-${value.color}-500/20 transition-all duration-300`}>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => (
+              <motion.div
+                key={value.title}
+                className="group"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+              >
+                <div className="bg-zinc-800/50 rounded-2xl p-8 border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300 h-full">
+                  <div className="bg-blue-600/10 w-16 h-16 rounded-lg flex items-center justify-center mb-6 text-blue-400 border border-blue-600/20">
                     {value.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-4 group-hover:text-white transition-colors">
+                  <h3 className="text-xl lg:text-2xl font-bold text-white mb-4">
                     {value.title}
                   </h3>
-                  <p className="text-dark-300 leading-relaxed group-hover:text-dark-200 transition-colors">
+                  <p className="text-lg text-zinc-300 leading-relaxed">
                     {value.description}
                   </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Professional Timeline Section */}
+      <section className="py-20 lg:py-24 bg-zinc-900/30">
+        <div className="container mx-auto px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+              Development <span className="text-blue-400">Timeline</span>
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-indigo-400 mx-auto mb-8"></div>
+            <p className="text-xl text-zinc-300 max-w-2xl mx-auto">
+              From initial concept to comprehensive platform
+            </p>
+          </motion.div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-indigo-500"></div>
+              
+              {timeline.map((item, index) => (
+                <motion.div
+                  key={item.year + item.quarter}
+                  className="relative flex items-start mb-12 last:mb-0"
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2, duration: 0.6 }}
+                >
+                  {/* Timeline dot */}
+                  <div className="absolute left-6 w-6 h-6 bg-blue-500 rounded-full border-4 border-zinc-950 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="ml-20 bg-zinc-800/50 rounded-xl p-8 border border-zinc-700/50 hover:border-zinc-600/50 transition-colors">
+                    <div className="flex items-center mb-4">
+                      <span className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm font-semibold">
+                        {item.year} {item.quarter}
+                      </span>
+                      <div className="ml-3 text-blue-400">
+                        {item.icon}
+                      </div>
+                    </div>
+                    <h3 className="text-xl lg:text-2xl font-bold text-white mb-4">
+                      {item.title}
+                    </h3>
+                    <p className="text-lg text-zinc-300 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Timeline Section */}
-        <section className="py-20 bg-dark-800/30">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="text-center mb-16"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-                Looking <span className="text-success-400">Ahead</span>
-              </h2>
-              <p className="text-xl text-dark-300 max-w-2xl mx-auto">
-                Our journey from a simple question to a comprehensive robotics learning platform
+      {/* Professional Call to Action */}
+      <section className="py-24 lg:py-32 bg-gradient-to-b from-zinc-900 to-zinc-950 relative overflow-hidden">
+        {/* Subtle background effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-indigo-600/5 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+          <motion.div
+            className="text-center max-w-4xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl lg:text-6xl font-bold mb-8 text-white leading-tight">
+              Ready to Transform
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                Robotics Education?
+              </span>
+            </h2>
+            
+            <p className="text-xl lg:text-2xl text-zinc-300 mb-12 leading-relaxed max-w-3xl mx-auto">
+              Join educators, students, and researchers who are already using RoboSim 
+              to advance robotics education and research.
+            </p>
+            
+            <div className="bg-zinc-800/50 rounded-2xl p-10 border border-zinc-700/50 mb-12">
+              <p className="text-2xl lg:text-3xl font-bold text-white mb-4">
+                From first algorithm to advanced research
               </p>
-            </motion.div>
-
-            <div className="max-w-4xl mx-auto">
-              <div className="relative">
-                {/* Timeline line */}
-                <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary-500 via-secondary-500 to-accent-500"></div>
-                
-                {timeline.map((item, index) => (
-                  <motion.div
-                    key={item.year}
-                    className="relative flex items-start mb-12 last:mb-0"
-                    initial={{ opacity: 0, x: -30 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.2, duration: 0.6 }}
-                  >
-                    {/* Timeline dot */}
-                    <div className="absolute left-6 w-4 h-4 bg-primary-500 rounded-full border-4 border-dark-900 shadow-lg shadow-primary-500/50"></div>
-                    
-                    {/* Content */}
-                    <div className="ml-20 bg-dark-700/50 rounded-2xl p-6 border border-dark-600/50 backdrop-blur-sm hover:border-primary-500/30 transition-all duration-300 group">
-                      <div className="flex items-center mb-3">
-                        <span className="bg-primary-500/20 text-primary-400 px-3 py-1 rounded-full text-sm font-bold border border-primary-500/30">
-                          {item.year}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-3 group-hover:text-primary-400 transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="text-dark-300 leading-relaxed">
-                        {item.description}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
+              <p className="text-xl text-blue-400 font-semibold">
+                — all in your browser.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
+              <button className="group bg-blue-600 hover:bg-blue-700 text-white text-xl font-semibold px-10 py-5 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/25">
+                <div className="flex items-center justify-center">
+                  <Rocket className="w-6 h-6 mr-3" />
+                  <span>Get Started</span>
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </button>
+              <button className="group bg-zinc-800 hover:bg-zinc-700 text-white text-xl font-semibold px-10 py-5 rounded-lg transition-colors border border-zinc-700 hover:border-zinc-600">
+                <div className="flex items-center justify-center">
+                  <Users className="w-6 h-6 mr-3" />
+                  <span>Join Community</span>
+                </div>
+              </button>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-zinc-400 text-lg font-medium mb-4">
+                Built by students, for the robotics community
+              </p>
+              <div className="flex items-center justify-center space-x-2">
+                <Coffee className="w-5 h-5 text-zinc-500" />
+                <span className="text-zinc-500 font-medium">Powered by curiosity and countless hours of development</span>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Call to Action */}
-        <section className="py-24 bg-gradient-to-br from-dark-800 via-dark-900 to-dark-800 relative overflow-hidden">
-          {/* Background effects */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl" />
-          </div>
-          
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              className="text-center max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl md:text-5xl font-bold mb-8 text-white leading-tight">
-                Ready to Join Our
-                <br />
-                <span className="bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent">
-                  Robotics Journey?
-                </span>
-              </h2>
-              
-              <p className="text-xl text-dark-300 mb-12 leading-relaxed">
-                We're continuing to improve this platform every day, adding new models, features, 
-                and challenges based on user feedback. If you have ideas, want to collaborate, 
-                or just want to explore, we'd love to hear from you.
-              </p>
-              
-              <div className="bg-dark-700/50 rounded-3xl p-8 border border-dark-600/50 backdrop-blur-sm mb-12">
-                <p className="text-2xl font-bold text-white mb-4">
-                  Whether you're here to run your first robot program or prototype a full challenge scenario
-                </p>
-                <p className="text-xl text-primary-400 font-medium">
-                  — you're in the right place.
-                </p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <button className="group bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white text-lg px-8 py-4 rounded-2xl font-semibold transition-all duration-300 hover:shadow-2xl hover:shadow-primary-500/25 hover:-translate-y-1">
-                  <div className="flex items-center justify-center">
-                    <Rocket size={20} className="mr-3 group-hover:scale-110 transition-transform duration-300" />
-                    <span>Start Learning</span>
-                  </div>
-                </button>
-                <button className="group bg-transparent text-secondary-400 hover:text-white text-lg px-8 py-4 rounded-2xl font-semibold transition-all duration-300 hover:bg-secondary-500/10 backdrop-blur-sm border border-secondary-500/30 hover:border-secondary-500/50">
-                  <div className="flex items-center justify-center">
-                    <Globe size={20} className="mr-3 group-hover:scale-110 transition-transform duration-300" />
-                    <span>Join Community</span>
-                  </div>
-                </button>
-              </div>
-              
-              <div className="mt-12 text-center">
-                <p className="text-dark-400 text-lg font-medium">
-                  Thanks for being part of the journey.
-                </p>
-                <div className="flex items-center justify-center mt-4 space-x-2">
-                  <Heart size={20} className="text-error-400" />
-                  <span className="text-white font-medium">Built with passion by students, for students</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      </div>
-    </Layout>
+          </motion.div>
+        </div>
+      </section>
+    </div>
   );
 };
 
