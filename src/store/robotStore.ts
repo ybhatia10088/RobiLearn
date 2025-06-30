@@ -194,6 +194,20 @@ const CHALLENGE_OBJECTIVES = {
   ]
 };
 
+const theoryMap: Record<string, string> = {
+  'intro-1': 'movement_basics',
+  'intro-2': 'sensor_basics', 
+  'patrol-1': 'waypoint_navigation',
+  'circle-1': 'circular_motion',
+  'grid-1': 'grid_navigation',
+  'spiral-1': 'spiral_algorithms',
+  'drone-1': 'drone_flight',
+  'arm-1': 'arm_kinematics',
+  'spider-1': 'multi_leg_locomotion',
+  'tank-1': 'tracked_vehicles',
+  'humanoid-1': 'bipedal_locomotion'
+};
+
 export const useRobotStore = create<RobotStoreState>((set, get) => ({
   selectedRobot: null,
   robotState: {
