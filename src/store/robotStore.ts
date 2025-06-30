@@ -1191,10 +1191,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     };
   },
 })); 
-      default:
-        return 0;
-    }
-  },
 
   getSensorData: async (sensorType: string): Promise<any> => {
     const state = get();
