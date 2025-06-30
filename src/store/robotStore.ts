@@ -140,7 +140,7 @@ const INITIAL_CHALLENGE_TRACKING: ChallengeTracking = {
   hasCompletedPath: false,
 };
 
-// Define challenge objectives with proper completion criteria
+// Enhanced challenge objectives with all new challenges
 const CHALLENGE_OBJECTIVES = {
   'intro-1': [
     { id: 'obj1', criteriaType: 'theory', criteriaValue: 'movement_basics' },
@@ -151,10 +151,46 @@ const CHALLENGE_OBJECTIVES = {
     { id: 'obj4', criteriaType: 'theory', criteriaValue: 'sensor_basics' },
     { id: 'obj5', criteriaType: 'sensor_read', criteriaValue: true }
   ],
-  'warehouse-1': [
-    { id: 'obj6', criteriaType: 'theory', criteriaValue: 'path_planning' },
-    { id: 'obj7', criteriaType: 'position_reached', criteriaValue: { x: 5, z: 8, tolerance: 2 } },
-    { id: 'obj8', criteriaType: 'grabbed_object', criteriaValue: true }
+  'patrol-1': [
+    { id: 'obj6', criteriaType: 'theory', criteriaValue: 'waypoint_navigation' },
+    { id: 'obj7', criteriaType: 'waypoints_visited', criteriaValue: 4 }
+  ],
+  'circle-1': [
+    { id: 'obj8', criteriaType: 'theory', criteriaValue: 'circular_motion' },
+    { id: 'obj9', criteriaType: 'circle_completed', criteriaValue: 360 }
+  ],
+  'grid-1': [
+    { id: 'obj10', criteriaType: 'theory', criteriaValue: 'grid_navigation' },
+    { id: 'obj11', criteriaType: 'grid_points_visited', criteriaValue: 5 }
+  ],
+  'spiral-1': [
+    { id: 'obj12', criteriaType: 'theory', criteriaValue: 'spiral_algorithms' },
+    { id: 'obj13', criteriaType: 'spiral_completed', criteriaValue: 5 }
+  ],
+  'drone-1': [
+    { id: 'obj14', criteriaType: 'theory', criteriaValue: 'drone_flight' },
+    { id: 'obj15', criteriaType: 'altitude_reached', criteriaValue: 2.0 },
+    { id: 'obj16', criteriaType: 'figure8_completed', criteriaValue: true }
+  ],
+  'arm-1': [
+    { id: 'obj17', criteriaType: 'theory', criteriaValue: 'arm_kinematics' },
+    { id: 'obj18', criteriaType: 'joints_exercised', criteriaValue: 4 },
+    { id: 'obj19', criteriaType: 'pick_place_completed', criteriaValue: true }
+  ],
+  'spider-1': [
+    { id: 'obj20', criteriaType: 'theory', criteriaValue: 'multi_leg_locomotion' },
+    { id: 'obj21', criteriaType: 'gait_demonstrated', criteriaValue: 8 },
+    { id: 'obj22', criteriaType: 'terrain_navigated', criteriaValue: 6 }
+  ],
+  'tank-1': [
+    { id: 'obj23', criteriaType: 'theory', criteriaValue: 'tracked_vehicles' },
+    { id: 'obj24', criteriaType: 'maneuvers_completed', criteriaValue: 4 },
+    { id: 'obj25', criteriaType: 'positioning_completed', criteriaValue: 4 }
+  ],
+  'humanoid-1': [
+    { id: 'obj26', criteriaType: 'theory', criteriaValue: 'bipedal_locomotion' },
+    { id: 'obj27', criteriaType: 'walking_demonstrated', criteriaValue: 12 },
+    { id: 'obj28', criteriaType: 'complex_movements', criteriaValue: true }
   ]
 };
 
@@ -408,10 +444,10 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
             } : null
           };
         });
-        return; // Return after altitude adjustment
+        return;
       }
 
-      // Handle joint-specific altitude control (when joint parameter is passed)
+      // Handle joint-specific altitude control
       if (joint === 'altitude') {
         const step = direction === 'up' ? 0.1 : -0.1;
         set((state) => {
@@ -431,16 +467,15 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
             } : null
           };
         });
-        return; // Return after joint altitude adjustment
+        return;
       }
 
-      // Handle horizontal movement for drones (forward, backward, left, right)
+      // Handle horizontal movement for drones
       if (['forward', 'backward', 'left', 'right'].includes(direction)) {
         const moveStep = 0.15 * speed;
         
         console.log(`🚁 Setting up horizontal movement interval for direction: ${direction}, moveStep: ${moveStep}`);
 
-        // Create movement interval for drone
         const moveInterval = setInterval(() => {
           const currentState = get();
           if (!currentState.robotState || !currentState.isMoving) {
@@ -475,7 +510,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
 
           const newPosition = {
             x: currentState.robotState.position.x + deltaX,
-            y: currentState.robotState.position.y, // Keep current Y position (altitude)
+            y: currentState.robotState.position.y,
             z: currentState.robotState.position.z + deltaZ,
           };
 
@@ -508,7 +543,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           });
           
           get().checkAndCompleteObjectives();
-        }, 50); // 50ms interval for smooth movement
+        }, 50);
 
         (window as any).robotMoveInterval = moveInterval;
         console.log(`🚁 Movement interval started for ${direction} direction`);
@@ -541,77 +576,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       return;
     }
 
-    // Handle explorer movement
-    if (state.selectedRobot?.type === 'explorer') {
-      const moveStep = 0.12 * speed;
-      const angle = state.robotState.rotation.y;
-      let deltaX = 0;
-      let deltaZ = 0;
-
-      switch (direction) {
-        case 'forward':
-          deltaX = Math.sin(angle) * moveStep;
-          deltaZ = Math.cos(angle) * moveStep;
-          break;
-        case 'backward':
-          deltaX = -Math.sin(angle) * moveStep;
-          deltaZ = -Math.cos(angle) * moveStep;
-          break;
-        case 'left':
-          deltaX = -Math.cos(angle) * moveStep;
-          deltaZ = Math.sin(angle) * moveStep;
-          break;
-        case 'right':
-          deltaX = Math.cos(angle) * moveStep;
-          deltaZ = -Math.sin(angle) * moveStep;
-          break;
-      }
-
-      const moveInterval = setInterval(() => {
-        const currentState = get();
-        if (!currentState.robotState || !currentState.isMoving) {
-          clearInterval(moveInterval);
-          (window as any).robotMoveInterval = null;
-          return;
-        }
-
-        const newPosition = {
-          x: currentState.robotState.position.x + deltaX,
-          y: currentState.robotState.position.y,
-          z: currentState.robotState.position.z + deltaZ,
-        };
-
-        const distance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
-        
-        set((state) => {
-          const newTracking = { ...state.challengeTracking };
-          newTracking.totalDistanceMoved += distance;
-          
-          if (direction === 'forward') {
-            newTracking.maxForwardDistance = Math.max(newTracking.maxForwardDistance, newPosition.z);
-          } else if (direction === 'backward') {
-            newTracking.maxBackwardDistance = Math.max(newTracking.maxBackwardDistance, Math.abs(newPosition.z));
-          }
-          
-          return {
-            robotState: {
-              ...currentState.robotState!,
-              position: newPosition,
-              isMoving: true,
-            },
-            challengeTracking: newTracking,
-          };
-        });
-        
-        get().checkAndCompleteObjectives();
-      }, 16);
-
-      (window as any).robotMoveInterval = moveInterval;
-      return;
-    }
-
-    // Handle other robot types (humanoid, spider, tank)
-    const moveStep = 0.1 * speed;
+    // Handle other robot types (explorer, spider, tank, humanoid)
+    const moveStep = state.selectedRobot?.type === 'explorer' ? 0.12 * speed : 0.1 * speed;
     const angle = state.robotState.rotation.y;
     
     let deltaX = 0;
@@ -705,7 +671,7 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
     if (state.selectedRobot?.type === 'explorer') {
       rotateStep = 0.08 * speed;
     } else if (state.selectedRobot?.type === 'drone') {
-      rotateStep = 0.06 * speed; // Slightly faster for drones
+      rotateStep = 0.06 * speed;
     }
     
     const delta = direction === 'left' ? rotateStep : -rotateStep;
@@ -818,34 +784,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         const distance = Math.random() * 3.9 + 0.1;
         get().markObjectiveCompleted('obj5');
         return distance;
-      case 'camera':
-        return Math.random();
-      default:
-        return 0;
-    }
-  },
-
-  getSensorData: async (sensorType: string): Promise<any> => {
-    const state = get();
-    if (!state.robotState) return null;
-
-    set((state) => ({
-      challengeTracking: {
-        ...state.challengeTracking,
-        hasReadSensor: true,
-        sensorReadings: state.challengeTracking.sensorReadings + 1,
-      }
-    }));
-
-    get().markObjectiveCompleted('obj5');
-
-    switch (sensorType) {
-      case 'ultrasonic':
-        return {
-          distance: Math.random() * 3.9 + 0.1,
-          unit: 'meters',
-          timestamp: Date.now()
-        };
       case 'camera':
         return {
           objects: ['red_ball', 'blue_cube'],
@@ -1025,8 +963,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           shouldComplete = challengeTracking.maxForwardDistance >= objective.criteriaValue;
           if (shouldComplete) {
             console.log(`✅ Distance objective completed! Moved ${challengeTracking.maxForwardDistance.toFixed(2)}m forward (required: ${objective.criteriaValue}m)`);
-          } else {
-            console.log(`📊 Forward progress: ${challengeTracking.maxForwardDistance.toFixed(2)}m / ${objective.criteriaValue}m required`);
           }
           break;
         
@@ -1035,8 +971,6 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           shouldComplete = challengeTracking.totalRotationAngle >= requiredRadians;
           if (shouldComplete) {
             console.log(`✅ Rotation objective completed! Rotated ${(challengeTracking.totalRotationAngle * 180 / Math.PI).toFixed(1)}° (required: ${(requiredRadians * 180 / Math.PI).toFixed(1)}°)`);
-          } else {
-            console.log(`📊 Rotation progress: ${(challengeTracking.totalRotationAngle * 180 / Math.PI).toFixed(1)}° / ${(requiredRadians * 180 / Math.PI).toFixed(1)}° required`);
           }
           break;
         
@@ -1047,35 +981,109 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           }
           break;
         
-        case 'position_reached':
-          const target = objective.criteriaValue as { x: number; z: number; tolerance: number };
-          const distance = Math.sqrt(
-            Math.pow(position.x - target.x, 2) + 
-            Math.pow(position.z - target.z, 2)
-          );
-          shouldComplete = distance <= target.tolerance;
-          if (shouldComplete) {
-            console.log(`✅ Position objective completed! Reached target within ${distance.toFixed(2)}m (tolerance: ${target.tolerance}m)`);
-            set((state) => ({
-              challengeTracking: {
-                ...state.challengeTracking,
-                hasReachedPickupArea: true,
-              }
-            }));
-          }
-          break;
-        
-        case 'grabbed_object':
-          shouldComplete = state.robotState.isGrabbing;
-          if (shouldComplete) {
-            console.log(`✅ Grab objective completed! Object grabbed successfully`);
-          }
-          break;
-        
         case 'theory':
           shouldComplete = challengeTracking.viewedTheory.has(objective.criteriaValue);
           if (shouldComplete) {
             console.log(`✅ Theory objective completed! Viewed theory: ${objective.criteriaValue}`);
+          }
+          break;
+
+        // New challenge criteria
+        case 'waypoints_visited':
+          shouldComplete = challengeTracking.totalDistanceMoved > 5.0; // Simplified check
+          if (shouldComplete) {
+            console.log(`✅ Waypoints objective completed! Completed patrol route`);
+          }
+          break;
+
+        case 'circle_completed':
+          shouldComplete = challengeTracking.totalRotationAngle >= (2 * Math.PI * 0.9); // Almost full circle
+          if (shouldComplete) {
+            console.log(`✅ Circle objective completed! Completed circular motion`);
+          }
+          break;
+
+        case 'grid_points_visited':
+          shouldComplete = challengeTracking.totalDistanceMoved > 8.0; // Simplified check
+          if (shouldComplete) {
+            console.log(`✅ Grid navigation objective completed!`);
+          }
+          break;
+
+        case 'spiral_completed':
+          shouldComplete = challengeTracking.totalDistanceMoved > 12.0; // Simplified check
+          if (shouldComplete) {
+            console.log(`✅ Spiral pattern objective completed!`);
+          }
+          break;
+
+        case 'altitude_reached':
+          shouldComplete = position.y >= objective.criteriaValue;
+          if (shouldComplete) {
+            console.log(`✅ Altitude objective completed! Reached ${position.y.toFixed(1)}m (required: ${objective.criteriaValue}m)`);
+          }
+          break;
+
+        case 'figure8_completed':
+          shouldComplete = challengeTracking.totalDistanceMoved > 15.0; // Simplified check
+          if (shouldComplete) {
+            console.log(`✅ Figure-8 objective completed!`);
+          }
+          break;
+
+        case 'joints_exercised':
+          shouldComplete = challengeTracking.totalDistanceMoved > 2.0; // Simplified check for arm movement
+          if (shouldComplete) {
+            console.log(`✅ Joint exercise objective completed!`);
+          }
+          break;
+
+        case 'pick_place_completed':
+          shouldComplete = challengeTracking.hasGrabbed;
+          if (shouldComplete) {
+            console.log(`✅ Pick and place objective completed!`);
+          }
+          break;
+
+        case 'gait_demonstrated':
+          shouldComplete = challengeTracking.totalDistanceMoved > 6.0; // Spider walking
+          if (shouldComplete) {
+            console.log(`✅ Gait demonstration objective completed!`);
+          }
+          break;
+
+        case 'terrain_navigated':
+          shouldComplete = challengeTracking.hasReadSensor && challengeTracking.totalDistanceMoved > 4.0;
+          if (shouldComplete) {
+            console.log(`✅ Terrain navigation objective completed!`);
+          }
+          break;
+
+        case 'maneuvers_completed':
+          shouldComplete = challengeTracking.totalRotationAngle > Math.PI; // Tank maneuvers
+          if (shouldComplete) {
+            console.log(`✅ Tank maneuvers objective completed!`);
+          }
+          break;
+
+        case 'positioning_completed':
+          shouldComplete = challengeTracking.hasReadSensor && challengeTracking.totalDistanceMoved > 8.0;
+          if (shouldComplete) {
+            console.log(`✅ Tactical positioning objective completed!`);
+          }
+          break;
+
+        case 'walking_demonstrated':
+          shouldComplete = challengeTracking.totalDistanceMoved > 10.0; // Humanoid walking
+          if (shouldComplete) {
+            console.log(`✅ Walking demonstration objective completed!`);
+          }
+          break;
+
+        case 'complex_movements':
+          shouldComplete = challengeTracking.totalDistanceMoved > 20.0; // Complex humanoid movements
+          if (shouldComplete) {
+            console.log(`✅ Complex movements objective completed!`);
           }
           break;
       }
@@ -1182,4 +1190,32 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       sensorReadings: state.challengeTracking.sensorReadings
     };
   },
-}));
+})); Math.random();
+      default:
+        return 0;
+    }
+  },
+
+  getSensorData: async (sensorType: string): Promise<any> => {
+    const state = get();
+    if (!state.robotState) return null;
+
+    set((state) => ({
+      challengeTracking: {
+        ...state.challengeTracking,
+        hasReadSensor: true,
+        sensorReadings: state.challengeTracking.sensorReadings + 1,
+      }
+    }));
+
+    get().markObjectiveCompleted('obj5');
+
+    switch (sensorType) {
+      case 'ultrasonic':
+        return {
+          distance: Math.random() * 3.9 + 0.1,
+          unit: 'meters',
+          timestamp: Date.now()
+        };
+      case 'camera':
+        return
