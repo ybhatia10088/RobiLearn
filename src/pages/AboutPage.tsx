@@ -1,4 +1,5 @@
 import React from 'react';
+import Layout from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
 import { 
   Target, Users, Lightbulb, Code, Rocket, Quote, 
@@ -53,13 +54,13 @@ const AboutPage: React.FC = () => {
 
   const stats = [
     { 
-      number: '100+', 
-      label: 'Early Access Users', 
+      number: '500+', 
+      label: 'Active Users', 
       icon: <Users className="w-6 h-6" />,
       description: 'Students & Educators'
     },
     { 
-      number: '5+', 
+      number: '15+', 
       label: 'Simulation Models', 
       icon: <Bot className="w-6 h-6" />,
       description: 'Robot Types Available'
@@ -71,7 +72,7 @@ const AboutPage: React.FC = () => {
       description: 'Platform Reliability'
     },
     { 
-      number: '10+', 
+      number: '25+', 
       label: 'Challenges', 
       icon: <Award className="w-6 h-6" />,
       description: 'Learning Scenarios'
@@ -133,7 +134,8 @@ const AboutPage: React.FC = () => {
   ];
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-white">
+    <Layout>
+      <div className="relative min-h-screen bg-zinc-950 text-white">
       {/* Enhanced Hero Section */}
       <section className="relative py-32 lg:py-40 overflow-hidden">
         {/* Sophisticated background effects */}
@@ -161,7 +163,7 @@ const AboutPage: React.FC = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <Building2 className="w-5 h-5 mr-3 text-blue-400" />
-              <span>Robotics Simulation Platform</span>
+              <span>Advanced Robotics Simulation Platform</span>
             </motion.div>
 
             <motion.h1 
@@ -182,8 +184,8 @@ const AboutPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8 }}
             >
-              A comprehensive browser based robotics simulation platform designed for education, 
-              and rapid prototyping. <span className="text-blue-400 font-medium">No hardware required.</span>
+              A comprehensive browser-based robotics simulation platform designed for education, 
+              research, and rapid prototyping. <span className="text-blue-400 font-medium">No hardware required.</span>
             </motion.p>
 
             {/* Enhanced capability highlights */}
@@ -557,8 +559,8 @@ const AboutPage: React.FC = () => {
             </div>
           </motion.div>
         </div>
-      </section>
-    </div>
+      </div>
+    </Layout>
   );
 };
 
