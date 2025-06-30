@@ -81,7 +81,7 @@ const Hero: React.FC = () => {
             <div className="inline-flex items-center px-8 py-4 rounded-full bg-gradient-to-r from-primary-500/15 via-primary-500/10 to-secondary-500/15 text-primary-300 text-sm font-semibold mb-12 backdrop-blur-md border border-primary-500/20 shadow-lg shadow-primary-500/10 hover:shadow-primary-500/20 transition-all duration-500 group">
               <div className="w-2 h-2 bg-success-400 rounded-full mr-3 animate-pulse" />
               <Star size={16} className="mr-3 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="tracking-wide">Enterprise-Grade Robotics Education Platform</span>
+              <span className="tracking-wide">Advanced Robotics Education Platform</span>
               <div className="w-2 h-2 bg-primary-400 rounded-full ml-3 animate-pulse" style={{ animationDelay: '1s' }} />
             </div>
 
@@ -180,7 +180,7 @@ const Hero: React.FC = () => {
                   title: 'Advanced Simulation Engine',
                   description: 'Industry-grade physics simulation with multiple robot types including arms, mobile platforms, and autonomous drones.',
                   color: 'primary',
-                  stats: '6 Robot Types'
+                  stats: '5 Robot Types'
                 },
                 {
                   icon: <Brain size={32} />, 
