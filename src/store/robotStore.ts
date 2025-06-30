@@ -1214,4 +1214,9 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
           timestamp: Date.now()
         };
       case 'camera':
-        return
+          return 0; 
+        default:
+          return 0;
+      }
+    },
+  }));
