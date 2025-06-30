@@ -13,7 +13,7 @@ const AboutPage: React.FC = () => {
   const founders = [
     {
       name: 'Utkarsh Priyadarshi',
-      role: 'Co-Founder & Technical Lead',
+      role: 'Co-Founder',
       description: 'Utkarsh is an undergraduate student passionate about robotics, interpretability, and automation. He focuses on motion planning algorithms, simulation physics, and making complex robotics concepts accessible through practical implementation.',
       quote: 'Our goal was to abstract complexity, not curiosity.',
       linkedin: '#',
@@ -21,7 +21,7 @@ const AboutPage: React.FC = () => {
     },
     {
       name: 'Yugav Bhatia',
-      role: 'Co-Founder & Product Lead',
+      role: 'Co-Founder',
       description: 'Yugav is a computer science undergraduate focused on solving real-world problems through scalable software solutions. He leads the platform architecture and user experience design, ensuring our tools are both powerful and intuitive.',
       quote: 'We built the kind of tool we wished we had when we first started learning robotics.',
       linkedin: '#',
