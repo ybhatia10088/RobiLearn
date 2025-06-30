@@ -1222,3 +1222,4 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       };
   }
 },
+    }));
