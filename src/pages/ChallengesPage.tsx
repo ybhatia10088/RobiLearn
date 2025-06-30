@@ -1477,30 +1477,30 @@ const ChallengesPage: React.FC = () => {
       const completed = getChallengeStatus(challenge.id);
       
       // Dynamic unlocking logic
-      let unlocked = false;
-      if (challenge.id === 'intro-1') {
-        unlocked = true;
-      } else if (challenge.id === 'intro-2') {
-        unlocked = getChallengeStatus('intro-1');
-      } else if (challenge.id === 'patrol-1') {
-        unlocked = getChallengeStatus('intro-2');
-      } else if (challenge.id === 'circle-1') {
-        unlocked = getChallengeStatus('patrol-1');
-      } else if (challenge.id === 'grid-1') {
-        unlocked = getChallengeStatus('circle-1');
-      } else if (challenge.id === 'spiral-1') {
-        unlocked = getChallengeStatus('grid-1');
-      } else if (challenge.id === 'drone-1') {
-        unlocked = getChallengeStatus('spiral-1');
-      } else if (challenge.id === 'arm-1') {
-        unlocked = getChallengeStatus('drone-1');
-      } else if (challenge.id === 'spider-1') {
-        unlocked = getChallengeStatus('arm-1');
-      } else if (challenge.id === 'tank-1') {
-        unlocked = getChallengeStatus('spider-1');
-      } else if (challenge.id === 'humanoid-1') {
-        unlocked = getChallengeStatus('tank-1');
-      }
+      let unlocked = challenge.unlocked; // Start with default
+if (challenge.id === 'intro-1') {
+  unlocked = true;
+} else if (challenge.id === 'intro-2') {
+  unlocked = getChallengeStatus('intro-1');
+} else if (challenge.id === 'patrol-1') {
+  unlocked = getChallengeStatus('intro-2');
+} else if (challenge.id === 'circle-1') {
+  unlocked = getChallengeStatus('patrol-1');
+} else if (challenge.id === 'grid-1') {
+  unlocked = getChallengeStatus('circle-1');
+} else if (challenge.id === 'spiral-1') {
+  unlocked = getChallengeStatus('grid-1');
+} else if (challenge.id === 'drone-1') {
+  unlocked = getChallengeStatus('spiral-1');
+} else if (challenge.id === 'arm-1') {
+  unlocked = getChallengeStatus('drone-1');
+} else if (challenge.id === 'spider-1') {
+  unlocked = getChallengeStatus('arm-1');
+} else if (challenge.id === 'tank-1') {
+  unlocked = getChallengeStatus('spider-1');
+} else if (challenge.id === 'humanoid-1') {
+  unlocked = getChallengeStatus('tank-1');
+}
 
       return {
         ...challenge,
@@ -1648,31 +1648,26 @@ const ChallengesPage: React.FC = () => {
 
   // Fixed Theory Modal without infinite loop
   const TheoryModal: React.FC<{ challenge: Challenge }> = React.memo(({ challenge }) => {
-    const [hasMarkedViewed, setHasMarkedViewed] = useState(false);
+  useEffect(() => {
+    const theoryMap: Record<string, string> = {
+      'intro-1': 'movement_basics',
+      'intro-2': 'sensor_basics',
+      'patrol-1': 'waypoint_navigation',
+      'circle-1': 'circular_motion',
+      'grid-1': 'grid_navigation',
+      'spiral-1': 'spiral_algorithms',
+      'drone-1': 'drone_flight',
+      'arm-1': 'arm_kinematics',
+      'spider-1': 'multi_leg_locomotion',
+      'tank-1': 'tracked_vehicles',
+      'humanoid-1': 'bipedal_locomotion'
+    };
     
-    useEffect(() => {
-      if (!hasMarkedViewed) {
-        const theoryMap: Record<string, string> = {
-          'intro-1': 'movement_basics',
-          'intro-2': 'sensor_basics',
-          'patrol-1': 'waypoint_navigation',
-          'circle-1': 'circular_motion',
-          'grid-1': 'grid_navigation',
-          'spiral-1': 'spiral_algorithms',
-          'drone-1': 'drone_flight',
-          'arm-1': 'arm_kinematics',
-          'spider-1': 'multi_leg_locomotion',
-          'tank-1': 'tracked_vehicles',
-          'humanoid-1': 'bipedal_locomotion'
-        };
-        
-        const theoryId = theoryMap[challenge.id];
-        if (theoryId) {
-          markTheoryViewed(theoryId);
-          setHasMarkedViewed(true);
-        }
-      }
-    }, [challenge.id, hasMarkedViewed]);
+    const theoryId = theoryMap[challenge.id];
+    if (theoryId) {
+      markTheoryViewed(theoryId);
+    }
+  }, [challenge.id]);
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
