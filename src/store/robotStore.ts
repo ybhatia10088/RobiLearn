@@ -779,6 +779,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
       }
     }));
 
+    setTimeout(() => get().checkAndCompleteObjectives(), 100);
+
     switch (sensorType) {
       case 'ultrasonic':
         const distance = Math.random() * 3.9 + 0.1;
@@ -812,6 +814,8 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
         sensorReadings: state.challengeTracking.sensorReadings + 1,
       }
     }));
+
+    setTimeout(() => get().checkAndCompleteObjectives(), 100);
     
     get().markObjectiveCompleted('obj5');
     
@@ -996,6 +1000,14 @@ export const useRobotStore = create<RobotStoreState>((set, get) => ({
             console.log(`✅ Distance objective completed! Moved ${challengeTracking.maxForwardDistance.toFixed(2)}m forward (required: ${objective.criteriaValue}m)`);
           }
           break;
+
+        case 'sensor_read_complete':
+  shouldComplete = challengeTracking.hasReadSensor;
+  if (shouldComplete) {
+    console.log(`✅ Sensor reading objective completed! Read sensor ${challengeTracking.sensorReadings} times`);
+  }
+  break;  
+        
         
         case 'rotation_angle':
           const requiredRadians = typeof objective.criteriaValue === 'number' ? objective.criteriaValue : (objective.criteriaValue * Math.PI / 180);
