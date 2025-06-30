@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Twitter, Youtube, Mail, Phone, Notebook as Robot } from 'lucide-react';
+import { Github, Twitter, Youtube, Mail, Phone } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -12,15 +12,24 @@ const Footer: React.FC = () => {
           {/* Brand section */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-primary-500 p-2 rounded-lg">
-                <Robot size={24} className="text-white" />
-              </div>
               <div>
-                <h3 className="text-xl font-bold text-white">
-                  <span className="text-primary-400">Robo</span>
-                  <span>Sim</span>
+                <h3 className="text-xl font-bold text-white tracking-wider" style={{ 
+                  fontFamily: '"Orbitron", "Exo", "Rajdhani", sans-serif', 
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textShadow: '0 0 12px rgba(59, 130, 246, 0.3), 0 0 24px rgba(59, 130, 246, 0.15)'
+                }}>
+                  ROBI<span className="text-primary-400" style={{
+                    textShadow: '0 0 12px rgba(59, 130, 246, 0.5), 0 0 24px rgba(59, 130, 246, 0.25)'
+                  }}>LEARN</span>
                 </h3>
-                <p className="text-xs text-dark-400">Learn. Code. Innovate.</p>
+                <p className="text-xs text-dark-400 mt-2 tracking-wide" style={{ 
+                  fontFamily: '"Orbitron", sans-serif',
+                  fontWeight: 400,
+                  letterSpacing: '0.05em'
+                }}>
+                  Learn. Code. Innovate.
+                </p>
               </div>
             </div>
             <p className="text-dark-300 mb-6 leading-relaxed">
@@ -112,10 +121,10 @@ const Footer: React.FC = () => {
                 <div>
                   <p className="text-sm text-white font-medium">Email Support</p>
                   <a 
-                    href="mailto:support@robosim.com" 
+                    href="mailto:support@robilearn.com" 
                     className="text-sm text-dark-300 hover:text-primary-400 transition-colors"
                   >
-                    support@robosim.com
+                    support@robilearn.com
                   </a>
                 </div>
               </div>
@@ -158,7 +167,7 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
               <p className="text-dark-400 text-sm">
-                © {currentYear} RoboSim. All rights reserved.
+                © {currentYear} RobiLearn. All rights reserved.
               </p>
               <div className="flex space-x-6">
                 <a href="#" className="text-dark-400 hover:text-primary-400 text-sm transition-colors">
