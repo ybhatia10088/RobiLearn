@@ -1282,12 +1282,19 @@ const SimulatorPage: React.FC = () => {
           return new Promise(resolve => setTimeout(resolve, ms));
         },
         
-        getSensor: async (type: string) => {
-          console.log('📡 Reading sensor:', type);
-          const reading = await readSensor(type);
-          console.log(`📊 Sensor reading: ${reading}`);
-          return reading;
-        },
+       getSensor: async (type: string) => {
+  console.log('📡 Reading sensor:', type);
+  const reading = await readSensor(type);
+  console.log(`📊 Sensor reading: ${reading}`);
+  
+  // Trigger objective check after sensor reading
+  setTimeout(() => {
+    const state = useRobotStore.getState();
+    state.checkAndCompleteObjectives();
+  }, 200);
+  
+  return reading;
+},
         
         grab: async () => {
           console.log('🤏 Grabbing object');
