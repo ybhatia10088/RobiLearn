@@ -152,21 +152,21 @@ const Hero: React.FC = () => {
               <div className="flex items-center group hover:text-primary-400 transition-all duration-300 cursor-pointer">
                 <Users size={20} className="mr-3 text-primary-400 group-hover:scale-125 transition-transform duration-300" />
                 <div className="text-center">
-                  <div className="font-semibold tracking-wide">10,000+</div>
-                  <div className="text-xs text-dark-500">Active Learners</div>
+                  <div className="font-semibold tracking-wide">100+</div>
+                  <div className="text-xs text-dark-500">Beta Users</div>
                 </div>
               </div>
               <div className="flex items-center group hover:text-secondary-400 transition-all duration-300 cursor-pointer">
                 <Award size={20} className="mr-3 text-secondary-400 group-hover:scale-125 transition-transform duration-300" />
                 <div className="text-center">
-                  <div className="font-semibold tracking-wide">100+</div>
+                  <div className="font-semibold tracking-wide">10+</div>
                   <div className="text-xs text-dark-500">Challenges</div>
                 </div>
               </div>
               <div className="flex items-center group hover:text-accent-400 transition-all duration-300 cursor-pointer">
                 <Star size={20} className="mr-3 text-accent-400 group-hover:scale-125 transition-transform duration-300" />
                 <div className="text-center">
-                  <div className="font-semibold tracking-wide">4.9★</div>
+                  <div className="font-semibold tracking-wide">4.7★</div>
                   <div className="text-xs text-dark-500">User Rating</div>
                 </div>
               </div>
@@ -232,7 +232,7 @@ const Hero: React.FC = () => {
             <div className="mt-20 flex flex-wrap items-center justify-center gap-8 text-sm text-dark-400">
               <div className="flex items-center">
                 <Shield size={16} className="mr-2 text-success-400" />
-                <span>Enterprise Security</span>
+                <span>Lightning-Fast Performance</span>
               </div>
               <div className="flex items-center">
                 <Zap size={16} className="mr-2 text-warning-400" />
@@ -240,7 +240,7 @@ const Hero: React.FC = () => {
               </div>
               <div className="flex items-center">
                 <Target size={16} className="mr-2 text-primary-400" />
-                <span>Industry Standard</span>
+                <span>User Friendly Design</span>
               </div>
             </div>
           </div>
